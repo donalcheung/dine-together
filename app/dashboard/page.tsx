@@ -3,8 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
+
+interface UserLocation {
+  latitude: number
+  longitude: number
+}
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -12,10 +17,13 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [requests, setRequests] = useState<DiningRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [locationError, setLocationError] = useState<string>('')
 
   useEffect(() => {
     checkUser()
     loadRequests()
+    getUserLocation()
     
     // Subscribe to real-time updates
     const channel = supabase
@@ -32,6 +40,48 @@ export default function DashboardPage() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  const getUserLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          })
+          setLocationError('')
+        },
+        (error) => {
+          console.error('Location error:', error)
+          setLocationError('Unable to get your location. Distance sorting disabled.')
+        }
+      )
+    } else {
+      setLocationError('Location not supported by your browser.')
+    }
+  }
+
+  const calculateDistance = (lat1: number, lon1: number, lat2?: number, lon2?: number): number => {
+    if (!lat2 || !lon2) return Infinity
+    
+    // Haversine formula to calculate distance in miles
+    const R = 3959 // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c
+  }
+
+  const formatDistance = (distance: number): string => {
+    if (distance === Infinity) return ''
+    if (distance < 0.1) return 'Very nearby'
+    if (distance < 1) return `${(distance * 5280).toFixed(0)} ft away`
+    return `${distance.toFixed(1)} mi away`
+  }
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -99,6 +149,26 @@ export default function DashboardPage() {
     }
   }
 
+  // Sort requests by distance if we have user location
+  const sortedRequests = [...requests].sort((a, b) => {
+    if (!userLocation) return 0
+    
+    const distanceA = calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      a.latitude,
+      a.longitude
+    )
+    const distanceB = calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      b.latitude,
+      b.longitude
+    )
+    
+    return distanceA - distanceB
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
       {/* Navigation */}
@@ -149,9 +219,22 @@ export default function DashboardPage() {
           <h2 className="text-4xl font-bold text-[var(--neutral)] mb-2">
             Available Dining Requests
           </h2>
-          <p className="text-gray-600 text-lg">
-            Join someone for a meal and share the experience!
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 text-lg">
+              Join someone for a meal and share the experience!
+            </p>
+            {userLocation && (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-full border border-green-200">
+                <Navigation className="w-4 h-4" />
+                <span className="text-sm font-medium">Showing nearest first</span>
+              </div>
+            )}
+          </div>
+          {locationError && (
+            <div className="mt-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+              {locationError}
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -159,7 +242,7 @@ export default function DashboardPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading dining requests...</p>
           </div>
-        ) : requests.length === 0 ? (
+        ) : sortedRequests.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-lg">
             <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-700 mb-2">No active requests</h3>
@@ -174,62 +257,83 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {requests.map((request) => (
-              <Link
-                key={request.id}
-                href={`/request/${request.id}`}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 card-hover"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-[var(--neutral)] mb-1">
-                      {request.restaurant_name}
-                    </h3>
-                    <div className="flex items-center gap-1 text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4" />
-                      <span className="truncate">{request.restaurant_address}</span>
+            {sortedRequests.map((request) => {
+              const distance = userLocation
+                ? calculateDistance(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    request.latitude,
+                    request.longitude
+                  )
+                : Infinity
+
+              return (
+                <Link
+                  key={request.id}
+                  href={`/request/${request.id}`}
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 card-hover relative"
+                >
+                  {/* Distance Badge */}
+                  {distance !== Infinity && (
+                    <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                      <Navigation className="w-3 h-3" />
+                      {formatDistance(distance)}
+                    </div>
+                  )}
+
+                  <div className="flex items-start justify-between mb-4 pr-20">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-[var(--neutral)] mb-1">
+                        {request.restaurant_name}
+                      </h3>
+                      <div className="flex items-center gap-1 text-gray-600 text-sm">
+                        <MapPin className="w-4 h-4" />
+                        <span className="truncate">{request.restaurant_address}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 px-3 py-1 bg-orange-100 rounded-full">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-[var(--neutral)]">
-                      {request.host?.rating.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Clock className="w-5 h-5 text-[var(--primary)]" />
-                    <span className="font-medium">{formatTime(request.dining_time)}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Users className="w-5 h-5 text-[var(--accent)]" />
-                    <span className="font-medium">
-                      {request.seats_available} seat{request.seats_available !== 1 ? 's' : ''} available
-                    </span>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Clock className="w-5 h-5 text-[var(--primary)]" />
+                      <span className="font-medium">{formatTime(request.dining_time)}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Users className="w-5 h-5 text-[var(--accent)]" />
+                      <span className="font-medium">
+                        {request.seats_available} seat{request.seats_available !== 1 ? 's' : ''} available
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <User className="w-5 h-5 text-[var(--neutral)]" />
+                        <span className="font-medium">
+                          {request.host?.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 px-3 py-1 bg-orange-100 rounded-full">
+                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-bold text-[var(--neutral)]">
+                          {request.host?.rating.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <User className="w-5 h-5 text-[var(--neutral)]" />
-                    <span className="font-medium">
-                      Hosted by {request.host?.name}
-                    </span>
-                  </div>
-                </div>
+                  {request.description && (
+                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                      {request.description}
+                    </p>
+                  )}
 
-                {request.description && (
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                    {request.description}
-                  </p>
-                )}
-
-                <button className="w-full py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors">
-                  View Details
-                </button>
-              </Link>
-            ))}
+                  <button className="w-full py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors">
+                    View Details
+                  </button>
+                </Link>
+              )
+            })}
           </div>
         )}
       </main>

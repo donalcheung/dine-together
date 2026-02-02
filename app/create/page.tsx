@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, ArrowLeft } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function CreateRequestPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [geocoding, setGeocoding] = useState(false)
   
   const [formData, setFormData] = useState({
     restaurant_name: '',
@@ -34,11 +35,45 @@ export default function CreateRequestPage() {
     setUser(user)
   }
 
+  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      setGeocoding(true)
+      // Using OpenStreetMap Nominatim (free, no API key needed)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'DineTogether App'
+          }
+        }
+      )
+      
+      const data = await response.json()
+      
+      if (data && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        }
+      }
+      
+      return null
+    } catch (error) {
+      console.error('Geocoding error:', error)
+      return null
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      // Try to geocode the address
+      const coordinates = await geocodeAddress(formData.restaurant_address)
+      
       const { data, error } = await supabase
         .from('dining_requests')
         .insert([
@@ -46,6 +81,8 @@ export default function CreateRequestPage() {
             host_id: user.id,
             restaurant_name: formData.restaurant_name,
             restaurant_address: formData.restaurant_address,
+            latitude: coordinates?.lat || null,
+            longitude: coordinates?.lng || null,
             dining_time: formData.dining_time,
             seats_available: formData.seats_available,
             total_seats: formData.seats_available,
@@ -60,10 +97,7 @@ export default function CreateRequestPage() {
 
       router.push(`/request/${data.id}`)
     } catch (error: any) {
-      console.error('Full error:', error)
-      console.error('Error message:', error?.message)
-      console.error('Error details:', error?.details)
-      console.error('Error hint:', error?.hint)
+      console.error('Error creating request:', error)
       alert(`Failed to create request: ${error?.message || 'Unknown error'}`)
     } finally {
       setLoading(false)
@@ -142,6 +176,10 @@ export default function CreateRequestPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
                 placeholder="e.g., 123 Main St, New York, NY 10001"
               />
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                <Navigation className="w-4 h-4" />
+                <span>Address will be used to calculate distance for others</span>
+              </div>
             </div>
 
             {/* Dining Time */}
@@ -207,7 +245,7 @@ export default function CreateRequestPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <h4 className="font-semibold text-[var(--neutral)] mb-2">How it works:</h4>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Other users will see your request and can ask to join</li>
+                <li>• Other users will see your request and distance from them</li>
                 <li>• You'll approve who joins based on their profile</li>
                 <li>• Meet at the restaurant at the scheduled time</li>
                 <li>• Share dishes and split the bill however you prefer</li>
@@ -218,10 +256,22 @@ export default function CreateRequestPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || geocoding}
+              className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Creating...' : 'Create Dining Request'}
+              {geocoding ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Finding location...
+                </>
+              ) : loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Creating...
+                </>
+              ) : (
+                'Create Dining Request'
+              )}
             </button>
           </form>
         </div>
