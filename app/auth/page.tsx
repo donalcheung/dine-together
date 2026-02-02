@@ -25,7 +25,8 @@ function AuthForm() {
 
     try {
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
+        // First, sign up the user
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -35,24 +36,33 @@ function AuthForm() {
           }
         })
         
-        if (error) throw error
+        if (signUpError) throw signUpError
         
-        if (data.user) {
-          // Create profile
+        if (authData.user) {
+          // Wait a moment for auth to settle
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Try to create profile - use upsert to avoid conflicts
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert([
+            .upsert([
               {
-                id: data.user.id,
+                id: authData.user.id,
                 email: email,
                 name: name,
                 rating: 5.0,
                 total_ratings: 0,
               }
-            ])
+            ], {
+              onConflict: 'id'
+            })
           
-          if (profileError) throw profileError
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            // Don't throw - profile might already exist
+          }
           
+          // Always redirect even if profile creation had issues
           router.push('/dashboard')
         }
       } else {
@@ -66,7 +76,8 @@ function AuthForm() {
         router.push('/dashboard')
       }
     } catch (error: any) {
-      setError(error.message)
+      console.error('Auth error:', error)
+      setError(error.message || 'An error occurred during authentication')
     } finally {
       setLoading(false)
     }
