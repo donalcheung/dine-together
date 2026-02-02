@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, Mail, Lock, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export default function AuthPage() {
+function AuthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isSignUp = searchParams.get('signup') === 'true'
@@ -184,5 +184,17 @@ export default function AuthPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+      </div>
+    }>
+      <AuthForm />
+    </Suspense>
   )
 }
