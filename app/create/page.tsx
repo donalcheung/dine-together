@@ -1,16 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+
+// Load Google Maps script
+const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && (window as any).google) {
+      resolve()
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
 
 export default function CreateRequestPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [geocoding, setGeocoding] = useState(false)
+  const [mapsLoaded, setMapsLoaded] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const autocompleteRef = useRef<any>(null)
   
   const [formData, setFormData] = useState({
     restaurant_name: '',
@@ -18,11 +38,64 @@ export default function CreateRequestPage() {
     dining_time: '',
     seats_available: 1,
     description: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
   })
 
   useEffect(() => {
     checkUser()
+    initializeGoogleMaps()
   }, [])
+
+  const initializeGoogleMaps = async () => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    
+    if (!apiKey) {
+      console.error('Google Maps API key not found')
+      return
+    }
+
+    try {
+      await loadGoogleMapsScript(apiKey)
+      setMapsLoaded(true)
+    } catch (error) {
+      console.error('Error loading Google Maps:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (mapsLoaded && searchInputRef.current) {
+      initializeAutocomplete()
+    }
+  }, [mapsLoaded])
+
+  const initializeAutocomplete = () => {
+    if (!searchInputRef.current || !(window as any).google) return
+
+    const autocomplete = new (window as any).google.maps.places.Autocomplete(
+      searchInputRef.current,
+      {
+        types: ['restaurant', 'cafe', 'food', 'establishment'],
+        fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+      }
+    )
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace()
+
+      if (place.geometry && place.geometry.location) {
+        setFormData(prev => ({
+          ...prev,
+          restaurant_name: place.name || '',
+          restaurant_address: place.formatted_address || '',
+          latitude: place.geometry.location.lat(),
+          longitude: place.geometry.location.lng(),
+        }))
+      }
+    })
+
+    autocompleteRef.current = autocomplete
+  }
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -35,45 +108,11 @@ export default function CreateRequestPage() {
     setUser(user)
   }
 
-  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
-    try {
-      setGeocoding(true)
-      // Using OpenStreetMap Nominatim (free, no API key needed)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'DineTogether App'
-          }
-        }
-      )
-      
-      const data = await response.json()
-      
-      if (data && data.length > 0) {
-        return {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon)
-        }
-      }
-      
-      return null
-    } catch (error) {
-      console.error('Geocoding error:', error)
-      return null
-    } finally {
-      setGeocoding(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // Try to geocode the address
-      const coordinates = await geocodeAddress(formData.restaurant_address)
-      
       const { data, error } = await supabase
         .from('dining_requests')
         .insert([
@@ -81,8 +120,8 @@ export default function CreateRequestPage() {
             host_id: user.id,
             restaurant_name: formData.restaurant_name,
             restaurant_address: formData.restaurant_address,
-            latitude: coordinates?.lat || null,
-            longitude: coordinates?.lng || null,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
             dining_time: formData.dining_time,
             seats_available: formData.seats_available,
             total_seats: formData.seats_available,
@@ -109,6 +148,14 @@ export default function CreateRequestPage() {
     setFormData(prev => ({
       ...prev,
       [name]: name === 'seats_available' ? parseInt(value) : value
+    }))
+  }
+
+  const handleManualInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow manual typing in the search field
+    setFormData(prev => ({
+      ...prev,
+      restaurant_name: e.target.value
     }))
   }
 
@@ -142,45 +189,74 @@ export default function CreateRequestPage() {
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Restaurant Name */}
+            {/* Restaurant Search with Autocomplete */}
             <div>
-              <label htmlFor="restaurant_name" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <Utensils className="w-5 h-5 text-[var(--primary)]" />
-                Restaurant Name
+              <label htmlFor="restaurant_search" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Search className="w-5 h-5 text-[var(--primary)]" />
+                Search for Restaurant
               </label>
-              <input
-                id="restaurant_name"
-                name="restaurant_name"
-                type="text"
-                value={formData.restaurant_name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
-                placeholder="e.g., Golden Dragon Dim Sum"
-              />
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  id="restaurant_search"
+                  type="text"
+                  value={formData.restaurant_name}
+                  onChange={handleManualInput}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+                  placeholder="Start typing restaurant name..."
+                />
+                {mapsLoaded && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Utensils className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                <span>✨</span>
+                <span>Start typing to see restaurant suggestions</span>
+              </p>
             </div>
 
-            {/* Restaurant Address */}
-            <div>
-              <label htmlFor="restaurant_address" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                <MapPin className="w-5 h-5 text-[var(--primary)]" />
-                Restaurant Address
-              </label>
-              <input
-                id="restaurant_address"
-                name="restaurant_address"
-                type="text"
-                value={formData.restaurant_address}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
-                placeholder="e.g., 123 Main St, New York, NY 10001"
-              />
-              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                <Navigation className="w-4 h-4" />
-                <span>Address will be used to calculate distance for others</span>
+            {/* Restaurant Address (Auto-filled) */}
+            {formData.restaurant_address && (
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <MapPin className="w-5 h-5 text-[var(--primary)]" />
+                  Address
+                </label>
+                <div className="w-full px-4 py-3 border border-green-300 bg-green-50 rounded-xl text-gray-700">
+                  {formData.restaurant_address}
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                  <Navigation className="w-4 h-4" />
+                  <span>✓ Location saved - others will see distance from them</span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Manual Address Entry (if autocomplete didn't work) */}
+            {!formData.restaurant_address && formData.restaurant_name && (
+              <div>
+                <label htmlFor="restaurant_address" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                  <MapPin className="w-5 h-5 text-[var(--primary)]" />
+                  Restaurant Address (Manual Entry)
+                </label>
+                <input
+                  id="restaurant_address"
+                  name="restaurant_address"
+                  type="text"
+                  value={formData.restaurant_address}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+                  placeholder="e.g., 123 Main St, New York, NY 10001"
+                />
+                <p className="mt-2 text-sm text-amber-600">
+                  ⚠️ Try using the search above for better accuracy
+                </p>
+              </div>
+            )}
 
             {/* Dining Time */}
             <div>
@@ -243,12 +319,11 @@ export default function CreateRequestPage() {
 
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <h4 className="font-semibold text-[var(--neutral)] mb-2">How it works:</h4>
+              <h4 className="font-semibold text-[var(--neutral)] mb-2">✨ Smart Restaurant Search:</h4>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Other users will see your request and distance from them</li>
-                <li>• You'll approve who joins based on their profile</li>
-                <li>• Meet at the restaurant at the scheduled time</li>
-                <li>• Share dishes and split the bill however you prefer</li>
+                <li>• Type restaurant name to see suggestions with full addresses</li>
+                <li>• Select a suggestion to auto-fill everything</li>
+                <li>• Location is saved so others see distance from them</li>
                 <li>• Rate each other after the meal!</li>
               </ul>
             </div>
@@ -256,15 +331,10 @@ export default function CreateRequestPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || geocoding}
+              disabled={loading || !formData.restaurant_name}
               className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {geocoding ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Finding location...
-                </>
-              ) : loading ? (
+              {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                   Creating...
