@@ -64,8 +64,7 @@ export default function DashboardPage() {
   const calculateDistance = (lat1: number, lon1: number, lat2?: number, lon2?: number): number => {
     if (!lat2 || !lon2) return Infinity
     
-    // Haversine formula to calculate distance in miles
-    const R = 3959 // Earth's radius in miles
+    const R = 3959
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLon = (lon2 - lon1) * Math.PI / 180
     const a = 
@@ -93,7 +92,6 @@ export default function DashboardPage() {
     
     setUser(user)
     
-    // Load profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -149,7 +147,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Sort requests by distance if we have user location
   const sortedRequests = [...requests].sort((a, b) => {
     if (!userLocation) return 0
     
@@ -193,7 +190,17 @@ export default function DashboardPage() {
                 href="/profile"
                 className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 hover:border-[var(--primary)] transition-all group"
               >
-                <User className="w-5 h-5 text-gray-600 group-hover:text-[var(--primary)]" />
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {profile.name[0]?.toUpperCase()}
+                  </div>
+                )}
                 <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -273,7 +280,6 @@ export default function DashboardPage() {
                   href={`/request/${request.id}`}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all p-6 card-hover relative"
                 >
-                  {/* Distance Badge */}
                   {distance !== Infinity && (
                     <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                       <Navigation className="w-3 h-3" />
@@ -307,9 +313,19 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <User className="w-5 h-5 text-[var(--neutral)]" />
-                        <span className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {request.host?.avatar_url ? (
+                          <img
+                            src={request.host.avatar_url}
+                            alt={request.host.name}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-[var(--neutral)] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {request.host?.name[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-medium text-gray-700">
                           {request.host?.name}
                         </span>
                       </div>

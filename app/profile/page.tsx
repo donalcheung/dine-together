@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Star } from 'lucide-react'
+import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Star, Camera, Upload } from 'lucide-react'
 import { supabase, Profile } from '@/lib/supabase'
 
 export default function ProfilePage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   
@@ -20,6 +22,7 @@ export default function ProfilePage() {
     bio: '',
     dietary_restrictions: '',
     food_preferences: '',
+    avatar_url: '',
   })
 
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -53,6 +56,7 @@ export default function ProfilePage() {
         bio: profile.bio || '',
         dietary_restrictions: profile.dietary_restrictions || '',
         food_preferences: profile.food_preferences || '',
+        avatar_url: profile.avatar_url || '',
       })
     }
     
@@ -65,6 +69,78 @@ export default function ProfilePage() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be less than 2MB')
+      return
+    }
+
+    setUploading(true)
+    setError('')
+
+    try {
+      // Delete old avatar if exists
+      if (formData.avatar_url) {
+        const oldPath = formData.avatar_url.split('/').pop()
+        if (oldPath) {
+          await supabase.storage
+            .from('avatars')
+            .remove([`${user.id}/${oldPath}`])
+        }
+      }
+
+      // Upload new avatar
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      setFormData(prev => ({ ...prev, avatar_url: data.publicUrl }))
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error)
+      setError(error.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,18 +211,61 @@ export default function ProfilePage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10">
-          {/* Profile Header */}
+          {/* Profile Header with Avatar Upload */}
           <div className="flex items-center gap-6 mb-8 pb-8 border-b border-gray-200">
-            <div className="w-24 h-24 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              {formData.name[0]?.toUpperCase() || 'U'}
+            <div className="relative">
+              {/* Avatar Display */}
+              {formData.avatar_url ? (
+                <img
+                  src={formData.avatar_url}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                  {formData.name[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
+              
+              {/* Upload Button Overlay */}
+              <button
+                onClick={handleAvatarClick}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-[var(--primary)] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50"
+                title="Change profile picture"
+              >
+                {uploading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
+              </button>
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </div>
+
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-[var(--neutral)] mb-1">{formData.name}</h3>
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 mb-2">
                 <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                 <span className="font-medium">{profile?.rating.toFixed(1)} rating</span>
                 <span className="text-sm">({profile?.total_ratings} reviews)</span>
               </div>
+              <button
+                onClick={handleAvatarClick}
+                disabled={uploading}
+                className="flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{formData.avatar_url ? 'Change photo' : 'Upload photo'}</span>
+              </button>
             </div>
           </div>
 
@@ -287,23 +406,23 @@ export default function ProfilePage() {
 
           {/* Additional Info */}
           <div className="mt-8 pt-8 border-t border-gray-200">
-            <h4 className="font-semibold text-[var(--neutral)] mb-3">Why complete your profile?</h4>
+            <h4 className="font-semibold text-[var(--neutral)] mb-3">📸 Profile Picture Tips:</h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <span className="text-[var(--primary)] mt-0.5">•</span>
-                <span>Help others know about dietary restrictions before inviting you</span>
+                <span>Use a clear photo of yourself (max 2MB)</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[var(--primary)] mt-0.5">•</span>
-                <span>Match with people who share similar food interests</span>
+                <span>Square photos work best - your photo will be cropped to a circle</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[var(--primary)] mt-0.5">•</span>
-                <span>Build trust with a complete profile and good ratings</span>
+                <span>Your photo shows on all dining requests you create or join</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[var(--primary)] mt-0.5">•</span>
-                <span>Stand out when requesting to join dining experiences</span>
+                <span>A friendly photo helps build trust with other diners!</span>
               </li>
             </ul>
           </div>
