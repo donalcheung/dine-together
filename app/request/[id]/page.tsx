@@ -116,42 +116,42 @@ export default function RequestDetailPage() {
   }
 
   const loadRestaurantInfo = async (name: string, address: string) => {
-    setLoadingInfo(true)
-    try {
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      if (!apiKey) return
+  setLoadingInfo(true)
 
-      // Search for place
-      const searchResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(name + ' ' + address)}&inputtype=textquery&fields=place_id&key=${apiKey}`
-      )
-      const searchData = await searchResponse.json()
-      
-      if (searchData.candidates && searchData.candidates[0]) {
-        const placeId = searchData.candidates[0].place_id
-        
-        // Get place details
-        const detailsResponse = await fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number,website,opening_hours,rating,price_level&key=${apiKey}`
-        )
-        const detailsData = await detailsResponse.json()
-        
-        if (detailsData.result) {
-          setRestaurantInfo({
-            phone: detailsData.result.formatted_phone_number,
-            website: detailsData.result.website,
-            hours: detailsData.result.opening_hours?.weekday_text?.join('\n'),
-            rating: detailsData.result.rating,
-            priceLevel: '€'.repeat(detailsData.result.price_level || 0)
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error loading restaurant info:', error)
-    } finally {
-      setLoadingInfo(false)
+  try {
+    const response = await fetch(
+      `/api/places?name=${encodeURIComponent(name)}&address=${encodeURIComponent(
+        address
+      )}`
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch restaurant info')
     }
+
+    const placeData = await response.json()
+
+    if (!placeData) {
+      setRestaurantInfo(null)
+      return
+    }
+
+    setRestaurantInfo({
+      phone: placeData.formatted_phone_number,
+      website: placeData.website,
+      hours: placeData.opening_hours?.weekday_text?.join('\n'),
+      rating: placeData.rating,
+      priceLevel: placeData.price_level
+        ? '€'.repeat(placeData.price_level)
+        : undefined
+    })
+  } catch (error) {
+    console.error('Error loading restaurant info:', error)
+    setRestaurantInfo(null)
+  } finally {
+    setLoadingInfo(false)
   }
+}
 
   const loadJoins = async () => {
     try {
