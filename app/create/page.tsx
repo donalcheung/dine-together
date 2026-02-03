@@ -75,7 +75,7 @@ export default function CreateRequestPage() {
     const autocomplete = new (window as any).google.maps.places.Autocomplete(
       searchInputRef.current,
       {
-        types: ['restaurant', 'cafe', 'food', 'establishment'],
+        types: ['establishment'],
         fields: ['name', 'formatted_address', 'geometry', 'place_id'],
       }
     )
