@@ -297,7 +297,7 @@ export default function DashboardPage() {
               }`}
             >
               <Filter className="w-4 h-4" />
-              {showActiveOnly ? 'Active Only' : 'Show All'}
+              {showActiveOnly ? 'Show All' : 'Active Only'}
             </button>
 
             <div className="flex items-center gap-4 text-sm text-gray-600">
