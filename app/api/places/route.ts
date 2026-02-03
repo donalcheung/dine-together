@@ -9,7 +9,8 @@ export async function GET(req: Request) {
     return NextResponse.json({})
   }
 
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY
+  // --- UPDATE THIS LINE ---
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
   const searchRes = await fetch(
     `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
