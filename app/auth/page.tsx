@@ -18,6 +18,63 @@ function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const ensureProfileExists = async (userId: string, userEmail: string, userName: string, retries = 3): Promise<boolean> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        // Wait longer on each retry
+        await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)))
+        
+        // Check if profile already exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .single()
+        
+        if (existingProfile) {
+          console.log('Profile already exists')
+          return true
+        }
+        
+        // Try to create profile
+        const { data, error } = await supabase
+          .from('profiles')
+          .upsert([
+            {
+              id: userId,
+              email: userEmail,
+              name: userName,
+              rating: 5.0,
+              total_ratings: 0,
+            }
+          ], {
+            onConflict: 'id'
+          })
+          .select()
+        
+        if (!error) {
+          console.log('Profile created successfully')
+          return true
+        }
+        
+        console.error(`Profile creation attempt ${i + 1} failed:`, error)
+        
+        // If it's the last retry, continue anyway
+        if (i === retries - 1) {
+          console.warn('Profile creation failed after all retries, but allowing user to continue')
+          return false
+        }
+      } catch (err) {
+        console.error(`Profile creation error on attempt ${i + 1}:`, err)
+        if (i === retries - 1) {
+          return false
+        }
+      }
+    }
+    
+    return false
+  }
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -25,7 +82,7 @@ function AuthForm() {
 
     try {
       if (mode === 'signup') {
-        // First, sign up the user
+        // Sign up the user
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -39,30 +96,12 @@ function AuthForm() {
         if (signUpError) throw signUpError
         
         if (authData.user) {
-          // Wait a moment for auth to settle
-          await new Promise(resolve => setTimeout(resolve, 500))
+          console.log('User signed up:', authData.user.id)
           
-          // Try to create profile - use upsert to avoid conflicts
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert([
-              {
-                id: authData.user.id,
-                email: email,
-                name: name,
-                rating: 5.0,
-                total_ratings: 0,
-              }
-            ], {
-              onConflict: 'id'
-            })
+          // Ensure profile is created with retries
+          await ensureProfileExists(authData.user.id, email, name)
           
-          if (profileError) {
-            console.error('Profile creation error:', profileError)
-            // Don't throw - profile might already exist
-          }
-          
-          // Always redirect even if profile creation had issues
+          // Always redirect to dashboard
           router.push('/dashboard')
         }
       } else {
@@ -72,6 +111,20 @@ function AuthForm() {
         })
         
         if (error) throw error
+        
+        // On sign in, check if profile exists and create if missing
+        if (data.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .single()
+          
+          if (!profile) {
+            console.log('Profile missing on sign in, creating...')
+            await ensureProfileExists(data.user.id, data.user.email!, data.user.user_metadata?.name || 'User')
+          }
+        }
         
         router.push('/dashboard')
       }
