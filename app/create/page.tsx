@@ -197,15 +197,14 @@ export default function CreateRequestPage() {
               </label>
               <div className="relative">
                 <input
-                  ref={searchInputRef}
-                  id="restaurant_search"
-                  type="text"
-                  value={formData.restaurant_name}
-                  onChange={handleManualInput}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
-                  placeholder="Start typing restaurant name..."
-                />
+  ref={searchInputRef}
+  id="restaurant_search"
+  type="text"
+  required
+  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+  placeholder="Start typing restaurant name..."
+/>
+
                 {mapsLoaded && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Utensils className="w-5 h-5 text-gray-400" />
