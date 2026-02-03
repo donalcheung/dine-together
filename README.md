@@ -245,4 +245,4 @@ Remember:
 - Consider partnering with restaurants
 - Gather user feedback early and often
 
-Happy dining! 🍽️ 
+Happy dining! 🍽️  
