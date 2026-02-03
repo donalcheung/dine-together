@@ -401,8 +401,8 @@ export default function RequestDetailPage() {
   const pendingJoins = joins.filter(j => j.status === 'pending')
 
   const mapUrl = request.latitude && request.longitude
-    ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${request.latitude},${request.longitude}&zoom=15`
-    : null
+  ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${request.latitude},${request.longitude}&zoom=15`
+  : null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
