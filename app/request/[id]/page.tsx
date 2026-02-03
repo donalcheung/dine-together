@@ -3,8 +3,17 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
+
+interface Comment {
+  id: string
+  request_id: string
+  user_id: string
+  comment: string
+  created_at: string
+  user: Profile
+}
 
 export default function RequestDetailPage() {
   const router = useRouter()
@@ -14,15 +23,22 @@ export default function RequestDetailPage() {
   const [user, setUser] = useState<any>(null)
   const [request, setRequest] = useState<DiningRequest | null>(null)
   const [joins, setJoins] = useState<DiningJoin[]>([])
+  const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [joinMessage, setJoinMessage] = useState('')
   const [showJoinForm, setShowJoinForm] = useState(false)
   const [userJoin, setUserJoin] = useState<DiningJoin | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editedDescription, setEditedDescription] = useState('')
+  const [newComment, setNewComment] = useState('')
+  const [postingComment, setPostingComment] = useState(false)
 
   useEffect(() => {
     checkUser()
     loadRequest()
     loadJoins()
+    loadComments()
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -31,6 +47,12 @@ export default function RequestDetailPage() {
         { event: '*', schema: 'public', table: 'dining_joins', filter: `request_id=eq.${requestId}` },
         () => {
           loadJoins()
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'request_comments', filter: `request_id=eq.${requestId}` },
+        () => {
+          loadComments()
         }
       )
       .subscribe()
@@ -64,6 +86,7 @@ export default function RequestDetailPage() {
 
       if (error) throw error
       setRequest(data)
+      setEditedDescription(data.description || '')
     } catch (error) {
       console.error('Error loading request:', error)
     } finally {
@@ -92,6 +115,94 @@ export default function RequestDetailPage() {
       }
     } catch (error) {
       console.error('Error loading joins:', error)
+    }
+  }
+
+  const loadComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('request_comments')
+        .select(`
+          *,
+          user:profiles!request_comments_user_id_fkey(*)
+        `)
+        .eq('request_id', requestId)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      setComments(data || [])
+    } catch (error) {
+      console.error('Error loading comments:', error)
+    }
+  }
+
+  const handleDeleteRequest = async () => {
+    if (!confirm('Are you sure you want to delete this dining request? This action cannot be undone.')) {
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      const { error } = await supabase
+        .from('dining_requests')
+        .delete()
+        .eq('id', requestId)
+
+      if (error) throw error
+
+      router.push('/dashboard')
+    } catch (error: any) {
+      console.error('Error deleting request:', error)
+      alert(`Failed to delete request: ${error.message}`)
+      setDeleting(false)
+    }
+  }
+
+  const handleUpdateDescription = async () => {
+    try {
+      const { error } = await supabase
+        .from('dining_requests')
+        .update({ description: editedDescription })
+        .eq('id', requestId)
+
+      if (error) throw error
+
+      setEditing(false)
+      loadRequest()
+    } catch (error: any) {
+      console.error('Error updating description:', error)
+      alert(`Failed to update description: ${error.message}`)
+    }
+  }
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!newComment.trim()) return
+
+    setPostingComment(true)
+
+    try {
+      const { error } = await supabase
+        .from('request_comments')
+        .insert([
+          {
+            request_id: requestId,
+            user_id: user.id,
+            comment: newComment.trim(),
+          }
+        ])
+
+      if (error) throw error
+
+      setNewComment('')
+      loadComments()
+    } catch (error: any) {
+      console.error('Error posting comment:', error)
+      alert(`Failed to post comment: ${error.message}`)
+    } finally {
+      setPostingComment(false)
     }
   }
 
@@ -157,6 +268,19 @@ export default function RequestDetailPage() {
     })
   }
 
+  const formatCommentTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+    
+    if (diffMinutes < 1) return 'Just now'
+    if (diffMinutes < 60) return `${diffMinutes}m ago`
+    const diffHours = Math.floor(diffMinutes / 60)
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    return `${diffDays}d ago`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 flex items-center justify-center">
@@ -192,10 +316,32 @@ export default function RequestDetailPage() {
             <span className="font-medium">Back to Dashboard</span>
           </Link>
           
-          <Link href="/" className="flex items-center gap-2">
-            <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
-            <h1 className="text-xl font-bold text-[var(--neutral)]">DineTogether</h1>
-          </Link>
+          <div className="flex items-center gap-4">
+            {isHost && (
+              <button
+                onClick={handleDeleteRequest}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all disabled:opacity-50"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            )}
+            
+            <Link href="/" className="flex items-center gap-2">
+              <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
+              <h1 className="text-xl font-bold text-[var(--neutral)]">DineTogether</h1>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -233,13 +379,32 @@ export default function RequestDetailPage() {
               </div>
             </div>
 
-            {/* Host Info */}
+            {/* Host Info with Description */}
             <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-              <h3 className="text-lg font-bold text-[var(--neutral)] mb-3">Hosted by</h3>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-[var(--primary)] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {request.host?.name[0]}
-                </div>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-bold text-[var(--neutral)]">Hosted by</h3>
+                {isHost && !editing && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="flex items-center gap-1 text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-4 mb-4">
+                {request.host?.avatar_url ? (
+                  <img
+                    src={request.host.avatar_url}
+                    alt={request.host.name}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-[var(--primary)] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    {request.host?.name[0]}
+                  </div>
+                )}
                 <div className="flex-1">
                   <div className="font-semibold text-lg text-[var(--neutral)]">{request.host?.name}</div>
                   <div className="flex items-center gap-2 text-gray-600">
@@ -249,8 +414,39 @@ export default function RequestDetailPage() {
                   </div>
                 </div>
               </div>
-              {request.description && (
-                <p className="mt-4 text-gray-700 leading-relaxed">{request.description}</p>
+              
+              {/* Description Section */}
+              {!editing ? (
+                request.description && (
+                  <p className="text-gray-700 leading-relaxed">{request.description}</p>
+                )
+              ) : (
+                <div className="space-y-3">
+                  <textarea
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all resize-none"
+                    placeholder="Add a description..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUpdateDescription}
+                      className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditing(false)
+                        setEditedDescription(request.description || '')
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -261,9 +457,17 @@ export default function RequestDetailPage() {
                 <div className="space-y-3">
                   {acceptedJoins.map((join) => (
                     <div key={join.id} className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                        {join.user?.name[0]}
-                      </div>
+                      {join.user?.avatar_url ? (
+                        <img
+                          src={join.user.avatar_url}
+                          alt={join.user.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                          {join.user?.name[0]}
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                         <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -286,9 +490,17 @@ export default function RequestDetailPage() {
                   {pendingJoins.map((join) => (
                     <div key={join.id} className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                       <div className="flex items-center gap-4 mb-3">
-                        <div className="w-12 h-12 bg-[var(--accent)] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                          {join.user?.name[0]}
-                        </div>
+                        {join.user?.avatar_url ? (
+                          <img
+                            src={join.user.avatar_url}
+                            alt={join.user.name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-[var(--accent)] rounded-full flex items-center justify-center text-white text-xl font-bold">
+                            {join.user?.name[0]}
+                          </div>
+                        )}
                         <div className="flex-1">
                           <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                           <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -324,6 +536,71 @@ export default function RequestDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Comments Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-[var(--neutral)] mb-3 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Comments ({comments.length})
+              </h3>
+              
+              {/* Comment Form */}
+              <form onSubmit={handlePostComment} className="mb-6">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+                  />
+                  <button
+                    type="submit"
+                    disabled={postingComment || !newComment.trim()}
+                    className="px-6 py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {postingComment ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Post
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Comments List */}
+              <div className="space-y-4">
+                {comments.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3 p-4 bg-gray-50 rounded-xl">
+                      {comment.user?.avatar_url ? (
+                        <img
+                          src={comment.user.avatar_url}
+                          alt={comment.user.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {comment.user?.name[0]}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[var(--neutral)]">{comment.user?.name}</span>
+                          <span className="text-xs text-gray-500">{formatCommentTime(comment.created_at)}</span>
+                        </div>
+                        <p className="text-gray-700">{comment.comment}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
 
             {/* Join Button (Only visible to non-hosts who haven't joined) */}
             {!isHost && !userJoin && request.seats_available > 0 && (
