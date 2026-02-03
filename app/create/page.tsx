@@ -218,19 +218,26 @@ export default function CreateRequestPage() {
               </p>
             </div>
 
-            {/* Restaurant Address (Auto-filled) */}
+            {/* Restaurant Address (Always Editable) */}
             {formData.restaurant_address && (
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="restaurant_address" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-5 h-5 text-[var(--primary)]" />
                   Address
                 </label>
-                <div className="w-full px-4 py-3 border border-green-300 bg-green-50 rounded-xl text-gray-700">
-                  {formData.restaurant_address}
-                </div>
+                <input
+                  id="restaurant_address"
+                  name="restaurant_address"
+                  type="text"
+                  value={formData.restaurant_address}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-green-300 bg-green-50 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+                  placeholder="e.g., 123 Main St, New York, NY 10001"
+                />
                 <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
                   <Navigation className="w-4 h-4" />
-                  <span>✓ Location saved - others will see distance from them</span>
+                  <span>✓ Location saved - you can edit if needed</span>
                 </div>
               </div>
             )}
@@ -238,12 +245,12 @@ export default function CreateRequestPage() {
             {/* Manual Address Entry (if autocomplete didn't work) */}
             {!formData.restaurant_address && formData.restaurant_name && (
               <div>
-                <label htmlFor="restaurant_address" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="restaurant_address_manual" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-5 h-5 text-[var(--primary)]" />
                   Restaurant Address (Manual Entry)
                 </label>
                 <input
-                  id="restaurant_address"
+                  id="restaurant_address_manual"
                   name="restaurant_address"
                   type="text"
                   value={formData.restaurant_address}
