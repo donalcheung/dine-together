@@ -30,7 +30,7 @@ export interface DiningRequest {
   seats_available: number
   total_seats: number
   description?: string
-  status: 'open' | 'closed' | 'completed'
+  status: 'active' | 'completed' | 'cancelled'
   created_at: string
   host?: Profile
 }
