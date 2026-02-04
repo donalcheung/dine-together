@@ -485,26 +485,6 @@ export default function RequestDetailPage() {
           </Link>
           
           <div className="flex items-center gap-4">
-            {isHost && !isExpired(request.dining_time) && (
-              <button
-                onClick={handleDeleteRequest}
-                disabled={deleting}
-                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all disabled:opacity-50"
-              >
-                {deleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </>
-                )}
-              </button>
-            )}
-            
             <Link href="/" className="flex items-center gap-2">
               <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
               <h1 className="text-xl font-bold text-[var(--neutral)]">DineTogether</h1>
@@ -1006,6 +986,27 @@ export default function RequestDetailPage() {
                       Meal Completed
                     </div>
                   </div>
+                )}
+
+                {/* Delete Button (Host only, for non-expired requests) */}
+                {isHost && !isExpired(request.dining_time) && (
+                  <button
+                    onClick={handleDeleteRequest}
+                    disabled={deleting}
+                    className="w-full py-3 bg-red-50 text-red-600 border-2 border-red-200 rounded-xl font-semibold hover:bg-red-100 hover:border-red-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {deleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                        Deleting Request...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-5 h-5" />
+                        Delete Request
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
