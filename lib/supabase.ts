@@ -14,8 +14,7 @@ export interface Profile {
   bio?: string
   dietary_restrictions?: string
   food_preferences?: string
-  rating: number
-  total_ratings: number
+  total_likes: number
   created_at: string
 }
 
@@ -45,12 +44,10 @@ export interface DiningJoin {
   user?: Profile
 }
 
-export interface Rating {
+export interface MealLike {
   id: string
+  request_id: string
   from_user_id: string
   to_user_id: string
-  request_id: string
-  rating: number
-  comment?: string
   created_at: string
 }

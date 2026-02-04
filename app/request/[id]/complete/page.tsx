@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, ArrowLeft, Check, X, Upload, Star, MessageSquare, Camera } from 'lucide-react'
+import { Utensils, ArrowLeft, Check, X, Upload, Heart, Camera } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
 
 interface AttendanceStatus {
@@ -11,6 +11,7 @@ interface AttendanceStatus {
   user: Profile
   attended: boolean
   paid_share: boolean
+  liked: boolean
 }
 
 export default function CompleteMealPage() {
@@ -22,7 +23,6 @@ export default function CompleteMealPage() {
   const [request, setRequest] = useState<DiningRequest | null>(null)
   const [acceptedGuests, setAcceptedGuests] = useState<DiningJoin[]>([])
   const [attendance, setAttendance] = useState<AttendanceStatus[]>([])
-  const [reviews, setReviews] = useState<Map<string, { rating: number; text: string }>>(new Map())
   const [photos, setPhotos] = useState<File[]>([])
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [notes, setNotes] = useState('')
@@ -86,16 +86,10 @@ export default function CompleteMealPage() {
         user_id: join.user_id,
         user: join.user,
         attended: true, // Default to true
-        paid_share: true // Default to true
+        paid_share: true, // Default to true
+        liked: false // Default to false
       }))
       setAttendance(initialAttendance)
-
-      // Initialize reviews with 5 stars
-      const initialReviews = new Map()
-      ;(joinsData || []).forEach(join => {
-        initialReviews.set(join.user_id, { rating: 5, text: '' })
-      })
-      setReviews(initialReviews)
 
     } catch (error) {
       console.error('Error loading request:', error)
@@ -104,30 +98,12 @@ export default function CompleteMealPage() {
     }
   }
 
-  const handleAttendanceChange = (userId: string, field: 'attended' | 'paid_share', value: boolean) => {
+  const handleAttendanceChange = (userId: string, field: 'attended' | 'paid_share' | 'liked', value: boolean) => {
     setAttendance(prev =>
       prev.map(a =>
         a.user_id === userId ? { ...a, [field]: value } : a
       )
     )
-  }
-
-  const handleRatingChange = (userId: string, rating: number) => {
-    setReviews(prev => {
-      const newMap = new Map(prev)
-      const existing = newMap.get(userId) || { rating: 5, text: '' }
-      newMap.set(userId, { ...existing, rating })
-      return newMap
-    })
-  }
-
-  const handleReviewTextChange = (userId: string, text: string) => {
-    setReviews(prev => {
-      const newMap = new Map(prev)
-      const existing = newMap.get(userId) || { rating: 5, text: '' }
-      newMap.set(userId, { ...existing, text })
-      return newMap
-    })
   }
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,25 +188,24 @@ export default function CompleteMealPage() {
 
       await supabase.from('meal_attendance').upsert(attendanceRecords)
 
-      // Save reviews for guests who attended
-      const reviewRecords = attendance
-        .filter(a => a.attended)
-        .map(a => {
-          const review = reviews.get(a.user_id)
-          return {
-            request_id: requestId,
-            reviewer_id: user.id,
-            reviewee_id: a.user_id,
-            rating: review?.rating || 5,
-            review_text: review?.text || '',
-            attended: a.attended,
-            paid_share: a.paid_share,
-            would_dine_again: a.paid_share // Simple logic: if they paid, would dine again
-          }
-        })
+      // Save likes for guests who attended AND were liked
+      const likeRecords = attendance
+        .filter(a => a.attended && a.liked)
+        .map(a => ({
+          request_id: requestId,
+          from_user_id: user.id,
+          to_user_id: a.user_id
+        }))
 
-      if (reviewRecords.length > 0) {
-        await supabase.from('meal_reviews').upsert(reviewRecords)
+      if (likeRecords.length > 0) {
+        const { error: likeError } = await supabase
+          .from('meal_likes')
+          .insert(likeRecords)
+        
+        if (likeError) {
+          console.error('Error saving likes:', likeError)
+          // Continue anyway - don't fail the whole operation
+        }
       }
 
       // Mark meal as completed
@@ -310,7 +285,7 @@ export default function CompleteMealPage() {
           {/* Guest Attendance */}
           <div>
             <h3 className="text-2xl font-bold text-[var(--neutral)] mb-4">Guest Attendance</h3>
-            <p className="text-gray-600 mb-6">Mark who showed up and paid their share</p>
+            <p className="text-gray-600 mb-6">Mark who showed up, paid their share, and who you'd like to dine with again!</p>
             
             <div className="space-y-4">
               {attendance.map((guest) => (
@@ -330,8 +305,8 @@ export default function CompleteMealPage() {
                     <div className="flex-1">
                       <div className="font-bold text-lg text-[var(--neutral)]">{guest.user.name}</div>
                       <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span>{guest.user.rating.toFixed(1)}</span>
+                        <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                        <span>{guest.user.total_likes} likes</span>
                       </div>
                     </div>
                   </div>
@@ -348,85 +323,32 @@ export default function CompleteMealPage() {
                     </label>
 
                     {guest.attended && (
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={guest.paid_share}
-                          onChange={(e) => handleAttendanceChange(guest.user_id, 'paid_share', e.target.checked)}
-                          className="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
-                        />
-                        <span className="text-gray-700">Did they pay their share?</span>
-                      </label>
+                      <>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={guest.paid_share}
+                            onChange={(e) => handleAttendanceChange(guest.user_id, 'paid_share', e.target.checked)}
+                            className="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
+                          />
+                          <span className="text-gray-700">Did they pay their share?</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer p-3 bg-pink-50 rounded-lg border border-pink-200 transition-all hover:bg-pink-100">
+                          <input
+                            type="checkbox"
+                            checked={guest.liked}
+                            onChange={(e) => handleAttendanceChange(guest.user_id, 'liked', e.target.checked)}
+                            className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-500"
+                          />
+                          <Heart className={`w-5 h-5 transition-all ${guest.liked ? 'text-pink-500 fill-pink-500 scale-110' : 'text-gray-400'}`} />
+                          <span className="text-gray-700 font-medium">Would dine with them again!</span>
+                        </label>
+                      </>
                     )}
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Reviews */}
-          <div>
-            <h3 className="text-2xl font-bold text-[var(--neutral)] mb-4">Rate Your Guests</h3>
-            <p className="text-gray-600 mb-6">Help the community by sharing your experience</p>
-            
-            <div className="space-y-6">
-              {attendance.filter(g => g.attended).map((guest) => {
-                const review = reviews.get(guest.user_id) || { rating: 5, text: '' }
-                
-                return (
-                  <div key={guest.user_id} className="border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      {guest.user.avatar_url ? (
-                        <img
-                          src={guest.user.avatar_url}
-                          alt={guest.user.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-[var(--primary)] rounded-full flex items-center justify-center text-white text-lg font-bold">
-                          {guest.user.name[0]}
-                        </div>
-                      )}
-                      <div className="font-bold text-lg text-[var(--neutral)]">{guest.user.name}</div>
-                    </div>
-
-                    {/* Star Rating */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                      <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => handleRatingChange(guest.user_id, star)}
-                            className="transition-transform hover:scale-110"
-                          >
-                            <Star
-                              className={`w-8 h-8 ${
-                                star <= review.rating
-                                  ? 'text-yellow-500 fill-yellow-500'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Review Text */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Review (Optional)</label>
-                      <textarea
-                        value={review.text}
-                        onChange={(e) => handleReviewTextChange(guest.user_id, e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none resize-none"
-                        placeholder="Share your experience with this diner..."
-                      />
-                    </div>
-                  </div>
-                )
-              })}
             </div>
           </div>
 
