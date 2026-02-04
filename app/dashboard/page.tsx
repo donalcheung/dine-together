@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [locationError, setLocationError] = useState<string>('')
-  const [showActiveOnly, setShowActiveOnly] = useState(true)
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'expired' | 'completed'>('active')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -205,12 +205,20 @@ export default function DashboardPage() {
     return distanceA - distanceB
   })
 
-  const filteredRequests = showActiveOnly 
-    ? sortedRequests.filter(r => !isExpired(r.dining_time))
-    : sortedRequests
+  const filteredRequests = sortedRequests.filter(r => {
+    const expired = isExpired(r.dining_time)
+    const completed = r.status === 'completed'
+    
+    if (filterStatus === 'all') return true
+    if (filterStatus === 'active') return !expired && !completed
+    if (filterStatus === 'expired') return expired && !completed
+    if (filterStatus === 'completed') return completed
+    return true
+  })
 
-  const activeCount = sortedRequests.filter(r => !isExpired(r.dining_time)).length
-  const expiredCount = sortedRequests.length - activeCount
+  const activeCount = sortedRequests.filter(r => !isExpired(r.dining_time) && r.status !== 'completed').length
+  const expiredCount = sortedRequests.filter(r => isExpired(r.dining_time) && r.status !== 'completed').length
+  const completedCount = sortedRequests.filter(r => r.status === 'completed').length
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
@@ -288,27 +296,47 @@ export default function DashboardPage() {
 
           {/* Filter Controls */}
           <div className="flex items-center gap-4 flex-wrap">
-            <button
-              onClick={() => setShowActiveOnly(!showActiveOnly)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
-                showActiveOnly
-                  ? 'bg-[var(--primary)] text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-[var(--primary)]'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              {showActiveOnly ? 'Show All' : 'Active Only'}
-            </button>
-
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-[var(--primary)] rounded-full"></div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterStatus('active')}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  filterStatus === 'active'
+                    ? 'bg-[var(--primary)] text-white shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-[var(--primary)]'
+                }`}
+              >
                 Active ({activeCount})
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+              </button>
+              <button
+                onClick={() => setFilterStatus('expired')}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  filterStatus === 'expired'
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-amber-500'
+                }`}
+              >
                 Expired ({expiredCount})
-              </span>
+              </button>
+              <button
+                onClick={() => setFilterStatus('completed')}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  filterStatus === 'completed'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-green-500'
+                }`}
+              >
+                Completed ({completedCount})
+              </button>
+              <button
+                onClick={() => setFilterStatus('all')}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  filterStatus === 'all'
+                    ? 'bg-gray-700 text-white shadow-md'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-700'
+                }`}
+              >
+                All ({sortedRequests.length})
+              </button>
             </div>
           </div>
 
@@ -331,9 +359,10 @@ export default function DashboardPage() {
               {showActiveOnly ? 'No active requests' : 'No requests'}
             </h3>
             <p className="text-gray-600 mb-6">
-              {showActiveOnly 
-                ? 'Be the first to create a dining request!' 
-                : 'All requests have expired. Create a new one!'}
+              {filterStatus === 'active' && 'No active requests right now. Create one!'}
+              {filterStatus === 'expired' && 'No expired requests to complete.'}
+              {filterStatus === 'completed' && 'No completed meals yet.'}
+              {filterStatus === 'all' && 'Be the first to create a dining request!'}
             </p>
             <Link
               href="/create"
@@ -356,13 +385,16 @@ export default function DashboardPage() {
                 : Infinity
               
               const expired = isExpired(request.dining_time)
+              const completed = request.status === 'completed'
               const isMyRequest = user && request.host_id === user.id
 
               return (
                 <div
                   key={request.id}
                   className={`rounded-2xl shadow-lg transition-all p-6 relative ${
-                    expired 
+                    completed
+                      ? 'bg-green-50 border-2 border-green-200'
+                      : expired 
                       ? 'bg-gray-100 opacity-75' 
                       : 'bg-white hover:shadow-2xl card-hover'
                   }`}
@@ -384,15 +416,23 @@ export default function DashboardPage() {
                   )}
 
                   {/* Distance Badge */}
-                  {distance !== Infinity && !expired && (
+                  {distance !== Infinity && !expired && !completed && (
                     <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                       <Navigation className="w-3 h-3" />
                       {formatDistance(distance)}
                     </div>
                   )}
 
+                  {/* Completed Badge */}
+                  {completed && (
+                    <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      COMPLETED
+                    </div>
+                  )}
+
                   {/* Expired Badge */}
-                  {expired && (
+                  {expired && !completed && (
                     <div className="absolute top-4 right-4 bg-gray-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                       EXPIRED
                     </div>
@@ -462,7 +502,13 @@ export default function DashboardPage() {
                       </p>
                     )}
 
-                    {expired && isMyRequest && request.status !== 'completed' ? (
+                    {completed ? (
+                      <Link href={`/request/${request.id}`}>
+                        <button className="w-full py-2 rounded-lg font-medium transition-colors bg-green-100 text-green-700 border border-green-300">
+                          ✓ View Completed Meal
+                        </button>
+                      </Link>
+                    ) : expired && isMyRequest ? (
                       <div className="space-y-2">
                         <Link
                           href={`/request/${request.id}/complete`}
