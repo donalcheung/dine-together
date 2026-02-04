@@ -356,7 +356,7 @@ export default function DashboardPage() {
           <div className="text-center py-20 bg-white rounded-3xl shadow-lg">
             <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-700 mb-2">
-              {showActiveOnly ? 'No active requests' : 'No requests'}
+              No Requests Found
             </h3>
             <p className="text-gray-600 mb-6">
               {filterStatus === 'active' && 'No active requests right now. Create one!'}
