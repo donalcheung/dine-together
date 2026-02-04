@@ -108,13 +108,13 @@ export default function DashboardPage() {
   const loadRequests = async () => {
     try {
       const { data, error } = await supabase
-        .from('dining_requests')
-        .select(`
-          *,
-          host:profiles!dining_requests_host_id_fkey(*)
-        `)
-        .eq('status', 'open')
-        .order('dining_time', { ascending: true })
+  .from('dining_requests')
+  .select(`
+    *,
+    host:profiles!dining_requests_host_id_fkey(*)
+  `)
+  .order('dining_time', { ascending: true })
+
 
       if (error) throw error
       setRequests(data || [])
