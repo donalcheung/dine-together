@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation, Filter, Trash2 } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation, Filter, Trash2, Check } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 
 interface UserLocation {
