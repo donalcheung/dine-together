@@ -119,42 +119,51 @@ export default function RequestDetailPage() {
   }
 
   const loadRestaurantInfo = async (name: string, address: string) => {
-  setLoadingInfo(true)
+    console.log('🍽️ Loading restaurant info for:', { name, address })
+    setLoadingInfo(true)
 
-  try {
-    const response = await fetch(
-      `/api/places?name=${encodeURIComponent(name)}&address=${encodeURIComponent(
-        address
-      )}`
-    )
+    try {
+      const url = `/api/places?name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`
+      console.log('📍 Fetching from:', url)
+      
+      const response = await fetch(url)
+      console.log('📡 Response status:', response.status)
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch restaurant info')
-    }
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Response not ok:', errorText)
+        throw new Error('Failed to fetch restaurant info')
+      }
 
-    const placeData = await response.json()
+      const placeData = await response.json()
+      console.log('✅ Place data received:', placeData)
 
-    if (!placeData) {
+      if (!placeData) {
+        console.warn('⚠️ No place data returned')
+        setRestaurantInfo(null)
+        return
+      }
+
+      setRestaurantInfo({
+        phone: placeData.formatted_phone_number,
+        website: placeData.website,
+        hours: placeData.opening_hours?.weekday_text?.join('\n'),
+        rating: placeData.rating,
+        priceLevel: placeData.price_level ? '$'.repeat(placeData.price_level) : undefined
+      })
+      
+      console.log('💾 Restaurant info saved:', {
+        hasPhone: !!placeData.formatted_phone_number,
+        hasWebsite: !!placeData.website,
+        hasRating: !!placeData.rating
+      })
+    } catch (error) {
+      console.error('❌ Error loading restaurant info:', error)
       setRestaurantInfo(null)
-      return
+    } finally {
+      setLoadingInfo(false)
     }
-
-    setRestaurantInfo({
-      phone: placeData.formatted_phone_number,
-      website: placeData.website,
-      hours: placeData.opening_hours?.weekday_text?.join('\n'),
-      rating: placeData.rating,
-      priceLevel: placeData.price_level
-        ? '€'.repeat(placeData.price_level)
-        : undefined
-    })
-  } catch (error) {
-    console.error('Error loading restaurant info:', error)
-    setRestaurantInfo(null)
-  } finally {
-    setLoadingInfo(false)
   }
-}
 
   const loadJoins = async () => {
     try {
@@ -1033,52 +1042,89 @@ export default function RequestDetailPage() {
               </div>
             )}
 
-            {/* Restaurant Info */}
-            {(restaurantInfo || loadingInfo) && (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="font-bold text-lg text-[var(--neutral)] mb-4">Restaurant Info</h3>
-                
-                {loadingInfo ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)] mx-auto"></div>
-                  </div>
-                ) : restaurantInfo && (
-                  <div className="space-y-3">
-                    {restaurantInfo.phone && (
-                      <a 
-                        href={`tel:${restaurantInfo.phone}`}
-                        className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        <Phone className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium">{restaurantInfo.phone}</span>
-                      </a>
-                    )}
-                    
-                    {restaurantInfo.website && (
-                      <a 
-                        href={restaurantInfo.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                      >
-                        <Globe className="w-5 h-5 text-green-600" />
-                        <span className="text-sm font-medium flex-1">Website</span>
-                        <ExternalLink className="w-4 h-4 text-gray-400" />
-                      </a>
-                    )}
-                    
-                    {restaurantInfo.rating && (
-                      <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-medium">
-                          {restaurantInfo.rating} Google Rating {restaurantInfo.priceLevel && `• ${restaurantInfo.priceLevel}`}
-                        </span>
+            {/* Restaurant Info - ALWAYS VISIBLE NOW */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="font-bold text-lg text-[var(--neutral)] mb-4 flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-[var(--primary)]" />
+                Restaurant Info
+              </h3>
+              
+              {loadingInfo ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)] mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading restaurant details...</p>
+                </div>
+              ) : restaurantInfo ? (
+                <div className="space-y-3">
+                  {restaurantInfo.phone && (
+                    <a 
+                      href={`tel:${restaurantInfo.phone}`}
+                      className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group"
+                    >
+                      <Phone className="w-5 h-5 text-blue-600" />
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-500 mb-0.5">Phone</div>
+                        <div className="text-sm font-medium text-blue-600 group-hover:text-blue-700">
+                          {restaurantInfo.phone}
+                        </div>
                       </div>
-                    )}
+                    </a>
+                  )}
+                  
+                  {restaurantInfo.website && (
+                    <a 
+                      href={restaurantInfo.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group"
+                    >
+                      <Globe className="w-5 h-5 text-green-600" />
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-500 mb-0.5">Website</div>
+                        <div className="text-sm font-medium text-green-600 group-hover:text-green-700 flex items-center gap-1">
+                          Visit Website
+                          <ExternalLink className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </a>
+                  )}
+                  
+                  {restaurantInfo.rating && (
+                    <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+                      <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                      <div className="flex-1">
+                        <div className="text-xs text-gray-500 mb-0.5">Google Rating</div>
+                        <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <span>{restaurantInfo.rating.toFixed(1)} ★</span>
+                          {restaurantInfo.priceLevel && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-green-600 font-semibold">{restaurantInfo.priceLevel}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!restaurantInfo.phone && !restaurantInfo.website && !restaurantInfo.rating && (
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                      <p>No additional info available</p>
+                      <p className="text-xs mt-1 text-gray-400">Restaurant data not found in Google Places</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="text-gray-500 text-sm mb-2">
+                    <p>Unable to load restaurant details</p>
                   </div>
-                )}
-              </div>
-            )}
+                  <p className="text-xs text-gray-400">
+                    Check if the restaurant name and address are correct
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
