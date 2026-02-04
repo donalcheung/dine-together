@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation, Filter, Check } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 
 interface UserLocation {
@@ -230,8 +230,8 @@ export default function DashboardPage() {
                 )}
                 <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                  <span className="text-sm font-medium">{profile.rating.toFixed(1)}</span>
+                  <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                  <span className="text-sm font-medium">{profile.total_likes}</span>
                 </div>
               </Link>
             )}
@@ -447,7 +447,7 @@ export default function DashboardPage() {
                         }`}>
                           <Star className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-yellow-500 fill-yellow-500'}`} />
                           <span className={`text-sm font-bold ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
-                            {request.host?.rating.toFixed(1)}
+                            {request.host?.total_likes}
                           </span>
                         </div>
                       </div>

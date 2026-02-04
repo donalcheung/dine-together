@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Star, Camera, Upload } from 'lucide-react'
+import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Star, Heart, Camera, Upload } from 'lucide-react'
 import { supabase, Profile } from '@/lib/supabase'
 
 export default function ProfilePage() {
@@ -255,8 +255,8 @@ export default function ProfilePage() {
               <h3 className="text-2xl font-bold text-[var(--neutral)] mb-1">{formData.name}</h3>
               <div className="flex items-center gap-2 text-gray-600 mb-2">
                 <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span className="font-medium">{profile?.rating.toFixed(1)} rating</span>
-                <span className="text-sm">({profile?.total_ratings} reviews)</span>
+                <span className="font-medium">{profile?.total_likes} rating</span>
+                <span className="text-sm">({profile?.total_likes} reviews)</span>
               </div>
               <button
                 onClick={handleAvatarClick}
