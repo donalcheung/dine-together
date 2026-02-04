@@ -112,7 +112,6 @@ export default function DashboardPage() {
           *,
           host:profiles!dining_requests_host_id_fkey(*)
         `)
-        .eq('status', 'open')
         .order('dining_time', { ascending: true })
 
       if (error) throw error
