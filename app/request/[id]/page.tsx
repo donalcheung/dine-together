@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
 
 interface Comment {
@@ -47,12 +47,15 @@ export default function RequestDetailPage() {
   const [postingComment, setPostingComment] = useState(false)
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo | null>(null)
   const [loadingInfo, setLoadingInfo] = useState(false)
+  const [mealPhotos, setMealPhotos] = useState<any[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     checkUser()
     loadRequest()
     loadJoins()
     loadComments()
+    loadMealPhotos()
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -191,6 +194,69 @@ export default function RequestDetailPage() {
       setComments(data || [])
     } catch (error) {
       console.error('Error loading comments:', error)
+    }
+  }
+
+  const loadMealPhotos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('meal_photos')
+        .select(`
+          *,
+          user:profiles(*)
+        `)
+        .eq('request_id', requestId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setMealPhotos(data || [])
+    } catch (error) {
+      console.error('Error loading meal photos:', error)
+    }
+  }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+
+    setUploadingPhoto(true)
+
+    try {
+      const file = e.target.files[0]
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('meal-photos')
+        .upload(fileName, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('meal-photos')
+        .getPublicUrl(fileName)
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('meal_photos')
+        .insert([
+          {
+            request_id: requestId,
+            user_id: user.id,
+            photo_url: publicUrl
+          }
+        ])
+
+      if (dbError) throw dbError
+
+      // Reload photos
+      loadMealPhotos()
+    } catch (error: any) {
+      console.error('Error uploading photo:', error)
+      alert(`Failed to upload photo: ${error.message}`)
+    } finally {
+      setUploadingPhoto(false)
     }
   }
 
@@ -784,6 +850,75 @@ export default function RequestDetailPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Meal Photos Gallery */}
+                {(mealPhotos.length > 0 || (isHost || userJoin?.status === 'accepted')) && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-[var(--neutral)] mb-3 flex items-center gap-2">
+                      <Camera className="w-5 h-5" />
+                      Meal Photos ({mealPhotos.length})
+                    </h3>
+
+                    {/* Upload Button (for host and accepted guests) */}
+                    {(isHost || userJoin?.status === 'accepted') && (
+                      <div className="mb-4">
+                        <label className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-300">
+                          {uploadingPhoto ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Camera className="w-5 h-5" />
+                              Upload Photo
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            disabled={uploadingPhoto}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Photo Grid */}
+                    {mealPhotos.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {mealPhotos.map((photo) => (
+                          <div key={photo.id} className="group relative">
+                            <img
+                              src={photo.photo_url}
+                              alt="Meal photo"
+                              className="w-full h-48 object-cover rounded-xl"
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 rounded-b-xl">
+                              <div className="flex items-center gap-2">
+                                {photo.user?.avatar_url ? (
+                                  <img
+                                    src={photo.user.avatar_url}
+                                    alt={photo.user.name}
+                                    className="w-6 h-6 rounded-full object-cover border-2 border-white"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700">
+                                    {photo.user?.name[0]}
+                                  </div>
+                                )}
+                                <span className="text-white text-sm font-medium">{photo.user?.name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No photos yet. Be the first to share!</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Join Button */}
                 {!isHost && !userJoin && request.seats_available > 0 && (
