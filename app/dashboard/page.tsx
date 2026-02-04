@@ -462,13 +462,32 @@ export default function DashboardPage() {
                       </p>
                     )}
 
-                    <button className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                      expired
-                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                        : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
-                    }`}>
-                      {expired ? 'Request Expired' : 'View Details'}
-                    </button>
+                    {expired && isMyRequest && request.status !== 'completed' ? (
+                      <div className="space-y-2">
+                        <Link
+                          href={`/request/${request.id}/complete`}
+                          className="w-full py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors text-center block"
+                        >
+                          ✓ Complete Meal
+                        </Link>
+                        <Link
+                          href={`/request/${request.id}`}
+                          className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-center block text-sm"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                    ) : (
+                      <Link href={`/request/${request.id}`}>
+                        <button className={`w-full py-2 rounded-lg font-medium transition-colors ${
+                          expired
+                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                            : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
+                        }`}>
+                          {expired ? (request.status === 'completed' ? 'Meal Completed' : 'Request Expired') : 'View Details'}
+                        </button>
+                      </Link>
+                    )}
                   </Link>
                 </div>
               )
