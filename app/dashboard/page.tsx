@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation, Filter, Trash2, Check } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Navigation, Filter, Check } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 
 interface UserLocation {
@@ -20,7 +20,6 @@ export default function DashboardPage() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [locationError, setLocationError] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'expired' | 'completed'>('active')
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     checkUser()
@@ -108,13 +107,13 @@ export default function DashboardPage() {
   const loadRequests = async () => {
     try {
       const { data, error } = await supabase
-  .from('dining_requests')
-  .select(`
-    *,
-    host:profiles!dining_requests_host_id_fkey(*)
-  `)
-  .order('dining_time', { ascending: true })
-
+        .from('dining_requests')
+        .select(`
+          *,
+          host:profiles!dining_requests_host_id_fkey(*)
+        `)
+        .eq('status', 'open')
+        .order('dining_time', { ascending: true })
 
       if (error) throw error
       setRequests(data || [])
@@ -122,31 +121,6 @@ export default function DashboardPage() {
       console.error('Error loading requests:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleDeleteRequest = async (requestId: string) => {
-    if (!confirm('Are you sure you want to delete this dining request?')) {
-      return
-    }
-
-    setDeletingId(requestId)
-
-    try {
-      const { error } = await supabase
-        .from('dining_requests')
-        .delete()
-        .eq('id', requestId)
-
-      if (error) throw error
-
-      // Remove from local state
-      setRequests(requests.filter(r => r.id !== requestId))
-    } catch (error: any) {
-      console.error('Error deleting request:', error)
-      alert(`Failed to delete request: ${error.message}`)
-    } finally {
-      setDeletingId(null)
     }
   }
 
@@ -399,22 +373,6 @@ export default function DashboardPage() {
                       : 'bg-white hover:shadow-2xl card-hover'
                   }`}
                 >
-                  {/* Delete Button (only for host) */}
-                  {isMyRequest && (
-                    <button
-                      onClick={() => handleDeleteRequest(request.id)}
-                      disabled={deletingId === request.id}
-                      className="absolute top-4 left-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg z-10 disabled:opacity-50"
-                      title="Delete request"
-                    >
-                      {deletingId === request.id ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
-
                   {/* Distance Badge */}
                   {distance !== Infinity && !expired && !completed && (
                     <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
@@ -439,7 +397,7 @@ export default function DashboardPage() {
                   )}
 
                   <Link href={`/request/${request.id}`} className="block">
-                    <div className={`flex items-start justify-between mb-4 ${isMyRequest ? 'pl-12' : ''} pr-20`}>
+                    <div className="flex items-start justify-between mb-4 pr-20">
                       <div className="flex-1">
                         <h3 className={`text-xl font-bold mb-1 ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
                           {request.restaurant_name}
