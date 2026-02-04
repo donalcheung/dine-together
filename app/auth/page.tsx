@@ -44,8 +44,7 @@ function AuthForm() {
               id: userId,
               email: userEmail,
               name: userName,
-              rating: 5.0,
-              total_ratings: 0,
+              total_likes: 0,
             }
           ], {
             onConflict: 'id'

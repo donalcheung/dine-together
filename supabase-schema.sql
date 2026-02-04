@@ -11,7 +11,7 @@ CREATE TABLE profiles (
   dietary_restrictions TEXT,
   food_preferences TEXT,
   rating DECIMAL(3,2) DEFAULT 5.0,
-  total_ratings INTEGER DEFAULT 0,
+  total_likes INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -133,7 +133,7 @@ BEGIN
       FROM ratings
       WHERE to_user_id = NEW.to_user_id
     ),
-    total_ratings = (
+    total_likes = (
       SELECT COUNT(*)
       FROM ratings
       WHERE to_user_id = NEW.to_user_id

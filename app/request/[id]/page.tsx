@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
 
 interface Comment {
@@ -650,8 +650,8 @@ export default function RequestDetailPage() {
                       <div className="font-semibold text-lg text-[var(--neutral)]">{request.host?.name}</div>
                       <div className="flex items-center gap-2 text-gray-600">
                         <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">{request.host?.rating.toFixed(1)} rating</span>
-                        <span className="text-sm">({request.host?.total_ratings} reviews)</span>
+                        <span className="font-medium">{request.host?.total_likes} rating</span>
+                        <span className="text-sm">({request.host?.total_likes} reviews)</span>
                       </div>
                     </div>
                   </div>
@@ -711,8 +711,8 @@ export default function RequestDetailPage() {
                           <div className="flex-1">
                             <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                             <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                              <span>{join.user?.rating.toFixed(1)}</span>
+                              <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                              <span>{join.user?.total_likes}</span>
                             </div>
                           </div>
                           <Check className="w-6 h-6 text-green-600" />
@@ -744,8 +744,8 @@ export default function RequestDetailPage() {
                             <div className="flex-1">
                               <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                               <div className="flex items-center gap-1 text-sm text-gray-600">
-                                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                <span>{join.user?.rating.toFixed(1)}</span>
+                                <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                                <span>{join.user?.total_likes}</span>
                               </div>
                             </div>
                           </div>
@@ -1095,7 +1095,7 @@ export default function RequestDetailPage() {
                       <div className="flex-1">
                         <div className="text-xs text-gray-500 mb-0.5">Google Rating</div>
                         <div className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                          <span>{restaurantInfo.rating.toFixed(1)} ★</span>
+                          <span>{restaurantInfo.rating} ★</span>
                           {restaurantInfo.priceLevel && (
                             <>
                               <span className="text-gray-400">•</span>

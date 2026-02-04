@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, Users, MapPin, Star, Clock, Shield } from 'lucide-react'
+import { Utensils, Users, MapPin, Star, Clock, Shield, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function Home() {
