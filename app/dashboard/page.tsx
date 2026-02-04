@@ -443,9 +443,9 @@ export default function DashboardPage() {
                           </span>
                         </div>
                         <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
-                          expired ? 'bg-gray-200' : 'bg-orange-100'
+                          expired ? 'bg-gray-200' : 'bg-pink-100'
                         }`}>
-                          <Star className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-yellow-500 fill-yellow-500'}`} />
+                          <Heart className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-pink-500 fill-pink-500'}`} />
                           <span className={`text-sm font-bold ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
                             {request.host?.total_likes}
                           </span>

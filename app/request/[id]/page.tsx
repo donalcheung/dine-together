@@ -649,9 +649,8 @@ export default function RequestDetailPage() {
                     <div className="flex-1">
                       <div className="font-semibold text-lg text-[var(--neutral)]">{request.host?.name}</div>
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">{request.host?.total_likes} rating</span>
-                        <span className="text-sm">({request.host?.total_likes} reviews)</span>
+                        <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
+                        <span className="font-medium">{request.host?.total_likes} likes</span>
                       </div>
                     </div>
                   </div>
