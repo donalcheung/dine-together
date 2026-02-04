@@ -271,6 +271,10 @@ export default function RequestDetailPage() {
     }
   }
 
+  const isExpired = (dateString: string): boolean => {
+    return new Date(dateString) < new Date()
+  }
+
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -415,7 +419,7 @@ export default function RequestDetailPage() {
           </Link>
           
           <div className="flex items-center gap-4">
-            {isHost && (
+            {isHost && !isExpired(request.dining_time) && (
               <button
                 onClick={handleDeleteRequest}
                 disabled={deleting}
@@ -467,7 +471,7 @@ export default function RequestDetailPage() {
                     <div className="flex-1">
                       <div className="text-sm text-gray-600 flex items-center justify-between">
                         <span>Dining Time</span>
-                        {isHost && !editingTime && (
+                        {isHost && !editingTime && !isExpired(request.dining_time) && (
                           <button
                             onClick={() => setEditingTime(true)}
                             className="text-[var(--primary)] hover:text-[var(--primary-dark)]"
@@ -514,7 +518,7 @@ export default function RequestDetailPage() {
                     <div className="flex-1">
                       <div className="text-sm text-gray-600 flex items-center justify-between">
                         <span>Seats Available</span>
-                        {isHost && !editingSeats && (
+                        {isHost && !editingSeats && !isExpired(request.dining_time) && (
                           <button
                             onClick={() => setEditingSeats(true)}
                             className="text-[var(--primary)] hover:text-[var(--primary-dark)]"
@@ -565,7 +569,7 @@ export default function RequestDetailPage() {
                 <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-bold text-[var(--neutral)]">Hosted by</h3>
-                    {isHost && !editing && (
+                    {isHost && !editing && !isExpired(request.dining_time) && (
                       <button
                         onClick={() => setEditing(true)}
                         className="flex items-center gap-1 text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors"
@@ -845,6 +849,27 @@ export default function RequestDetailPage() {
                 {!isHost && request.seats_available === 0 && !userJoin && (
                   <div className="p-4 bg-gray-100 rounded-xl text-center text-gray-600 font-medium">
                     This dining request is full
+                  </div>
+                )}
+
+                {/* Complete Meal Button (Host only, after meal time) */}
+                {isHost && isExpired(request.dining_time) && request.status !== 'completed' && acceptedJoins.length > 0 && (
+                  <Link
+                    href={`/request/${request.id}/complete`}
+                    className="w-full py-4 bg-green-500 text-white rounded-xl font-bold text-lg hover:bg-green-600 transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    Complete Meal
+                  </Link>
+                )}
+
+                {/* Meal Completed Status */}
+                {request.status === 'completed' && (
+                  <div className="p-4 bg-green-50 rounded-xl text-center border border-green-200">
+                    <div className="font-semibold text-green-700 flex items-center justify-center gap-2">
+                      <Check className="w-5 h-5" />
+                      Meal Completed
+                    </div>
                   </div>
                 )}
               </div>

@@ -466,7 +466,7 @@ export default function DashboardPage() {
                       <div className="space-y-2">
                         <Link
                           href={`/request/${request.id}/complete`}
-                          className="w-full py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors text-center block"
+                          className="w-full py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors text-center block shadow-md"
                         >
                           ✓ Complete Meal
                         </Link>
