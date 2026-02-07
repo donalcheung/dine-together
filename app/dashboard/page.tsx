@@ -364,7 +364,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={request.id}
-                  className={`rounded-2xl shadow-lg transition-all p-6 relative ${
+                  className={`rounded-2xl shadow-lg transition-all p-6 relative flex flex-col ${
                     completed
                       ? 'bg-green-50 border-2 border-green-200'
                       : expired 
@@ -395,20 +395,20 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  <Link href={`/request/${request.id}`} className="block">
+                  <Link href={`/request/${request.id}`} className="flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-4 pr-20">
                       <div className="flex-1">
                         <h3 className={`text-xl font-bold mb-1 ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
                           {request.restaurant_name}
                         </h3>
                         <div className="flex items-center gap-1 text-gray-600 text-sm">
-                          <MapPin className="w-4 h-4" />
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
                           <span className="truncate">{request.restaurant_address}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-3 mb-4">
+                    <div className="space-y-3 mb-4 flex-1">
                       <div className={`flex items-center gap-2 ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
                         <Clock className={`w-5 h-5 ${expired ? 'text-gray-400' : 'text-[var(--primary)]'}`} />
                         <span className="font-medium">{formatTime(request.dining_time)}</span>
@@ -422,27 +422,27 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           {request.host?.avatar_url ? (
                             <img
                               src={request.host.avatar_url}
                               alt={request.host.name}
-                              className={`w-8 h-8 rounded-full object-cover border-2 ${
+                              className={`w-8 h-8 rounded-full object-cover border-2 flex-shrink-0 ${
                                 expired ? 'border-gray-300 opacity-75' : 'border-gray-200'
                               }`}
                             />
                           ) : (
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
                               expired ? 'bg-gray-400' : 'bg-[var(--neutral)]'
                             }`}>
                               {request.host?.name[0]?.toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-medium ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
+                          <span className={`font-medium truncate ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
                             {request.host?.name}
                           </span>
                         </div>
-                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full flex-shrink-0 ${
                           expired ? 'bg-gray-200' : 'bg-pink-100'
                         }`}>
                           <Heart className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-pink-500 fill-pink-500'}`} />
@@ -453,18 +453,20 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {request.description && (
-                      <p className={`text-sm line-clamp-2 mb-4 ${expired ? 'text-gray-500' : 'text-gray-600'}`}>
-                        {request.description}
-                      </p>
-                    )}
+                    {/* Fixed height description area */}
+                    <div className="h-10 mb-4">
+                      {request.description && (
+                        <p className={`text-sm line-clamp-2 ${expired ? 'text-gray-500' : 'text-gray-600'}`}>
+                          {request.description}
+                        </p>
+                      )}
+                    </div>
 
+                    {/* Buttons - Always at bottom */}
                     {completed ? (
-                      <Link href={`/request/${request.id}`}>
-                        <button className="w-full py-2 rounded-lg font-medium transition-colors bg-green-100 text-green-700 border border-green-300">
-                          ✓ View Completed Meal
-                        </button>
-                      </Link>
+                      <button className="w-full py-2 rounded-lg font-medium transition-colors bg-green-100 text-green-700 border border-green-300">
+                        ✓ View Completed Meal
+                      </button>
                     ) : expired && isMyRequest ? (
                       <div className="space-y-2">
                         <Link
@@ -473,23 +475,18 @@ export default function DashboardPage() {
                         >
                           ✓ Complete Meal
                         </Link>
-                        <Link
-                          href={`/request/${request.id}`}
-                          className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-center block text-sm"
-                        >
+                        <button className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors text-center block text-sm">
                           View Details
-                        </Link>
+                        </button>
                       </div>
                     ) : (
-                      <Link href={`/request/${request.id}`}>
-                        <button className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                          expired
-                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                            : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
-                        }`}>
-                          {expired ? (request.status === 'completed' ? 'Meal Completed' : 'Request Expired') : 'View Details'}
-                        </button>
-                      </Link>
+                      <button className={`w-full py-2 rounded-lg font-medium transition-colors ${
+                        expired
+                          ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                          : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
+                      }`}>
+                        {expired ? (request.status === 'completed' ? 'Meal Completed' : 'Request Expired') : 'View Details'}
+                      </button>
                     )}
                   </Link>
                 </div>
