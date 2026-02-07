@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -26,11 +26,16 @@ const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
 
 export default function CreateRequestPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [mapsLoaded, setMapsLoaded] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
+  
+  // NEW: Group support
+  const [userGroups, setUserGroups] = useState<any[]>([])
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   
   const [formData, setFormData] = useState({
     restaurant_name: '',
@@ -45,6 +50,13 @@ export default function CreateRequestPage() {
   useEffect(() => {
     checkUser()
     initializeGoogleMaps()
+    loadUserGroups()
+    
+    // NEW: Get group from URL parameter
+    const groupParam = searchParams.get('group')
+    if (groupParam) {
+      setSelectedGroupId(groupParam)
+    }
   }, [])
 
   const initializeGoogleMaps = async () => {
@@ -108,6 +120,22 @@ export default function CreateRequestPage() {
     setUser(user)
   }
 
+  // NEW: Load user's groups
+  const loadUserGroups = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('group_members')
+      .select(`
+        groups (*)
+      `)
+      .eq('user_id', user.id)
+
+    const groups = data?.map((m: any) => m.groups).filter(Boolean) || []
+    setUserGroups(groups)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -127,6 +155,7 @@ export default function CreateRequestPage() {
             total_seats: formData.seats_available,
             description: formData.description,
             status: 'open',
+            group_id: selectedGroupId || null, // NEW: Save group_id
           }
         ])
         .select()
@@ -134,7 +163,12 @@ export default function CreateRequestPage() {
 
       if (error) throw error
 
-      router.push(`/request/${data.id}`)
+      // NEW: Redirect to group page if created from group
+      if (selectedGroupId) {
+        router.push(`/groups/${selectedGroupId}`)
+      } else {
+        router.push(`/request/${data.id}`)
+      }
     } catch (error: any) {
       console.error('Error creating request:', error)
       alert(`Failed to create request: ${error?.message || 'Unknown error'}`)
@@ -197,13 +231,13 @@ export default function CreateRequestPage() {
               </label>
               <div className="relative">
                 <input
-  ref={searchInputRef}
-  id="restaurant_search"
-  type="text"
-  required
-  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
-  placeholder="Start typing restaurant name..."
-/>
+                  ref={searchInputRef}
+                  id="restaurant_search"
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+                  placeholder="Start typing restaurant name..."
+                />
 
                 {mapsLoaded && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -305,6 +339,35 @@ export default function CreateRequestPage() {
                 <option value={4}>4 people</option>
                 <option value={5}>5 people</option>
               </select>
+            </div>
+
+            {/* NEW: Group Selection */}
+            <div>
+              <label htmlFor="group_id" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <Users className="w-5 h-5 text-[var(--primary)]" />
+                Group (Optional)
+              </label>
+              <select
+                id="group_id"
+                name="group_id"
+                value={selectedGroupId}
+                onChange={(e) => setSelectedGroupId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
+              >
+                <option value="">No group - Open to everyone</option>
+                {userGroups.map((group: any) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm text-gray-500">
+                {selectedGroupId ? (
+                  <span className="text-purple-600">🔒 This request will only be visible to group members</span>
+                ) : (
+                  <span>Group requests are only visible to group members</span>
+                )}
+              </p>
             </div>
 
             {/* Description */}
