@@ -110,7 +110,8 @@ export default function DashboardPage() {
         .from('dining_requests')
         .select(`
           *,
-          host:profiles!dining_requests_host_id_fkey(*)
+          host:profiles!dining_requests_host_id_fkey(*),
+          group:groups(*)
         `)
         .order('dining_time', { ascending: true })
 
@@ -443,6 +444,24 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* NEW: Group Badge */}
+                    {request.group && (
+                      <div className="mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200">
+                          {request.group.cover_image_url ? (
+                            <img
+                              src={request.group.cover_image_url}
+                              alt={request.group.name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Users className="w-4 h-4" />
+                          )}
+                          <span className="text-sm font-medium">{request.group.name}</span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-3 mb-4 flex-1">
                       <div className={`flex items-center gap-2 ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
