@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX, Camera } from 'lucide-react'
