@@ -366,7 +366,9 @@ export default function GroupsPage() {
                         </div>
                       </div>
                       {group.created_by === user?.id && (
-                        <Crown className="w-5 h-5 text-yellow-500" title="Admin" />
+                        <div title="Admin">
+                          <Crown className="w-5 h-5 text-yellow-500" />
+                        </div>
                       )}
                     </div>
 
