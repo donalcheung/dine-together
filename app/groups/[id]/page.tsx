@@ -3,19 +3,21 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX } from 'lucide-react'
+import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX, Camera } from 'lucide-react'
 import { supabase, Group, GroupMember, DiningRequest, Profile } from '@/lib/supabase'
 
 export default function GroupDetailPage() {
   const router = useRouter()
   const params = useParams()
   const groupId = params.id as string
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [user, setUser] = useState<any>(null)
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<GroupMember[]>([])
   const [requests, setRequests] = useState<DiningRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [userMember, setUserMember] = useState<GroupMember | null>(null)
@@ -107,6 +109,66 @@ export default function GroupDetailPage() {
       navigator.clipboard.writeText(group.join_code)
       setCopiedCode(true)
       setTimeout(() => setCopiedCode(false), 2000)
+    }
+  }
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user || !group) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB')
+      return
+    }
+
+    setUploadingCover(true)
+
+    try {
+      // Delete old cover if exists
+      if (group.cover_image_url) {
+        const oldPath = group.cover_image_url.split('/').pop()
+        if (oldPath) {
+          await supabase.storage
+            .from('group-covers')
+            .remove([`${group.id}/${oldPath}`])
+        }
+      }
+
+      // Upload new cover
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `${group.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('group-covers')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('group-covers')
+        .getPublicUrl(filePath)
+
+      // Update group
+      const { error: updateError } = await supabase
+        .from('groups')
+        .update({ cover_image_url: data.publicUrl })
+        .eq('id', group.id)
+
+      if (updateError) throw updateError
+
+      loadGroup()
+    } catch (error: any) {
+      console.error('Error uploading cover:', error)
+      alert(`Failed to upload: ${error.message}`)
+    } finally {
+      setUploadingCover(false)
     }
   }
 
@@ -213,46 +275,92 @@ export default function GroupDetailPage() {
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Group Header */}
-            <div className="bg-white rounded-3xl shadow-2xl p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h1 className="text-4xl font-bold text-[var(--neutral)] mb-2">
-                    {group.name}
-                  </h1>
-                  {group.description && (
-                    <p className="text-gray-600 text-lg">{group.description}</p>
-                  )}
-                </div>
-                {isAdmin && (
-                  <div className="flex items-center gap-2 text-yellow-500 bg-yellow-50 px-4 py-2 rounded-full border border-yellow-200">
-                    <Crown className="w-5 h-5" />
-                    <span className="font-medium">Admin</span>
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+              {/* Cover Image Section */}
+              <div className="relative h-48 overflow-hidden group">
+                {group.cover_image_url ? (
+                  <img
+                    src={group.cover_image_url}
+                    alt={group.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                    <Users className="w-24 h-24 text-white opacity-30" />
                   </div>
                 )}
+                
+                {isAdmin && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingCover}
+                    className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 text-gray-700 rounded-lg hover:bg-white transition-all shadow-lg flex items-center gap-2"
+                  >
+                    {uploadingCover ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4" />
+                        Change Cover
+                      </>
+                    )}
+                  </button>
+                )}
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                  className="hidden"
+                />
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Users className="w-5 h-5" />
-                  <span className="font-medium">{group.member_count} members</span>
+              {/* Group Info */}
+              <div className="p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex-1">
+                    <h1 className="text-4xl font-bold text-[var(--neutral)] mb-2">
+                      {group.name}
+                    </h1>
+                    {group.description && (
+                      <p className="text-gray-600 text-lg">{group.description}</p>
+                    )}
+                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-2 text-yellow-500 bg-yellow-50 px-4 py-2 rounded-full border border-yellow-200">
+                      <Crown className="w-5 h-5" />
+                      <span className="font-medium">Admin</span>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  onClick={copyJoinCode}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
-                >
-                  {copiedCode ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Share Code: {group.join_code}
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Users className="w-5 h-5" />
+                    <span className="font-medium">{group.member_count} members</span>
+                  </div>
+
+                  <button
+                    onClick={copyJoinCode}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200"
+                  >
+                    {copiedCode ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Share Code: {group.join_code}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
