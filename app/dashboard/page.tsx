@@ -205,6 +205,14 @@ export default function DashboardPage() {
           
           <div className="flex items-center gap-4">
             <Link
+              href="/groups"
+              className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-full hover:bg-gray-50 transition-all border border-gray-200 hover:border-[var(--primary)] font-medium"
+            >
+              <Users className="w-5 h-5" />
+              Groups
+            </Link>
+            
+            <Link
               href="/create"
               className="flex items-center gap-2 px-6 py-2 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg font-medium"
             >
@@ -326,24 +334,52 @@ export default function DashboardPage() {
             <p className="mt-4 text-gray-600">Loading dining requests...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl shadow-lg">
-            <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-700 mb-2">
-              No Requests Found
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {filterStatus === 'active' && 'No active requests right now. Create one!'}
-              {filterStatus === 'expired' && 'No expired requests to complete.'}
-              {filterStatus === 'completed' && 'No completed meals yet.'}
-              {filterStatus === 'all' && 'Be the first to create a dining request!'}
-            </p>
-            <Link
-              href="/create"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all font-medium"
-            >
-              <Plus className="w-5 h-5" />
-              Create First Request
-            </Link>
+          <div className="space-y-6">
+            <div className="text-center py-20 bg-white rounded-3xl shadow-lg">
+              <Utensils className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">
+                No Requests Found
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {filterStatus === 'active' && 'No active requests right now. Create one!'}
+                {filterStatus === 'expired' && 'No expired requests to complete.'}
+                {filterStatus === 'completed' && 'No completed meals yet.'}
+                {filterStatus === 'all' && 'Be the first to create a dining request!'}
+              </p>
+              <Link
+                href="/create"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                Create First Request
+              </Link>
+            </div>
+
+            {/* Groups Promotion */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-3xl shadow-lg p-8 border-2 border-purple-200">
+              <div className="flex items-start gap-6">
+                <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    ✨ New: Create or Join Groups!
+                  </h3>
+                  <p className="text-gray-700 mb-4">
+                    Connect with friends, coworkers, or communities. Create group-specific dining requests and build your foodie circle!
+                  </p>
+                  <div className="flex gap-3">
+                    <Link
+                      href="/groups"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-all font-medium shadow-md"
+                    >
+                      <Users className="w-5 h-5" />
+                      Explore Groups
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
