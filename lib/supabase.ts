@@ -30,8 +30,10 @@ export interface DiningRequest {
   total_seats: number
   description?: string
   status: 'active' | 'completed' | 'cancelled'
+  group_id?: string
   created_at: string
   host?: Profile
+  group?: Group
 }
 
 export interface DiningJoin {
@@ -50,4 +52,28 @@ export interface MealLike {
   from_user_id: string
   to_user_id: string
   created_at: string
+}
+
+export interface Group {
+  id: string
+  name: string
+  description?: string
+  cover_image_url?: string
+  created_by: string
+  is_public: boolean
+  join_code: string
+  member_count: number
+  created_at: string
+  updated_at: string
+  creator?: Profile
+}
+
+export interface GroupMember {
+  id: string
+  group_id: string
+  user_id: string
+  role: 'admin' | 'moderator' | 'member'
+  joined_at: string
+  user?: Profile
+  group?: Group
 }
