@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
 
 interface Comment {
@@ -94,10 +94,11 @@ export default function RequestDetailPage() {
     try {
       const { data, error } = await supabase
         .from('dining_requests')
-        .select(`
-          *,
-          host:profiles!dining_requests_host_id_fkey(*)
-        `)
+          .select(`
+            *,
+            host:profiles!dining_requests_host_id_fkey(*),
+            group:groups(*)
+          `)
         .eq('id', requestId)
         .single()
 
@@ -1038,6 +1039,81 @@ export default function RequestDetailPage() {
                   referrerPolicy="no-referrer-when-downgrade"
                   className="w-full"
                 ></iframe>
+              </div>
+            )}
+
+            {request.group && (
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                {request.group.cover_image_url ? (
+                  <div className="h-24 overflow-hidden">
+                    <img
+                      src={request.group.cover_image_url}
+                      alt={request.group.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-24 bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                    <Users className="w-12 h-12 text-white opacity-50" />
+                  </div>
+                )}
+
+                <div className="p-6">
+                  <h3 className="font-bold text-lg text-[var(--neutral)] mb-2 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-purple-500" />
+                    Group Request
+                  </h3>
+
+                  <Link
+                    href={`/groups/${request.group.id}`}
+                    className="block mb-3 group"
+                  >
+                    <div className="text-xl font-bold text-[var(--neutral)] group-hover:text-[var(--primary)] transition-colors">
+                      {request.group.name}
+                    </div>
+                  </Link>
+
+                  {request.group.description && (
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                      {request.group.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>{request.group.member_count} members</span>
+                    </div>
+                    {request.group.is_public ? (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <Globe className="w-4 h-4" />
+                        <span>Public</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-purple-600">
+                        <Lock className="w-4 h-4" />
+                        <span>Private</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link
+                    href={`/groups/${request.group.id}`}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors font-medium border border-purple-200"
+                  >
+                    View Group
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+
+                  {isHost && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Only visible to group members
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
