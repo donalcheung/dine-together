@@ -195,7 +195,8 @@ export default function GroupsPage() {
     }
   }
 
-  const copyJoinCode = (code: string) => {
+  const copyJoinCode = (code?: string | null) => {
+    if (!code) return
     navigator.clipboard.writeText(code)
     setCopiedCode(code)
     setTimeout(() => setCopiedCode(null), 2000)

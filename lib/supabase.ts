@@ -3,6 +3,56 @@
 // =====================================================
 // Add these to your lib/supabase.ts file
 
+import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+)
+
+// Minimal Profile type used across the app
+export interface Profile {
+  id: string
+  name: string
+  avatar_url?: string
+  email?: string
+  total_likes?: number
+  created_at?: string
+}
+
+// Minimal Group type used by DiningRequest and UI
+export interface Group {
+  id: string
+  name: string
+  description?: string
+  cover_image_url?: string
+  join_code?: string
+  created_by?: string
+  member_count?: number
+  is_public?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface GroupMember {
+  id: string
+  group_id: string
+  user_id: string
+  role?: 'member' | 'admin'
+  joined_at?: string
+  user?: Profile
+}
+
+export interface DiningJoin {
+  id: string
+  request_id: string
+  user_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  message?: string
+  created_at: string
+  user?: Profile
+}
+
 export interface Restaurant {
   id: string
   name: string
