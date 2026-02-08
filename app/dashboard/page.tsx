@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [maxRange, setMaxRange] = useState<number>(50)
   const [sortOption, setSortOption] = useState<'nearest' | 'upcoming'>('nearest')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [cityCenters, setCityCenters] = useState<Record<string, { lat: number; lng: number }>>({})
 
   useEffect(() => {
     checkUser()
@@ -196,6 +197,111 @@ export default function DashboardPage() {
     return Array.from(cities).sort()
   }
 
+  const loadCachedCityCenters = () => {
+    try {
+      const raw = localStorage.getItem('dt_city_centers')
+      if (!raw) return {}
+      return JSON.parse(raw)
+    } catch (e) {
+      return {}
+    }
+  }
+
+  const saveCachedCityCenters = (centers: Record<string, { lat: number; lng: number }>) => {
+    try {
+      localStorage.setItem('dt_city_centers', JSON.stringify(centers))
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  const fetchCityGeocode = async (city: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      if (!key) return null
+      const q = encodeURIComponent(city)
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${q}&key=${key}`
+      const res = await fetch(url)
+      if (!res.ok) return null
+      const data = await res.json()
+      const result = data.results && data.results[0]
+      if (!result) return null
+      const { lat, lng } = result.geometry.location
+      return { lat, lng }
+    } catch (e) {
+      console.error('Geocode error', e)
+      return null
+    }
+  }
+
+  const populateCentersFromRequests = () => {
+    const centers: Record<string, { lat: number; lng: number }> = loadCachedCityCenters()
+    const cities = getUniqueCities()
+    cities.forEach(city => {
+      if (centers[city]) return
+      const restaurantsInCity = requests.filter(r => {
+        if (!r.restaurant_address) return false
+        const parts = r.restaurant_address.split(',')
+        const rCity = parts.length >= 3 ? parts[parts.length - 3].trim() : ''
+        const rState = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
+        const cityState = `${rCity}, ${rState}`
+        return cityState === city
+      })
+      if (restaurantsInCity.length > 0) {
+        const avgLat = restaurantsInCity.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsInCity.length
+        const avgLng = restaurantsInCity.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsInCity.length
+        centers[city] = { lat: avgLat, lng: avgLng }
+      }
+    })
+    setCityCenters(centers)
+    saveCachedCityCenters(centers)
+  }
+
+  useEffect(() => {
+    // populate centers from requests and cached storage
+    try {
+      const cached = loadCachedCityCenters()
+      setCityCenters(prev => ({ ...cached, ...prev }))
+    } catch (e) {}
+    populateCentersFromRequests()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requests])
+
+  useEffect(() => {
+    // when user selects a city make sure we have a center (try cached, requests-average, then geocode)
+    const ensureCenter = async () => {
+      if (selectedCity === 'current') return
+      if (cityCenters[selectedCity]) return
+      // try to compute from requests
+      const restaurantsInCity = requests.filter(r => {
+        if (!r.restaurant_address) return false
+        const parts = r.restaurant_address.split(',')
+        const rCity = parts.length >= 3 ? parts[parts.length - 3].trim() : ''
+        const rState = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
+        const cityState = `${rCity}, ${rState}`
+        return cityState === selectedCity
+      })
+      if (restaurantsInCity.length > 0) {
+        const avgLat = restaurantsInCity.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsInCity.length
+        const avgLng = restaurantsInCity.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsInCity.length
+        const updated = { ...cityCenters, [selectedCity]: { lat: avgLat, lng: avgLng } }
+        setCityCenters(updated)
+        saveCachedCityCenters(updated)
+        return
+      }
+
+      // fallback to Google Geocoding
+      const geo = await fetchCityGeocode(selectedCity)
+      if (geo) {
+        const updated = { ...cityCenters, [selectedCity]: geo }
+        setCityCenters(updated)
+        saveCachedCityCenters(updated)
+      }
+    }
+    ensureCenter()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity])
+
   const getFilteredCitySuggestions = (): string[] => {
     const allCities = getUniqueCities()
     if (!cityInput.trim()) return allCities
@@ -205,6 +311,10 @@ export default function DashboardPage() {
   }
 
   const getCityCenterCoordinates = (city: string): { lat: number; lng: number } | null => {
+    // prefer cached / computed centers
+    if (cityCenters[city]) return cityCenters[city]
+
+    // fallback to computing average from requests (synchronous)
     const restaurantsInCity = requests.filter(r => {
       if (!r.restaurant_address) return false
       const parts = r.restaurant_address.split(',')
@@ -213,12 +323,12 @@ export default function DashboardPage() {
       const cityState = `${rCity}, ${rState}`
       return cityState === city
     })
-    
+
     if (restaurantsInCity.length === 0) return null
-    
+
     const avgLat = restaurantsInCity.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsInCity.length
     const avgLng = restaurantsInCity.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsInCity.length
-    
+
     return { lat: avgLat, lng: avgLng }
   }
 
