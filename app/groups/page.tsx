@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Utensils, Users, Plus, LogOut, Search, Lock, Globe, Crown, Settings, Copy, Check, UserPlus } from 'lucide-react'
 import { supabase, Group, GroupMember, Profile } from '@/lib/supabase'
+import { validateProfanity } from '@/lib/profanity-filter'
 
 export default function GroupsPage() {
   const router = useRouter()
@@ -102,6 +103,12 @@ export default function GroupsPage() {
     if (!user) return
 
     try {
+      // Validate profanity in group name and description
+      validateProfanity(newGroup.name, 'Group name')
+      if (newGroup.description) {
+        validateProfanity(newGroup.description, 'Group description')
+      }
+
       const { data, error } = await supabase
         .from('groups')
         .insert([

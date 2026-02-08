@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Heart, Camera, Upload } from 'lucide-react'
 import { supabase, Profile } from '@/lib/supabase'
+import { validateProfanity } from '@/lib/profanity-filter'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -150,6 +151,11 @@ export default function ProfilePage() {
     setSuccess(false)
 
     try {
+      // Validate profanity in bio
+      if (formData.bio) {
+        validateProfanity(formData.bio, 'Bio')
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({

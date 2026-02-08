@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
+import { validateProfanity } from '@/lib/profanity-filter'
 
 interface Comment {
   id: string
@@ -295,6 +296,11 @@ export default function RequestDetailPage() {
 
   const handleUpdateDescription = async () => {
     try {
+      // Validate profanity in description
+      if (editedDescription) {
+        validateProfanity(editedDescription, 'Request description')
+      }
+
       const { error } = await supabase
         .from('dining_requests')
         .update({ description: editedDescription })

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { validateProfanity } from '@/lib/profanity-filter'
 
 // Load Google Maps script
 const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
@@ -141,6 +142,11 @@ function CreateRequestForm() {
     setLoading(true)
 
     try {
+      // Validate profanity in request description
+      if (formData.description) {
+        validateProfanity(formData.description, 'Request description')
+      }
+
       const { data, error } = await supabase
         .from('dining_requests')
         .insert([

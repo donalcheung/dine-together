@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Percent, DollarSign, Gift, Users, Calendar, Clock, Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { validateProfanity } from '@/lib/profanity-filter'
 
 export default function CreateDealPage() {
   const router = useRouter()
@@ -123,6 +124,10 @@ export default function CreateDealPage() {
     setLoading(true)
 
     try {
+      // Validate profanity in deal title and description
+      validateProfanity(formData.title, 'Deal title')
+      validateProfanity(formData.description, 'Deal description')
+
       const dealData = {
         restaurant_id: restaurantId,
         title: formData.title,
