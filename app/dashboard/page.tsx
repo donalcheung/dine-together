@@ -379,40 +379,40 @@ export default function DashboardPage() {
               <div className="flex gap-2 flex-wrap">
                 <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
                   filterStatus.active
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                 }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.active}
                     onChange={(e) => setFilterStatus({...filterStatus, active: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer hidden"
                   />
                   <span>Active ({activeCount})</span>
                 </label>
                 <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
                   filterStatus.expired
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                 }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.expired}
                     onChange={(e) => setFilterStatus({...filterStatus, expired: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer hidden"
                   />
                   <span>Expired ({expiredCount})</span>
                 </label>
                 <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
                   filterStatus.completed
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                 }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.completed}
                     onChange={(e) => setFilterStatus({...filterStatus, completed: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer hidden"
                   />
                   <span>Completed ({completedCount})</span>
                 </label>
