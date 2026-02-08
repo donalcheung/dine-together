@@ -229,8 +229,8 @@ export default function DashboardPage() {
     
     if (!statusMatches) return false
     
-    // Distance filter
-    if (userLocation && selectedCity === 'current') {
+    // Distance filter - always apply when user location is available
+    if (userLocation) {
       const distance = calculateDistance(
         userLocation.latitude,
         userLocation.longitude,
@@ -480,26 +480,24 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Max Range Filter - Only show when using current location */}
-              {selectedCity === 'current' && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-gray-700">Max Range:</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="1"
-                      max="100"
-                      value={maxRange}
-                      onChange={(e) => setMaxRange(parseInt(e.target.value))}
-                      className="w-40 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
-                      style={{
-                        background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`
-                      }}
-                    />
-                    <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
-                  </div>
+              {/* Max Range Filter - Always visible */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">Max Range:</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={maxRange}
+                    onChange={(e) => setMaxRange(parseInt(e.target.value))}
+                    className="w-40 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`
+                    }}
+                  />
+                  <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
                 </div>
-              )}
+              </div>
 
               {/* Clear Filters */}
               {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50) && (
