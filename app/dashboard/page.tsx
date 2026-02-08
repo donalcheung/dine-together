@@ -180,9 +180,10 @@ export default function DashboardPage() {
     requests.forEach(r => {
       if (r.restaurant_address) {
         const parts = r.restaurant_address.split(',')
-        if (parts.length >= 2) {
-          const city = parts[parts.length - 2].trim()
-          cities.add(city)
+        if (parts.length >= 3) {
+          const city = parts[parts.length - 3].trim()
+          const state = parts[parts.length - 2].trim()
+          cities.add(`${city}, ${state}`)
         }
       }
     })
@@ -242,8 +243,10 @@ export default function DashboardPage() {
     // City filter
     if (selectedCity !== 'current' && r.restaurant_address) {
       const parts = r.restaurant_address.split(',')
-      const city = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
-      if (city !== selectedCity) return false
+      const city = parts.length >= 3 ? parts[parts.length - 3].trim() : ''
+      const state = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
+      const cityState = `${city}, ${state}`
+      if (cityState !== selectedCity) return false
     }
     
     // Search filter - search in restaurant name, address, and description
