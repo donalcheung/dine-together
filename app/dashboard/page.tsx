@@ -31,6 +31,8 @@ export default function DashboardPage() {
     completed: false,
   })
   const [selectedCity, setSelectedCity] = useState<string>('current')
+  const [cityInput, setCityInput] = useState<string>('')
+  const [showCitySuggestions, setShowCitySuggestions] = useState<boolean>(false)
   const [maxRange, setMaxRange] = useState<number>(50)
   const [searchQuery, setSearchQuery] = useState<string>('')
 
@@ -185,6 +187,14 @@ export default function DashboardPage() {
       }
     })
     return Array.from(cities).sort()
+  }
+
+  const getFilteredCitySuggestions = (): string[] => {
+    const allCities = getUniqueCities()
+    if (!cityInput.trim()) return allCities
+    return allCities.filter(city => 
+      city.toLowerCase().includes(cityInput.toLowerCase())
+    )
   }
 
   const sortedRequests = [...requests].sort((a, b) => {
@@ -367,51 +377,104 @@ export default function DashboardPage() {
             <div className="flex flex-wrap gap-3 items-center">
               <span className="text-sm font-semibold text-gray-700">Status:</span>
               <div className="flex gap-2 flex-wrap">
-                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-[var(--primary)]" style={{borderColor: filterStatus.active ? 'var(--primary)' : '#d1d5db', backgroundColor: filterStatus.active ? 'rgba(var(--primary-rgb), 0.1)' : 'white'}}>
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
+                  filterStatus.active
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.active}
                     onChange={(e) => setFilterStatus({...filterStatus, active: e.target.checked})}
                     className="w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-medium text-gray-700">Active ({activeCount})</span>
+                  <span>Active ({activeCount})</span>
                 </label>
-                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-amber-500" style={{borderColor: filterStatus.expired ? '#b45309' : '#d1d5db', backgroundColor: filterStatus.expired ? '#fef3c7' : 'white'}}>
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
+                  filterStatus.expired
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.expired}
                     onChange={(e) => setFilterStatus({...filterStatus, expired: e.target.checked})}
                     className="w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-medium text-gray-700">Expired ({expiredCount})</span>
+                  <span>Expired ({expiredCount})</span>
                 </label>
-                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-green-500" style={{borderColor: filterStatus.completed ? '#16a34a' : '#d1d5db', backgroundColor: filterStatus.completed ? '#dcfce7' : 'white'}}>
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
+                  filterStatus.completed
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-amber-500'
+                }`}>
                   <input
                     type="checkbox"
                     checked={filterStatus.completed}
                     onChange={(e) => setFilterStatus({...filterStatus, completed: e.target.checked})}
                     className="w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-medium text-gray-700">Completed ({completedCount})</span>
+                  <span>Completed ({completedCount})</span>
                 </label>
               </div>
             </div>
 
             {/* Location and Distance Filters */}
             <div className="flex flex-wrap gap-4 items-end">
-              {/* City Filter */}
-              <div className="flex flex-col gap-2">
+              {/* City Filter - Autocomplete */}
+              <div className="flex flex-col gap-2 relative">
                 <label className="text-sm font-semibold text-gray-700">Location:</label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white"
-                >
-                  <option value="current">Current Location ({maxRange} mi radius)</option>
-                  {uniqueCities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  placeholder="Type city name or use current location..."
+                  value={selectedCity === 'current' ? '' : cityInput}
+                  onChange={(e) => {
+                    setCityInput(e.target.value)
+                    setSelectedCity(e.target.value || 'current')
+                    setShowCitySuggestions(true)
+                  }}
+                  onFocus={() => setShowCitySuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                  className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white w-64"
+                />
+                {showCitySuggestions && (
+                  <div className="absolute top-full mt-1 w-64 bg-white border-2 border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCity('current')
+                        setCityInput('')
+                        setShowCitySuggestions(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${
+                        selectedCity === 'current' ? 'bg-blue-100 text-[var(--primary)] font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      📍 Use Current Location
+                    </button>
+                    <div className="border-t border-gray-200" />
+                    {getFilteredCitySuggestions().length > 0 ? (
+                      getFilteredCitySuggestions().map(city => (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCity(city)
+                            setCityInput(city)
+                            setShowCitySuggestions(false)
+                          }}
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${
+                            selectedCity === city ? 'bg-blue-50 text-[var(--primary)] font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          {city}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-500 text-sm">No cities match your search</div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Max Range Filter - Only show when using current location */}
@@ -441,6 +504,7 @@ export default function DashboardPage() {
                   onClick={() => {
                     setFilterStatus({ active: true, expired: false, completed: false })
                     setSelectedCity('current')
+                    setCityInput('')
                     setMaxRange(50)
                     setSearchQuery('')
                   }}
