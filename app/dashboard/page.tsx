@@ -35,6 +35,8 @@ export default function DashboardPage() {
   const [showCitySuggestions, setShowCitySuggestions] = useState<boolean>(false)
   const [maxRange, setMaxRange] = useState<number>(50)
   const [sortOption, setSortOption] = useState<'nearest' | 'upcoming'>('nearest')
+  const [dateRangeOption, setDateRangeOption] = useState<'all' | 'today' | 'thisWeek' | 'range'>('all')
+  const [rangeEndDate, setRangeEndDate] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [cityCenters, setCityCenters] = useState<Record<string, { lat: number; lng: number }>>({})
 
@@ -180,6 +182,35 @@ export default function DashboardPage() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  }
+
+  const isInDateRange = (dateString: string) => {
+    if (dateRangeOption === 'all') return true
+    const dt = new Date(dateString)
+    const today = new Date()
+    today.setHours(0,0,0,0)
+
+    if (dateRangeOption === 'today') {
+      const d = new Date(dt)
+      d.setHours(0,0,0,0)
+      return d.getTime() === today.getTime()
+    }
+
+    if (dateRangeOption === 'thisWeek') {
+      const end = new Date()
+      end.setHours(23,59,59,999)
+      end.setDate(end.getDate() + 7)
+      return dt >= today && dt <= end
+    }
+
+    if (dateRangeOption === 'range') {
+      if (!rangeEndDate) return true
+      const end = new Date(rangeEndDate)
+      end.setHours(23,59,59,999)
+      return dt >= today && dt <= end
+    }
+
+    return true
   }
 
   const getUniqueCities = (): string[] => {
@@ -376,6 +407,9 @@ export default function DashboardPage() {
     if (filterStatus.completed && completed) statusMatches = true
     
     if (!statusMatches) return false
+
+    // Date range filter
+    if (!isInDateRange(r.dining_time)) return false
     
     // City filter
     if (selectedCity !== 'current' && r.restaurant_address) {
@@ -560,6 +594,55 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Date Range Filters */}
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-sm font-semibold text-gray-700">When:</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setDateRangeOption('all'); setRangeEndDate('') }}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    dateRangeOption === 'all' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => { setDateRangeOption('today'); setRangeEndDate('') }}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    dateRangeOption === 'today' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => { setDateRangeOption('thisWeek'); setRangeEndDate('') }}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    dateRangeOption === 'thisWeek' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  This Week
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDateRangeOption('range')}
+                    className={`px-3 py-2 rounded-full font-medium transition-all ${
+                      dateRangeOption === 'range' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                    }`}
+                  >
+                    Range
+                  </button>
+                  {dateRangeOption === 'range' && (
+                    <input
+                      type="date"
+                      value={rangeEndDate}
+                      onChange={(e) => setRangeEndDate(e.target.value)}
+                      className="px-3 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Status Filters */}
             <div className="flex flex-wrap gap-3 items-center">
               <span className="text-sm font-semibold text-gray-700">Status:</span>
@@ -684,7 +767,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Clear Filters */}
-              {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50) && (
+              {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50 || dateRangeOption !== 'all' || rangeEndDate) && (
                 <button
                   onClick={() => {
                     setFilterStatus({ active: true, expired: false, completed: false })
@@ -692,6 +775,8 @@ export default function DashboardPage() {
                     setCityInput('')
                     setMaxRange(50)
                     setSearchQuery('')
+                    setDateRangeOption('all')
+                    setRangeEndDate('')
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
                 >
