@@ -571,6 +571,19 @@ export default function DashboardPage() {
                       <Bell className="w-5 h-5 text-gray-600" />
                       <span className="text-[var(--neutral)] font-medium">Notification Settings</span>
                     </Link>
+                  
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false)
+                          handleSignOut()
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
+                      >
+                        <LogOut className="w-5 h-5 text-red-600" />
+                        <span className="text-red-600 font-medium">Sign Out</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
