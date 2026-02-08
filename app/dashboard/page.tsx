@@ -727,6 +727,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        </div>
 
         {loading ? (
           <div className="text-center py-20">
