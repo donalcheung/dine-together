@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 
 interface UserLocation {
@@ -41,6 +41,8 @@ export default function DashboardPage() {
   const [rangeEndDate, setRangeEndDate] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [cityCenters, setCityCenters] = useState<Record<string, { lat: number; lng: number }>>({})
+  const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     checkUser()
@@ -62,6 +64,23 @@ export default function DashboardPage() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProfileMenu])
 
   const getUserLocation = () => {
     if ('geolocation' in navigator) {
@@ -510,36 +529,52 @@ export default function DashboardPage() {
             </Link>
             
             {profile && (
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 hover:border-[var(--primary)] transition-all group"
-              >
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {profile.name[0]?.toUpperCase()}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setShowProfileMenu(v => !v)}
+                  className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 hover:border-[var(--primary)] transition-all group"
+                >
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.name}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {profile.name[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-medium">{typeof profile.total_likes === 'number' ? profile.total_likes : '-'}</span>
+                  </div>
+                </button>
+
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="w-5 h-5 text-gray-600" />
+                      <span className="text-[var(--neutral)] font-medium">Edit Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/settings/notifications"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <Bell className="w-5 h-5 text-gray-600" />
+                      <span className="text-[var(--neutral)] font-medium">Notification Settings</span>
+                    </Link>
                   </div>
                 )}
-                <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                  <span className="text-sm font-medium">{profile.total_likes}</span>
-                </div>
-              </Link>
+              </div>
             )}
-            
-            <button
-              onClick={handleSignOut}
-              className="p-2 text-gray-600 hover:text-[var(--primary)] transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </nav>
