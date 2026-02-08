@@ -198,6 +198,24 @@ export default function DashboardPage() {
     )
   }
 
+  const getCityCenterCoordinates = (city: string): { lat: number; lng: number } | null => {
+    const restaurantsInCity = requests.filter(r => {
+      if (!r.restaurant_address) return false
+      const parts = r.restaurant_address.split(',')
+      const rCity = parts.length >= 3 ? parts[parts.length - 3].trim() : ''
+      const rState = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
+      const cityState = `${rCity}, ${rState}`
+      return cityState === city
+    })
+    
+    if (restaurantsInCity.length === 0) return null
+    
+    const avgLat = restaurantsInCity.reduce((sum, r) => sum + (r.latitude || 0), 0) / restaurantsInCity.length
+    const avgLng = restaurantsInCity.reduce((sum, r) => sum + (r.longitude || 0), 0) / restaurantsInCity.length
+    
+    return { lat: avgLat, lng: avgLng }
+  }
+
   const sortedRequests = [...requests].sort((a, b) => {
     if (!userLocation) return 0
     
@@ -229,17 +247,6 @@ export default function DashboardPage() {
     
     if (!statusMatches) return false
     
-    // Distance filter - always apply when user location is available
-    if (userLocation) {
-      const distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        r.latitude,
-        r.longitude
-      )
-      if (distance > maxRange) return false
-    }
-    
     // City filter
     if (selectedCity !== 'current' && r.restaurant_address) {
       const parts = r.restaurant_address.split(',')
@@ -247,6 +254,30 @@ export default function DashboardPage() {
       const state = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
       const cityState = `${city}, ${state}`
       if (cityState !== selectedCity) return false
+    }
+    
+    // Distance filter
+    if (selectedCity === 'current' && userLocation) {
+      // For current location, filter by distance from user's location
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        r.latitude,
+        r.longitude
+      )
+      if (distance > maxRange) return false
+    } else if (selectedCity !== 'current') {
+      // For selected city, filter by distance from city center
+      const cityCenter = getCityCenterCoordinates(selectedCity)
+      if (cityCenter) {
+        const distance = calculateDistance(
+          cityCenter.lat,
+          cityCenter.lng,
+          r.latitude,
+          r.longitude
+        )
+        if (distance > maxRange) return false
+      }
     }
     
     // Search filter - search in restaurant name, address, and description
