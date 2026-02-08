@@ -547,7 +547,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <div>
               <h2 className="text-4xl font-bold text-[var(--neutral)] mb-2">
                 Available Dining Requests
@@ -556,12 +556,6 @@ export default function DashboardPage() {
                 Join someone for a meal and share the experience!
               </p>
             </div>
-            {userLocation && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-full border border-green-200">
-                <Navigation className="w-4 h-4" />
-                <span className="text-sm font-medium">Showing nearest first</span>
-              </div>
-            )}
           </div>
 
           {/* Filter Controls - Compact layout with More filters collapse */}
