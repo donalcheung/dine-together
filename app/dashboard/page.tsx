@@ -35,7 +35,9 @@ export default function DashboardPage() {
   const [showCitySuggestions, setShowCitySuggestions] = useState<boolean>(false)
   const [maxRange, setMaxRange] = useState<number>(50)
   const [sortOption, setSortOption] = useState<'nearest' | 'upcoming'>('nearest')
+  const [moreOpen, setMoreOpen] = useState<boolean>(false)
   const [dateRangeOption, setDateRangeOption] = useState<'all' | 'today' | 'thisWeek' | 'range'>('all')
+  const [rangeStartDate, setRangeStartDate] = useState<string>('')
   const [rangeEndDate, setRangeEndDate] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [cityCenters, setCityCenters] = useState<Record<string, { lat: number; lng: number }>>({})
@@ -204,10 +206,17 @@ export default function DashboardPage() {
     }
 
     if (dateRangeOption === 'range') {
-      if (!rangeEndDate) return true
-      const end = new Date(rangeEndDate)
-      end.setHours(23,59,59,999)
-      return dt >= today && dt <= end
+      // allow optional start and end datetimes; default start = today start, default end = end of start day
+      const start = rangeStartDate ? new Date(rangeStartDate) : new Date(today)
+      if (!rangeStartDate) start.setHours(0,0,0,0)
+      let end: Date
+      if (rangeEndDate) {
+        end = new Date(rangeEndDate)
+      } else {
+        end = new Date(start)
+        end.setHours(23,59,59,999)
+      }
+      return dt >= start && dt <= end
     }
 
     return true
@@ -555,26 +564,18 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Filter Controls */}
-          <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="flex">
+          {/* Filter Controls - Compact layout with More filters collapse */}
+          <div className="space-y-3">
+            {/* Row 1: Search + Sort */}
+            <div className="flex gap-3 items-center">
               <input
                 type="text"
                 placeholder="Search by restaurant, location, host name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-l-full border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
+                className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
               />
-              <button className="px-6 py-3 bg-[var(--primary)] text-white rounded-r-full hover:bg-[var(--primary-dark)] transition-colors font-medium">
-                <Filter className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Sort Options */}
-            <div className="flex items-center gap-3 mt-3">
-              <span className="text-sm font-semibold text-gray-700">Sort:</span>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSortOption('nearest')}
                   className={`px-3 py-2 rounded-full font-medium transition-all ${
@@ -594,12 +595,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Date Range Filters */}
-            <div className="flex items-center gap-3 mt-3">
-              <span className="text-sm font-semibold text-gray-700">When:</span>
-              <div className="flex gap-2">
+            {/* Row 2: When */}
+            <div className="flex gap-3 items-center">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => { setDateRangeOption('all'); setRangeEndDate('') }}
+                  onClick={() => { setDateRangeOption('all'); setRangeStartDate(''); setRangeEndDate('') }}
                   className={`px-3 py-2 rounded-full font-medium transition-all ${
                     dateRangeOption === 'all' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                   }`}
@@ -607,7 +607,7 @@ export default function DashboardPage() {
                   All
                 </button>
                 <button
-                  onClick={() => { setDateRangeOption('today'); setRangeEndDate('') }}
+                  onClick={() => { setDateRangeOption('today'); setRangeStartDate(''); setRangeEndDate('') }}
                   className={`px-3 py-2 rounded-full font-medium transition-all ${
                     dateRangeOption === 'today' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                   }`}
@@ -615,176 +615,111 @@ export default function DashboardPage() {
                   Today
                 </button>
                 <button
-                  onClick={() => { setDateRangeOption('thisWeek'); setRangeEndDate('') }}
+                  onClick={() => { setDateRangeOption('thisWeek'); setRangeStartDate(''); setRangeEndDate('') }}
                   className={`px-3 py-2 rounded-full font-medium transition-all ${
                     dateRangeOption === 'thisWeek' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
                   }`}
                 >
                   This Week
                 </button>
+                <button
+                  onClick={() => setDateRangeOption('range')}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    dateRangeOption === 'range' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  Range
+                </button>
+              </div>
+
+              {dateRangeOption === 'range' && (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setDateRangeOption('range')}
-                    className={`px-3 py-2 rounded-full font-medium transition-all ${
-                      dateRangeOption === 'range' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
-                    }`}
-                  >
-                    Range
-                  </button>
-                  {dateRangeOption === 'range' && (
-                    <input
-                      type="date"
-                      value={rangeEndDate}
-                      onChange={(e) => setRangeEndDate(e.target.value)}
-                      className="px-3 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
-                    />
+                  <input
+                    type="datetime-local"
+                    value={rangeStartDate}
+                    onChange={(e) => setRangeStartDate(e.target.value)}
+                    className="px-3 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
+                    aria-label="Range start"
+                  />
+                  <span className="text-gray-500">to</span>
+                  <input
+                    type="datetime-local"
+                    value={rangeEndDate}
+                    onChange={(e) => setRangeEndDate(e.target.value)}
+                    className="px-3 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
+                    aria-label="Range end"
+                  />
+                </div>
+              )}
+
+              <div className="ml-auto text-sm text-gray-600">{dateRangeOption === 'all' ? 'Showing all dates' : dateRangeOption === 'today' ? 'Today only' : dateRangeOption === 'thisWeek' ? 'Next 7 days' : `Range ${rangeStartDate || 'today'} → ${rangeEndDate || '...'}`}</div>
+            </div>
+
+            {/* More filters (collapsible) */}
+            <div>
+              <button
+                onClick={() => setMoreOpen(v => !v)}
+                aria-expanded={moreOpen}
+                aria-controls="more-filters"
+                className="text-sm text-[var(--primary)] underline"
+              >
+                {moreOpen ? 'Hide filters' : 'More filters'} ▾
+              </button>
+
+              <div id="more-filters" className={`mt-3 grid gap-3 ${moreOpen ? '' : 'hidden'} md:grid-cols-3`}>
+                {/* Status */}
+                <div className="flex items-center gap-2">
+                  <button className={`px-3 py-2 rounded-full font-medium ${filterStatus.active ? 'bg-orange-500 text-white' : 'bg-white border-2 border-gray-300'}`} onClick={() => setFilterStatus({...filterStatus, active: !filterStatus.active})}>Active ({activeCount})</button>
+                  <button className={`px-3 py-2 rounded-full font-medium ${filterStatus.expired ? 'bg-orange-500 text-white' : 'bg-white border-2 border-gray-300'}`} onClick={() => setFilterStatus({...filterStatus, expired: !filterStatus.expired})}>Expired ({expiredCount})</button>
+                  <button className={`px-3 py-2 rounded-full font-medium ${filterStatus.completed ? 'bg-orange-500 text-white' : 'bg-white border-2 border-gray-300'}`} onClick={() => setFilterStatus({...filterStatus, completed: !filterStatus.completed})}>Completed ({completedCount})</button>
+                </div>
+
+                {/* Location autocomplete */}
+                <div className="flex flex-col gap-2 relative">
+                  <label className="text-sm font-semibold text-gray-700">Location</label>
+                  <input
+                    type="text"
+                    placeholder="City, State or Current"
+                    value={selectedCity === 'current' ? '' : cityInput}
+                    onChange={(e) => {
+                      setCityInput(e.target.value)
+                      setSelectedCity(e.target.value || 'current')
+                      setShowCitySuggestions(true)
+                    }}
+                    onFocus={() => setShowCitySuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                    className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white w-full"
+                  />
+                  {showCitySuggestions && (
+                    <div className="absolute top-full mt-1 w-full bg-white border-2 border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                      <button type="button" onClick={() => { setSelectedCity('current'); setCityInput(''); setShowCitySuggestions(false) }} className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${selectedCity === 'current' ? 'bg-blue-100 text-[var(--primary)] font-medium' : 'text-gray-700'}`}>📍 Use Current Location</button>
+                      <div className="border-t border-gray-200" />
+                      {getFilteredCitySuggestions().length > 0 ? getFilteredCitySuggestions().map(city => (
+                        <button key={city} type="button" onClick={() => { setSelectedCity(city); setCityInput(city); setShowCitySuggestions(false) }} className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${selectedCity === city ? 'bg-blue-50 text-[var(--primary)] font-medium' : 'text-gray-700'}`}>{city}</button>
+                      )) : (
+                        <div className="px-4 py-2 text-gray-500 text-sm">No cities match your search</div>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Status Filters */}
-            <div className="flex flex-wrap gap-3 items-center">
-              <span className="text-sm font-semibold text-gray-700">Status:</span>
-              <div className="flex gap-2 flex-wrap">
-                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
-                  filterStatus.active
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={filterStatus.active}
-                    onChange={(e) => setFilterStatus({...filterStatus, active: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer hidden"
-                  />
-                  <span>Active ({activeCount})</span>
-                </label>
-                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
-                  filterStatus.expired
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={filterStatus.expired}
-                    onChange={(e) => setFilterStatus({...filterStatus, expired: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer hidden"
-                  />
-                  <span>Expired ({expiredCount})</span>
-                </label>
-                <label className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all cursor-pointer ${
-                  filterStatus.completed
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={filterStatus.completed}
-                    onChange={(e) => setFilterStatus({...filterStatus, completed: e.target.checked})}
-                    className="w-4 h-4 cursor-pointer hidden"
-                  />
-                  <span>Completed ({completedCount})</span>
-                </label>
-              </div>
-            </div>
+                {/* Max Range */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">Max Range</label>
+                  <div className="flex items-center gap-3">
+                    <input type="range" min="1" max="100" value={maxRange} onChange={(e) => setMaxRange(parseInt(e.target.value))} className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer" style={{background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`}} />
+                    <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
+                  </div>
 
-            {/* Location and Distance Filters */}
-            <div className="flex flex-wrap gap-4 items-end">
-              {/* City Filter - Autocomplete */}
-              <div className="flex flex-col gap-2 relative">
-                <label className="text-sm font-semibold text-gray-700">Location:</label>
-                <input
-                  type="text"
-                  placeholder="Type city name or use current location..."
-                  value={selectedCity === 'current' ? '' : cityInput}
-                  onChange={(e) => {
-                    setCityInput(e.target.value)
-                    setSelectedCity(e.target.value || 'current')
-                    setShowCitySuggestions(true)
-                  }}
-                  onFocus={() => setShowCitySuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
-                  className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white w-64"
-                />
-                {showCitySuggestions && (
-                  <div className="absolute top-full mt-1 w-64 bg-white border-2 border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCity('current')
-                        setCityInput('')
-                        setShowCitySuggestions(false)
-                      }}
-                      className={`w-full text-left px-4 py-2 hover:bg-blue-50 transition-colors ${
-                        selectedCity === 'current' ? 'bg-blue-100 text-[var(--primary)] font-medium' : 'text-gray-700'
-                      }`}
-                    >
-                      📍 Use Current Location
-                    </button>
-                    <div className="border-t border-gray-200" />
-                    {getFilteredCitySuggestions().length > 0 ? (
-                      getFilteredCitySuggestions().map(city => (
-                        <button
-                          key={city}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCity(city)
-                            setCityInput(city)
-                            setShowCitySuggestions(false)
-                          }}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${
-                            selectedCity === city ? 'bg-blue-50 text-[var(--primary)] font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          {city}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-gray-500 text-sm">No cities match your search</div>
+                  {/* Clear Filters inside more */}
+                  <div>
+                    {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50 || dateRangeOption !== 'all' || rangeStartDate || rangeEndDate) && (
+                      <button onClick={() => { setFilterStatus({ active: true, expired: false, completed: false }); setSelectedCity('current'); setCityInput(''); setMaxRange(50); setSearchQuery(''); setDateRangeOption('all'); setRangeStartDate(''); setRangeEndDate('') }} className="mt-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">Clear Filters</button>
                     )}
                   </div>
-                )}
-              </div>
-
-              {/* Max Range Filter - Always visible */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700">Max Range:</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="1"
-                    max="100"
-                    value={maxRange}
-                    onChange={(e) => setMaxRange(parseInt(e.target.value))}
-                    className="w-40 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`
-                    }}
-                  />
-                  <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
                 </div>
               </div>
-
-              {/* Clear Filters */}
-              {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50 || dateRangeOption !== 'all' || rangeEndDate) && (
-                <button
-                  onClick={() => {
-                    setFilterStatus({ active: true, expired: false, completed: false })
-                    setSelectedCity('current')
-                    setCityInput('')
-                    setMaxRange(50)
-                    setSearchQuery('')
-                    setDateRangeOption('all')
-                    setRangeEndDate('')
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Clear Filters
-                </button>
-              )}
             </div>
-          </div>
 
           {locationError && (
             <div className="mt-4 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
