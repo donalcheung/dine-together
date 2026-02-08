@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [cityInput, setCityInput] = useState<string>('')
   const [showCitySuggestions, setShowCitySuggestions] = useState<boolean>(false)
   const [maxRange, setMaxRange] = useState<number>(50)
+  const [sortOption, setSortOption] = useState<'nearest' | 'upcoming'>('nearest')
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   useEffect(() => {
@@ -175,6 +176,11 @@ export default function DashboardPage() {
     }
   }
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  }
+
   const getUniqueCities = (): string[] => {
     const cities = new Set<string>()
     requests.forEach(r => {
@@ -217,22 +223,36 @@ export default function DashboardPage() {
   }
 
   const sortedRequests = [...requests].sort((a, b) => {
-    if (!userLocation) return 0
-    
-    const distanceA = calculateDistance(
-      userLocation.latitude,
-      userLocation.longitude,
-      a.latitude,
-      a.longitude
-    )
-    const distanceB = calculateDistance(
-      userLocation.latitude,
-      userLocation.longitude,
-      b.latitude,
-      b.longitude
-    )
-    
-    return distanceA - distanceB
+    // If user chose 'nearest', sort by distance (from user or selected city center)
+    if (sortOption === 'nearest') {
+      // Determine reference point
+      let refLat: number | null = null
+      let refLng: number | null = null
+
+      if (selectedCity !== 'current') {
+        const cityCenter = getCityCenterCoordinates(selectedCity)
+        if (cityCenter) {
+          refLat = cityCenter.lat
+          refLng = cityCenter.lng
+        }
+      }
+
+      if ((refLat === null || refLng === null) && userLocation) {
+        refLat = userLocation.latitude
+        refLng = userLocation.longitude
+      }
+
+      if (refLat !== null && refLng !== null) {
+        const distA = calculateDistance(refLat, refLng, a.latitude, a.longitude)
+        const distB = calculateDistance(refLat, refLng, b.latitude, b.longitude)
+        return distA - distB
+      }
+    }
+
+    // Fallback or 'upcoming' sorting: earliest dining_time first
+    const timeA = new Date(a.dining_time).getTime()
+    const timeB = new Date(b.dining_time).getTime()
+    return timeA - timeB
   })
 
   const filteredRequests = sortedRequests.filter(r => {
@@ -405,6 +425,29 @@ export default function DashboardPage() {
               <button className="px-6 py-3 bg-[var(--primary)] text-white rounded-r-full hover:bg-[var(--primary-dark)] transition-colors font-medium">
                 <Filter className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Sort Options */}
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-sm font-semibold text-gray-700">Sort:</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSortOption('nearest')}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    sortOption === 'nearest' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  Nearest
+                </button>
+                <button
+                  onClick={() => setSortOption('upcoming')}
+                  className={`px-3 py-2 rounded-full font-medium transition-all ${
+                    sortOption === 'upcoming' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-orange-500'
+                  }`}
+                >
+                  Upcoming
+                </button>
+              </div>
             </div>
 
             {/* Status Filters */}
@@ -693,7 +736,10 @@ export default function DashboardPage() {
                     <div className="space-y-3 mb-4 flex-1">
                       <div className={`flex items-center gap-2 ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
                         <Clock className={`w-5 h-5 ${expired ? 'text-gray-400' : 'text-[var(--primary)]'}`} />
-                        <span className="font-medium">{formatTime(request.dining_time)}</span>
+                        <div className="font-medium text-sm leading-tight">
+                          <div className={`${expired ? 'text-gray-500' : 'text-gray-700'}`}>{formatDate(request.dining_time)}</div>
+                          <div className={`text-sm ${expired ? 'text-gray-400' : 'text-[var(--primary)]'}`}>{formatTime(request.dining_time)}</div>
+                        </div>
                       </div>
                       
                       <div className={`flex items-center gap-2 ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
