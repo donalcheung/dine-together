@@ -159,7 +159,7 @@ export default function BrowseRestaurantsPage() {
               Restaurant Deals & Discounts
             </h1>
             <p className="text-xl text-purple-100">
-              Discover amazing deals at local restaurants during non-peak hours
+              Discover exclusive restaurant deals and limited-time offers
             </p>
           </div>
         </div>
@@ -364,7 +364,7 @@ export default function BrowseRestaurantsPage() {
                 Own a restaurant?
               </h3>
               <p className="text-gray-700 mb-4">
-                Join DineTogether and attract more customers during non-peak hours with special deals and discounts.
+                Join DineTogether and offer exclusive time-based deals to attract more diners.
               </p>
               <Link
                 href="/restaurants/claim"
