@@ -11,6 +11,12 @@ interface UserLocation {
   longitude: number
 }
 
+interface FilterState {
+  active: boolean
+  expired: boolean
+  completed: boolean
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
@@ -19,7 +25,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [locationError, setLocationError] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'expired' | 'completed'>('active')
+  const [filterStatus, setFilterStatus] = useState<FilterState>({
+    active: true,
+    expired: false,
+    completed: false,
+  })
+  const [selectedCity, setSelectedCity] = useState<string>('current')
+  const [maxRange, setMaxRange] = useState<number>(50)
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   useEffect(() => {
     checkUser()
@@ -160,6 +173,20 @@ export default function DashboardPage() {
     }
   }
 
+  const getUniqueCities = (): string[] => {
+    const cities = new Set<string>()
+    requests.forEach(r => {
+      if (r.restaurant_address) {
+        const parts = r.restaurant_address.split(',')
+        if (parts.length >= 2) {
+          const city = parts[parts.length - 2].trim()
+          cities.add(city)
+        }
+      }
+    })
+    return Array.from(cities).sort()
+  }
+
   const sortedRequests = [...requests].sort((a, b) => {
     if (!userLocation) return 0
     
@@ -183,16 +210,52 @@ export default function DashboardPage() {
     const expired = isExpired(r.dining_time)
     const completed = r.status === 'completed'
     
-    if (filterStatus === 'all') return true
-    if (filterStatus === 'active') return !expired && !completed
-    if (filterStatus === 'expired') return expired && !completed
-    if (filterStatus === 'completed') return completed
+    // Status filter - check if at least one status filter is selected
+    let statusMatches = false
+    if (filterStatus.active && !expired && !completed) statusMatches = true
+    if (filterStatus.expired && expired && !completed) statusMatches = true
+    if (filterStatus.completed && completed) statusMatches = true
+    
+    if (!statusMatches) return false
+    
+    // Distance filter
+    if (userLocation && selectedCity === 'current') {
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        r.latitude,
+        r.longitude
+      )
+      if (distance > maxRange) return false
+    }
+    
+    // City filter
+    if (selectedCity !== 'current' && r.restaurant_address) {
+      const parts = r.restaurant_address.split(',')
+      const city = parts.length >= 2 ? parts[parts.length - 2].trim() : ''
+      if (city !== selectedCity) return false
+    }
+    
+    // Search filter - search in restaurant name, address, and description
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      const matchesRestaurantName = r.restaurant_name?.toLowerCase().includes(query)
+      const matchesAddress = r.restaurant_address?.toLowerCase().includes(query)
+      const matchesDescription = r.description?.toLowerCase().includes(query)
+      const matchesHostName = r.host?.name?.toLowerCase().includes(query)
+      
+      if (!matchesRestaurantName && !matchesAddress && !matchesDescription && !matchesHostName) {
+        return false
+      }
+    }
+    
     return true
   })
 
   const activeCount = sortedRequests.filter(r => !isExpired(r.dining_time) && r.status !== 'completed').length
   const expiredCount = sortedRequests.filter(r => isExpired(r.dining_time) && r.status !== 'completed').length
   const completedCount = sortedRequests.filter(r => r.status === 'completed').length
+  const uniqueCities = getUniqueCities()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
@@ -285,48 +348,107 @@ export default function DashboardPage() {
           </div>
 
           {/* Filter Controls */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilterStatus('active')}
-                className={`px-4 py-2 rounded-full font-medium transition-all ${
-                  filterStatus === 'active'
-                    ? 'bg-[var(--primary)] text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-[var(--primary)]'
-                }`}
-              >
-                Active ({activeCount})
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="flex">
+              <input
+                type="text"
+                placeholder="Search by restaurant, location, host name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-l-full border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors"
+              />
+              <button className="px-6 py-3 bg-[var(--primary)] text-white rounded-r-full hover:bg-[var(--primary-dark)] transition-colors font-medium">
+                <Filter className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => setFilterStatus('expired')}
-                className={`px-4 py-2 rounded-full font-medium transition-all ${
-                  filterStatus === 'expired'
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-amber-500'
-                }`}
-              >
-                Expired ({expiredCount})
-              </button>
-              <button
-                onClick={() => setFilterStatus('completed')}
-                className={`px-4 py-2 rounded-full font-medium transition-all ${
-                  filterStatus === 'completed'
-                    ? 'bg-green-500 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-green-500'
-                }`}
-              >
-                Completed ({completedCount})
-              </button>
-              <button
-                onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-full font-medium transition-all ${
-                  filterStatus === 'all'
-                    ? 'bg-gray-700 text-white shadow-md'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-700'
-                }`}
-              >
-                All ({sortedRequests.length})
-              </button>
+            </div>
+
+            {/* Status Filters */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <span className="text-sm font-semibold text-gray-700">Status:</span>
+              <div className="flex gap-2 flex-wrap">
+                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-[var(--primary)]" style={{borderColor: filterStatus.active ? 'var(--primary)' : '#d1d5db', backgroundColor: filterStatus.active ? 'rgba(var(--primary-rgb), 0.1)' : 'white'}}>
+                  <input
+                    type="checkbox"
+                    checked={filterStatus.active}
+                    onChange={(e) => setFilterStatus({...filterStatus, active: e.target.checked})}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <span className="font-medium text-gray-700">Active ({activeCount})</span>
+                </label>
+                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-amber-500" style={{borderColor: filterStatus.expired ? '#b45309' : '#d1d5db', backgroundColor: filterStatus.expired ? '#fef3c7' : 'white'}}>
+                  <input
+                    type="checkbox"
+                    checked={filterStatus.expired}
+                    onChange={(e) => setFilterStatus({...filterStatus, expired: e.target.checked})}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <span className="font-medium text-gray-700">Expired ({expiredCount})</span>
+                </label>
+                <label className="flex items-center gap-2 px-3 py-2 rounded-full border-2 cursor-pointer transition-all hover:border-green-500" style={{borderColor: filterStatus.completed ? '#16a34a' : '#d1d5db', backgroundColor: filterStatus.completed ? '#dcfce7' : 'white'}}>
+                  <input
+                    type="checkbox"
+                    checked={filterStatus.completed}
+                    onChange={(e) => setFilterStatus({...filterStatus, completed: e.target.checked})}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <span className="font-medium text-gray-700">Completed ({completedCount})</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Location and Distance Filters */}
+            <div className="flex flex-wrap gap-4 items-end">
+              {/* City Filter */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-700">Location:</label>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white"
+                >
+                  <option value="current">Current Location ({maxRange} mi radius)</option>
+                  {uniqueCities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Max Range Filter - Only show when using current location */}
+              {selectedCity === 'current' && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">Max Range:</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={maxRange}
+                      onChange={(e) => setMaxRange(parseInt(e.target.value))}
+                      className="w-40 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`
+                      }}
+                    />
+                    <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Clear Filters */}
+              {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50) && (
+                <button
+                  onClick={() => {
+                    setFilterStatus({ active: true, expired: false, completed: false })
+                    setSelectedCity('current')
+                    setMaxRange(50)
+                    setSearchQuery('')
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           </div>
 
@@ -350,10 +472,11 @@ export default function DashboardPage() {
                 No Requests Found
               </h3>
               <p className="text-gray-600 mb-6">
-                {filterStatus === 'active' && 'No active requests right now. Create one!'}
-                {filterStatus === 'expired' && 'No expired requests to complete.'}
-                {filterStatus === 'completed' && 'No completed meals yet.'}
-                {filterStatus === 'all' && 'Be the first to create a dining request!'}
+                {searchQuery && 'No requests match your search. '}
+                {!filterStatus.active && !filterStatus.expired && !filterStatus.completed && 'Please select at least one status filter.'}
+                {(filterStatus.active || filterStatus.expired || filterStatus.completed) && selectedCity === 'current' && maxRange < 100 && !searchQuery && 'No requests within your distance range. Try increasing the range.'}
+                {(filterStatus.active || filterStatus.expired || filterStatus.completed) && selectedCity !== 'current' && !searchQuery && `No requests found in ${selectedCity}.`}
+                {!searchQuery && !selectedCity && 'Be the first to create a dining request!'}
               </p>
               <Link
                 href="/create"
