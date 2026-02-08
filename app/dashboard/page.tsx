@@ -547,7 +547,7 @@ export default function DashboardPage() {
                   )}
                   <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
                   <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500" />
+                    <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
                     <span className="text-sm font-medium">{typeof profile.total_likes === 'number' ? profile.total_likes : '-'}</span>
                   </div>
                 </button>
