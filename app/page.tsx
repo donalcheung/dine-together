@@ -59,8 +59,7 @@ export default function Home() {
             <Link 
               href="/auth?signup=true" 
               className="px-6 py-2 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg font-medium"
-            >
-              Get Started
+                          <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
             </Link>
           </div>
         </div>
@@ -77,14 +76,11 @@ export default function Home() {
             Turn Every Meal<br />
             Into an <span className="text-[var(--primary)] italic">Experience</span>
           </h1>
-          
-          <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+                          <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
             Whether you're traveling solo, grabbing lunch with coworkers, organizing group dinners, or just want to try more dishes—TableMesh connects you with the right dining companions.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/dashboard" 
+                          <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                          <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                          <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
               className="px-8 py-4 bg-[var(--primary)] text-white rounded-full text-lg font-semibold hover:bg-[var(--primary-dark)] transition-all hover:shadow-xl transform hover:scale-105"
             >
               Browse Dining Requests
