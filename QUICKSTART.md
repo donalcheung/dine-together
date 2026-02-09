@@ -32,13 +32,18 @@ npm install
 
 ### 3️⃣ Configure & Run (3 minutes)
 
-1. Copy `.env.local.example` to `.env.local`
+1. Copy `.env.example` to `.env.local`
 2. Add your Supabase credentials to `.env.local`
-3. Run the dev server:
+3. **Optional: Set up Email Notifications**
+   - Go to https://resend.com and sign up (free)
+   - Get your API key from the dashboard
+   - Add to `.env.local`: `RESEND_API_KEY=your_key_here`
+   - Notifications will now be sent when users join requests!
+4. Run the dev server:
    ```bash
    npm run dev
    ```
-4. Open http://localhost:3000
+5. Open http://localhost:3000
 
 **That's it!** 🎉
 
@@ -49,6 +54,7 @@ Follow the detailed guide in `DEPLOYMENT.md` - takes about 20-30 minutes total.
 The entire stack is FREE:
 - Supabase free tier: 500MB database
 - Vercel free tier: Unlimited deployments
+- Resend free tier: 100 emails/day (perfect for testing!)
 - Custom domain: Optional (~$12/year)
 
 ## Need Help?

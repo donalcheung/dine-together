@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
 import { validateProfanity } from '@/lib/profanity-filter'
+import { sendJoinNotification, sendAcceptanceNotification } from '@/lib/send-notification'
 
 interface Comment {
   id: string
@@ -404,6 +405,16 @@ export default function RequestDetailPage() {
 
       if (error) throw error
 
+      // Send notification to host
+      if (request?.host?.email && user?.email) {
+        await sendJoinNotification(
+          request.host.email,
+          user.user_metadata?.full_name || 'A user',
+          request.restaurant_name,
+          requestId
+        )
+      }
+
       setShowJoinForm(false)
       setJoinMessage('')
       loadJoins()
@@ -427,6 +438,19 @@ export default function RequestDetailPage() {
           .from('dining_requests')
           .update({ seats_available: request.seats_available - 1 })
           .eq('id', requestId)
+
+        // Find the accepted join to get guest info
+        const acceptedJoin = joins.find(j => j.id === joinId)
+        if (acceptedJoin?.user?.email) {
+          await sendAcceptanceNotification(
+            acceptedJoin.user.email,
+            acceptedJoin.user.name,
+            user?.user_metadata?.full_name || 'The host',
+            request.restaurant_name,
+            request.dining_time,
+            requestId
+          )
+        }
       }
 
       loadRequest()
