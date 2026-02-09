@@ -90,19 +90,19 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Stats */}
+          {/* Trust Indicators */}
           <div className="flex gap-8 justify-center mt-16 flex-wrap">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[var(--primary)]">2,847</div>
-              <div className="text-gray-600">Meals Shared</div>
+            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+              <Shield className="w-5 h-5 text-green-500" />
+              <span className="font-medium text-gray-700">Verified Profiles</span>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[var(--primary)]">1,203</div>
-              <div className="text-gray-600">Active Diners</div>
+            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+              <span className="font-medium text-gray-700">Community Ratings</span>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[var(--primary)]">4.8★</div>
-              <div className="text-gray-600">Community Rating</div>
+            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              <span className="font-medium text-gray-700">Location-Based</span>
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "Finally tried that Korean BBQ spot! Found 3 people to split dishes with. We ordered the whole menu and spent half what we would've alone."
+                "Finally tried that dim sum spot! Found 3 people to split dishes with. We ordered the whole menu and spent half what we would've alone."
               </p>
               <div className="font-semibold text-[var(--neutral)]">— Jamie, Food Enthusiast</div>
             </div>
