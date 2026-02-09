@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -209,7 +210,13 @@ function CreateRequestForm() {
             <span className="font-medium">Back to Dashboard</span>
           </Link>
           
-          <Link href="/" className="flex items-center gap-2">
+          <LiImage
+              src="/logo.png"
+              alt="TableMesh Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7"
+           
             <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
             <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>

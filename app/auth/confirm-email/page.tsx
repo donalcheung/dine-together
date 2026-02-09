@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Utensils, Mail, CheckCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -99,7 +100,13 @@ export default function ConfirmEmailPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <Utensils className="w-10 h-10 text-[var(--primary)]" strokeWidth={2.5} />
+          <Image
+            src="/logo.png"
+            alt="TableMesh Logo"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
           <h1 className="text-3xl font-bold text-[var(--neutral)]">TableMesh</h1>
         </Link>
 

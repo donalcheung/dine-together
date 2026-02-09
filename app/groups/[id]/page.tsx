@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX, Camera } from 'lucide-react'
 import { supabase, Group, GroupMember, DiningRequest, Profile } from '@/lib/supabase'
@@ -263,8 +264,14 @@ export default function GroupDetailPage() {
           </Link>
           
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
-            <h1 className="text-xl font-bold text-[var(--neutral)]">DineTogether</h1>
+            <Image
+              src="/logo.png"
+              alt="TableMesh Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7"
+            />
+            <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>
         </div>
       </nav>

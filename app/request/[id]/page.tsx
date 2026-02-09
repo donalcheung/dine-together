@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
@@ -525,7 +526,13 @@ export default function RequestDetailPage() {
           </Link>
           
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2">
+            <LiImage
+                src="/logo.png"
+                alt="TableMesh Logo"
+                width={28}
+                height={28}
+                className="w-7 h-7"
+             
               <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
               <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
             </Link>
