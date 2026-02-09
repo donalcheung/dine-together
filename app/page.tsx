@@ -80,28 +80,27 @@ export default function Home() {
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             Whether you're traveling solo, grabbing lunch with coworkers, organizing group dinners, or just want to try more dishes—TableMesh connects you with the right dining companions.
           </p>
-            <Link 
-              href="/create" 
-              className="px-8 py-4 bg-white text-[var(--neutral)] rounded-full text-lg font-semibold border-2 border-[var(--neutral)] hover:bg-[var(--neutral)] hover:text-white transition-all"
-            >
-              Post Your Plans
-            </Link>
-          </div>
+          <Link 
+            href="/create" 
+            className="px-8 py-4 bg-white text-[var(--neutral)] rounded-full text-lg font-semibold border-2 border-[var(--neutral)] hover:bg-[var(--neutral)] hover:text-white transition-all"
+          >
+            Post Your Plans
+          </Link>
+        </div>
 
-          {/* Trust Indicators */}
-          <div className="flex gap-8 justify-center mt-16 flex-wrap">
-            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-              <Shield className="w-5 h-5 text-green-500" />
-              <span className="font-medium text-gray-700">Verified Profiles</span>
-            </div>
-            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-              <span className="font-medium text-gray-700">Community Ratings</span>
-            </div>
-            <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-              <MapPin className="w-5 h-5 text-blue-500" />
-              <span className="font-medium text-gray-700">Location-Based</span>
-            </div>
+        {/* Trust Indicators */}
+        <div className="flex gap-8 justify-center mt-16 flex-wrap">
+          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+            <Shield className="w-5 h-5 text-green-500" />
+            <span className="font-medium text-gray-700">Verified Profiles</span>
+          </div>
+          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+            <span className="font-medium text-gray-700">Community Ratings</span>
+          </div>
+          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
+            <MapPin className="w-5 h-5 text-blue-500" />
+            <span className="font-medium text-gray-700">Location-Based</span>
           </div>
         </div>
       </section>
@@ -157,29 +156,29 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Community Groups</h3>
               <p className="text-gray-600 leading-relaxed">
-                Organize recurring dinners, food tours, or tasting events for your running club, book club, or meetup group.
+                Running a book club or meetup? Post your group's dinner plans and let others discover your community.
               </p>
             </div>
 
-            {/* Food Lovers */}
+            {/* Try New Dishes */}
             <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 card-hover">
-              <div className="w-16 h-16 bg-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.4s'}}>
-                <Star className="w-8 h-8 text-white" strokeWidth={2.5} />
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.4s'}}>
+                <Utensils className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Adventurous Eaters</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Food Explorers</h3>
               <p className="text-gray-600 leading-relaxed">
-                Want to try the whole menu at that tapas bar? Share dishes, split bills, and explore cuisines together.
+                Want to try dim sum but can't order enough? Find others to split dishes and explore the full menu.
               </p>
             </div>
 
-            {/* Restaurants */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50 card-hover">
-              <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.5s'}}>
+            {/* Restaurant Promotions */}
+            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 card-hover">
+              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.5s'}}>
                 <TrendingUp className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Restaurant Owners</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Restaurants</h3>
               <p className="text-gray-600 leading-relaxed">
-                Fill empty tables during slow hours with exclusive deals. Attract groups and build a loyal community.
+                Fill tables during slow hours. Post special deals and attract groups looking for great dining experiences.
               </p>
             </div>
           </div>
@@ -193,34 +192,34 @@ export default function Home() {
             Simple as 1-2-3
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg card-hover">
-              <div className="w-20 h-20 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">
+          <div className="grid md:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 1
               </div>
               <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Post Your Plans</h3>
               <p className="text-gray-600 leading-relaxed">
-                Choose a restaurant, time, and how many people you want. Add details about what you're looking for.
+                Share where you're dining and how many seats are available. Add details about cuisine preferences or group vibe.
               </p>
             </div>
 
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg card-hover">
-              <div className="w-20 h-20 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 2
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Connect & Approve</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Connect & Confirm</h3>
               <p className="text-gray-600 leading-relaxed">
-                Get join requests from nearby diners. Review profiles, ratings, and choose who joins your table.
+                Browse requests near you or review join requests for yours. Message to coordinate details and confirm attendance.
               </p>
             </div>
 
-            <div className="text-center p-8 rounded-2xl bg-white shadow-lg card-hover">
-              <div className="w-20 h-20 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 text-white text-3xl font-bold">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 3
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Enjoy & Rate</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Dine & Review</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share dishes, stories, and experiences. Rate each other afterward to build a trusted community.
+                Enjoy your meal together. Afterward, rate your dining companions to help build a trusted community.
               </p>
             </div>
           </div>
@@ -231,44 +230,28 @@ export default function Home() {
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl font-bold text-center mb-16 text-[var(--neutral)]">
-            Built for Real Connections
+            Built for Real Diners
           </h2>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Clock className="w-12 h-12 text-[var(--primary)] mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Spontaneous & Real-Time</h3>
-              <p className="text-gray-600 leading-relaxed">
-                No scheduling weeks ahead. Post an hour before dinner and find companions instantly based on location.
-              </p>
-            </div>
-
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Star className="w-12 h-12 text-blue-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Trusted Ratings</h3>
+              <Clock className="w-12 h-12 text-blue-500 mb-4" strokeWidth={2} />
+              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Flexible Timing</h3>
               <p className="text-gray-600 leading-relaxed">
-                Every diner has verified ratings and reviews. You control who joins—accept, decline, or counter-offer.
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Users className="w-12 h-12 text-green-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Private Groups</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Create closed groups for friends, coworkers, or clubs. Share plans privately and coordinate easily.
+                Post hours in advance or minutes before. See what's happening now or plan ahead for the weekend.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <TrendingUp className="w-12 h-12 text-purple-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Restaurant Deals</h3>
+              <Star className="w-12 h-12 text-purple-500 mb-4" strokeWidth={2} />
+              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Rating System</h3>
               <p className="text-gray-600 leading-relaxed">
-                Restaurants post exclusive discounts for groups. Discover deals, save money, and support local spots.
+                Build your reputation as a reliable dining companion. See others' ratings before you commit.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-red-50 to-orange-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <MapPin className="w-12 h-12 text-[var(--accent)] mb-4" strokeWidth={2} />
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+              <MapPin className="w-12 h-12 text-green-500 mb-4" strokeWidth={2} />
               <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Location-Based</h3>
               <p className="text-gray-600 leading-relaxed">
                 See dining requests near you, sorted by distance. Never miss out on nearby opportunities.
@@ -391,8 +374,7 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white transition-colors">How It Works</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Find Dining Partners</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Create Request</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Safety Guidelines</a></li>
-                  <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
+                <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>
             
@@ -409,14 +391,10 @@ export default function Home() {
             <div>
               <h4 className="font-bold mb-3">Company</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                  <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                  <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                  <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
