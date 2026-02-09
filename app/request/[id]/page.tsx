@@ -525,18 +525,16 @@ export default function RequestDetailPage() {
             <span className="font-medium">Back to Dashboard</span>
           </Link>
           
-          <div className="flex items-center gap-4">
-            <LiImage
-                src="/logo.png"
-                alt="TableMesh Logo"
-                width={28}
-                height={28}
-                className="w-7 h-7"
-             
-              <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
-              <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
-            </Link>
-          </div>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="TableMesh Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7"
+            />
+            <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
+          </Link>
         </div>
       </nav>
 

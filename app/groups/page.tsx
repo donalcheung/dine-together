@@ -228,14 +228,14 @@ export default function GroupsPage() {
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-orange-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <LiImage
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
               src="/logo.png"
               alt="TableMesh Logo"
               width={32}
               height={32}
               className="w-8 h-8"
-           
-            <Utensils className="w-8 h-8 text-[var(--primary)]" strokeWidth={2.5} />
+            />
             <h1 className="text-2xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>
           

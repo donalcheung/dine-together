@@ -39,16 +39,16 @@ export default function Home() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-orange-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <diImage
+          <Link href="/" className="flex items-center gap-2">
+            <Image
               src="/logo.png"
               alt="TableMesh Logo"
               width={32}
               height={32}
               className="w-8 h-8"
-           
-            <Utensils className="w-8 h-8 text-[var(--primary)]" strokeWidth={2.5} />
+            />
             <h1 className="text-2xl font-bold text-[var(--neutral)]">TableMesh</h1>
-          </div>
+          </Link>
           <div className="flex gap-4">
             <Link 
               href="/auth" 
