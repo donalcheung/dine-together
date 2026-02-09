@@ -60,12 +60,15 @@ export function filterProfanity(text: string): {
   let filtered = text
 
   // Check each inappropriate word
+  // Helper to escape regex special characters
+  const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
   for (const word of INAPPROPRIATE_WORDS) {
     // Create regex that matches the word with word boundaries and variations
     // Also handles common number/symbol replacements like 4 for a, 1 for i, @ for a, etc.
     const patterns = [
-      new RegExp(`\\b${word}\\b`, 'gi'),
-      new RegExp(`\\b${word.replace(/3/g, 'e').replace(/4/g, 'a').replace(/1/g, 'i').replace(/0/g, 'o').replace(/5/g, 's')}\\b`, 'gi'),
+      new RegExp(`\\b${escapeRegExp(word)}\\b`, 'gi'),
+      new RegExp(`\\b${escapeRegExp(word.replace(/3/g, 'e').replace(/4/g, 'a').replace(/1/g, 'i').replace(/0/g, 'o').replace(/5/g, 's'))}\\b`, 'gi'),
     ]
 
     for (const pattern of patterns) {
