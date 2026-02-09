@@ -242,6 +242,7 @@ export default function RestaurantManagePage() {
           </Link>
           
           <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <Image
                 src="/logo.png"
                 alt="TableMesh Logo"
@@ -249,7 +250,6 @@ export default function RestaurantManagePage() {
                 height={28}
                 className="w-7 h-7"
               />
-              <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
               <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
             </Link>
           </div>

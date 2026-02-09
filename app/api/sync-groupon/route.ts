@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null
 
-const GROUPON_API_TOKEN = process.env.GROUPON_API_TOKEN!
-const GROUPON_AFFILIATE_ID = process.env.GROUPON_AFFILIATE_ID!
+const GROUPON_API_TOKEN = process.env.GROUPON_API_TOKEN || ''
+const GROUPON_AFFILIATE_ID = process.env.GROUPON_AFFILIATE_ID || ''
 
 interface GrouponDeal {
   id: string
@@ -47,6 +47,12 @@ interface GrouponDeal {
 
 export async function POST(req: Request) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+    if (!GROUPON_API_TOKEN || !GROUPON_AFFILIATE_ID) {
+      return NextResponse.json({ error: 'Groupon API not configured' }, { status: 500 })
+    }
     const { location = 'new-york', limit = 50 } = await req.json()
     
     console.log('[Groupon Sync] Starting sync for:', location)
@@ -226,6 +232,9 @@ export async function POST(req: Request) {
 // GET endpoint to check sync status
 export async function GET() {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
     const { count: totalRestaurants } = await supabase
       .from('restaurants')
       .select('*', { count: 'exact', head: true })
