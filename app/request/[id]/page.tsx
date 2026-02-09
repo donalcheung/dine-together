@@ -391,8 +391,13 @@ export default function RequestDetailPage() {
 
   const handleJoinRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
+      // Validate profanity in join message
+      if (joinMessage) {
+        validateProfanity(joinMessage, 'Join message')
+      }
+
       const { error } = await supabase
         .from('dining_joins')
         .insert([
@@ -421,7 +426,7 @@ export default function RequestDetailPage() {
       loadJoins()
     } catch (error: any) {
       console.error('Error joining request:', error)
-      alert('Failed to join request. Please try again.')
+      alert(`Failed to join request: ${error?.message || error?.toString() || 'Unknown error'}`)
     }
   }
 
