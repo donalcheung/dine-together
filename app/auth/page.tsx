@@ -120,18 +120,42 @@ function AuthForm() {
           }
         })
         
-        if (signUpError) throw signUpError
+        if (signUpError) {
+          console.error('Sign up error:', signUpError)
+          throw signUpError
+        }
+        
+        console.log('Sign up response:', authData)
         
         if (authData.user) {
           console.log('User signed up:', authData.user.id)
+          console.log('User email confirmed?', authData.user.email_confirmed_at)
           
           // Ensure profile is created with retries
           await ensureProfileExists(authData.user.id, email, name)
           
-          // Store email and password in localStorage and redirect to confirmation page
-          localStorage.setItem('signup_email', email)
-          localStorage.setItem('signup_password', password)
-          router.push('/auth/confirm-email')
+          // If email is already confirmed, go straight to dashboard
+          if (authData.user.email_confirmed_at) {
+            console.log('Email already confirmed, redirecting to dashboard')
+            router.push('/dashboard')
+          } else {
+            // Store email and password in localStorage and redirect to confirmation page
+            localStorage.setItem('signup_email', email)
+            localStorage.setItem('signup_password', password)
+            console.log('Stored credentials, redirecting to confirm-email...')
+            
+            // Use a small delay to ensure localStorage is written
+            await new Promise(resolve => setTimeout(resolve, 100))
+            
+            console.log('Pushing to /auth/confirm-email')
+            // Use setTimeout to ensure state is fully updated before navigation
+            setTimeout(() => {
+              router.push('/auth/confirm-email')
+            }, 50)
+          }
+        } else {
+          console.warn('No user returned from signup')
+          setError('Signup successful but no user returned. Please try signing in.')
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
