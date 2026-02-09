@@ -169,7 +169,7 @@ function AuthForm() {
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
           <Utensils className="w-10 h-10 text-[var(--primary)]" strokeWidth={2.5} />
-          <h1 className="text-3xl font-bold text-[var(--neutral)]">DineTogether</h1>
+          <h1 className="text-3xl font-bold text-[var(--neutral)]">TableMesh</h1>
         </Link>
 
         {/* Auth Card */}
