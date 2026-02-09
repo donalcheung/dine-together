@@ -128,8 +128,10 @@ function AuthForm() {
           // Ensure profile is created with retries
           await ensureProfileExists(authData.user.id, email, name)
           
-          // Always redirect to dashboard
-          router.push('/dashboard')
+          // Store email and password in localStorage and redirect to confirmation page
+          localStorage.setItem('signup_email', email)
+          localStorage.setItem('signup_password', password)
+          router.push('/auth/confirm-email')
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
