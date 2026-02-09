@@ -1,4 +1,4 @@
-# 🍽️ DineTogether - Share Meals, Split Bills, Make Memories
+# 🍽️ TableMesh - Share Meals, Split Bills, Make Memories
 
 A modern web application that helps food lovers find dining companions to share dishes and split bills. Perfect for solo travelers, foodies who want to try multiple menu items, or anyone who wants to make dining more social!
 
@@ -72,7 +72,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser. You should see the DineTogether landing page!
+Open http://localhost:3000 in your browser. You should see the TableMesh landing page!
 
 ## 🌐 Deploying to Vercel (FREE)
 

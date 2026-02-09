@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DineTogether - Share Meals, Split Bills, Make Memories",
+  title: "TableMesh - Share Meals, Split Bills, Make Memories",
   description: "Join spontaneous dining experiences. Find people to share dishes with at your favorite restaurants.",
 };
 

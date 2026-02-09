@@ -177,7 +177,7 @@ export default function ClaimRestaurantPage() {
           
           <Link href="/" className="flex items-center gap-2">
             <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
-            <h1 className="text-xl font-bold text-[var(--neutral)]">DineTogether</h1>
+            <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>
         </div>
       </nav>

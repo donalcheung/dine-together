@@ -40,7 +40,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Utensils className="w-8 h-8 text-[var(--primary)]" strokeWidth={2.5} />
-            <h1 className="text-2xl font-bold text-[var(--neutral)]">DineTogether</h1>
+            <h1 className="text-2xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </div>
           <div className="flex gap-4">
             <Link 
@@ -154,7 +154,7 @@ export default function Home() {
       <section className="py-20 px-6 bg-gradient-to-br from-amber-50 to-orange-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-5xl font-bold text-center mb-16 text-[var(--neutral)]">
-            Why DineTogether?
+            Why TableMesh?
           </h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -225,7 +225,7 @@ export default function Home() {
             <a href="#" className="hover:text-white transition-colors">Terms</a>
             <a href="#" className="hover:text-white transition-colors">Contact</a>
           </div>
-          <p className="mt-8 text-white/50 text-sm">© 2026 DineTogether. All rights reserved.</p>
+          <p className="mt-8 text-white/50 text-sm">© 2026 TableMesh. All rights reserved.</p>
         </div>
       </footer>
     </div>

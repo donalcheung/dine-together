@@ -500,7 +500,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Utensils className="w-8 h-8 text-[var(--primary)]" strokeWidth={2.5} />
-            <h1 className="text-2xl font-bold text-[var(--neutral)]">DineTogether</h1>
+            <h1 className="text-2xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>
           
           <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 # 🚀 Deployment Guide - Step by Step
 
-This guide will walk you through deploying DineTogether to production. The entire process takes about 30 minutes and costs $0 (using free tiers).
+This guide will walk you through deploying TableMesh to production. The entire process takes about 30 minutes and costs $0 (using free tiers).
 
 ## Part 1: Setting Up Supabase (Database & Auth)
 
@@ -119,7 +119,7 @@ git init
 git add .
 
 # Create first commit
-git commit -m "Initial commit - DineTogether app"
+git commit -m "Initial commit - TableMesh app"
 
 # Set main branch
 git branch -M main
@@ -196,7 +196,7 @@ Popular domain registrars:
 
 1. In Vercel dashboard, go to your project
 2. Click "Settings" → "Domains"
-3. Enter your domain (e.g., `dinetogether.com`)
+3. Enter your domain (e.g., `tablemesh.com`)
 4. Click "Add"
 5. Vercel will show you DNS records to add
 

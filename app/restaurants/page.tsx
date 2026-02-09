@@ -364,7 +364,7 @@ export default function BrowseRestaurantsPage() {
                 Own a restaurant?
               </h3>
               <p className="text-gray-700 mb-4">
-                Join DineTogether and offer exclusive time-based deals to attract more diners.
+                Join TableMesh and offer exclusive time-based deals to attract more diners.
               </p>
               <Link
                 href="/restaurants/claim"
