@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Utensils, ArrowLeft, Bell, Save, Mail, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -148,7 +149,13 @@ export default function NotificationSettingsPage() {
           </Link>
           
           <Link href="/" className="flex items-center gap-2">
-            <Utensils className="w-7 h-7 text-[var(--primary)]" strokeWidth={2.5} />
+            <Image
+              src="/logo.png"
+              alt="TableMesh Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7"
+            />
             <h1 className="text-xl font-bold text-[var(--neutral)]">TableMesh</h1>
           </Link>
         </div>
