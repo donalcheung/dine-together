@@ -401,6 +401,7 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white transition-colors">Find Dining Partners</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Create Request</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Safety Guidelines</a></li>
+                  <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>
             
@@ -418,9 +419,13 @@ export default function Home() {
               <h4 className="font-bold mb-3">Company</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                  <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                  <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                  <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
