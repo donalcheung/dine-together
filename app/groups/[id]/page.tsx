@@ -514,6 +514,34 @@ export default function GroupDetailPage() {
                 Create Group Request
               </Link>
 
+              {/* Join Group button for non-members */}
+              {!userMember && (
+                <button
+                  onClick={async () => {
+                    if (!user) return;
+                    try {
+                      const { error } = await supabase
+                        .from('group_members')
+                        .insert([
+                          {
+                            group_id: groupId,
+                            user_id: user.id,
+                            role: 'member'
+                          }
+                        ])
+                      if (error) throw error;
+                      await loadMembers();
+                    } catch (error: any) {
+                      alert(`Failed to join group: ${error?.message || error?.toString() || 'Unknown error'}`);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium border border-blue-200"
+                >
+                  <Users className="w-5 h-5" />
+                  Join Group
+                </button>
+              )}
+
               {userMember && (
                 <button
                   onClick={handleLeaveGroup}
