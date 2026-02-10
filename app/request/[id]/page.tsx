@@ -56,7 +56,6 @@ export default function RequestDetailPage() {
   useEffect(() => {
     checkUser()
     loadRequest()
-    loadJoins()
     loadComments()
     loadMealPhotos()
 
@@ -80,7 +79,7 @@ export default function RequestDetailPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [requestId])
+  }, [requestId, user?.id])
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -183,12 +182,16 @@ export default function RequestDetailPage() {
       if (error) throw error
       setJoins(data || [])
 
-      if (user) {
-        const myJoin = data?.find(j => j.user_id === user.id)
+      // Always update userJoin based on current user
+      if (user && data) {
+        const myJoin = data.find(j => j.user_id === user.id)
         setUserJoin(myJoin || null)
+      } else {
+        setUserJoin(null)
       }
     } catch (error) {
       console.error('Error loading joins:', error)
+      setUserJoin(null)
     }
   }
 
