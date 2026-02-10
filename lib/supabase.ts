@@ -69,6 +69,7 @@ export interface Group {
   member_count: number
   created_by: string
   created_at: string
+  join_code?: string
 }
 
 export interface GroupMember {
