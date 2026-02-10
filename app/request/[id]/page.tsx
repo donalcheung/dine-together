@@ -59,9 +59,6 @@ export default function RequestDetailPage() {
   const handleShareSlack = () => {
     window.open(`https://slack.com/app_redirect?channel=&message=${encodeURIComponent(shareText)}`)
   }
-  const router = useRouter()
-  const params = useParams()
-  const requestId = params.id as string
 
   const [user, setUser] = useState<any>(null)
   const [request, setRequest] = useState<DiningRequest | null>(null)
