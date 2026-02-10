@@ -2,7 +2,7 @@
 // Reusable components for displaying user level, XP, and achievements
 
 import { Star, Trophy, TrendingUp } from 'lucide-react'
-import { ACHIEVEMENTS, getLevelTitle, xpProgress } from './achievements'
+import { ACHIEVEMENTS, getLevelTitle, xpProgress } from '../lib/achievements'
 
 interface UserProgressionBadgeProps {
   level: number
