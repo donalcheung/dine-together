@@ -239,12 +239,26 @@ export async function processMealCompletion(
     const reason = isHost ? 'Completed meal as host' : 'Completed meal as guest'
     const levelUpResult = await awardXP(userId, xpAmount, reason, requestId)
 
+    // Fetch current progression stats
+    const { data: progressionData, error: fetchError } = await supabase
+      .from('user_progression')
+      .select('meals_completed, meals_hosted')
+      .eq('user_id', userId)
+      .single()
+
+    if (fetchError) {
+      console.error('Error fetching progression:', fetchError)
+    }
+
+    const currentMealsCompleted = progressionData?.meals_completed ?? 0;
+    const currentMealsHosted = progressionData?.meals_hosted ?? 0;
+
     // Update progression stats
     const { error: progressError } = await supabase
       .from('user_progression')
       .update({
-        meals_completed: supabase.raw('meals_completed + 1'),
-        meals_hosted: isHost ? supabase.raw('meals_hosted + 1') : supabase.raw('meals_hosted')
+        meals_completed: currentMealsCompleted + 1,
+        meals_hosted: isHost ? currentMealsHosted + 1 : currentMealsHosted
       })
       .eq('user_id', userId)
 
