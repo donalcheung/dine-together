@@ -136,17 +136,35 @@ export default function RequestDetailPage() {
         .from('dining_requests')
         .select(`
           *,
-          host:profiles!dining_requests_host_id_fkey(
-            *,
-            progression:user_progression!user_progression_user_id_fkey(*),
-            displayed_achievement:user_achievements!user_achievements_user_id_fkey(*)
-          ),
+          host:profiles!dining_requests_host_id_fkey(*),
           group:groups(*)
         `)
         .eq('id', requestId)
         .single()
 
       if (error) throw error
+      
+      // Fetch progression data separately
+      if (data.host_id) {
+        const { data: progression } = await supabase
+          .from('user_progression')
+          .select('*')
+          .eq('user_id', data.host_id)
+          .single()
+        
+        const { data: displayedAchievement } = await supabase
+          .from('user_achievements')
+          .select('*')
+          .eq('user_id', data.host_id)
+          .eq('is_displayed', true)
+          .maybeSingle()
+        
+        if (data.host) {
+          data.host.progression = progression || null
+          data.host.displayed_achievement = displayedAchievement || null
+        }
+      }
+      
       setRequest(data)
       setEditedDescription(data.description || '')
       setEditedTime(data.dining_time)
@@ -772,21 +790,35 @@ export default function RequestDetailPage() {
                     )}
                     <div className="flex-1">
                       <div className="font-semibold text-lg text-[var(--neutral)]">{request.host?.name}</div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-                        <span className="font-medium">{request.host?.rating.toFixed(1)} rating</span>
-                      </div>
-                      {/* Level Badge */}
+                      
+                      {/* Level + Achievement Display */}
                       {request.host?.progression && (
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold mt-2">
-                          <span>Level {request.host.progression.current_level}</span>
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold">
+                            Lv {request.host.progression.current_level}
+                          </div>
+                          <span className="text-gray-500">•</span>
+                          {request.host.displayed_achievement && ACHIEVEMENTS[request.host.displayed_achievement.achievement_key] ? (
+                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium border border-amber-300">
+                              <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].icon}</span>
+                              <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-600 text-sm font-medium">
+                              {request.host.progression.current_level >= 20 ? '👑 TableMesh Legend' :
+                               request.host.progression.current_level >= 15 ? '💎 Elite Foodie' :
+                               request.host.progression.current_level >= 10 ? '🏆 Veteran Diner' :
+                               request.host.progression.current_level >= 5 ? '🍽️ Regular Diner' :
+                               '🌱 Newcomer'}
+                            </span>
+                          )}
                         </div>
                       )}
-                      {/* Achievement Title */}
-                      {request.host?.displayed_achievement && ACHIEVEMENTS[request.host.displayed_achievement.achievement_key] && (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium border border-amber-300 mt-2">
-                          <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].icon}</span>
-                          <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].name}</span>
+                      
+                      {/* XP Display */}
+                      {request.host?.progression && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          {request.host.progression.total_xp.toLocaleString()} XP
                         </div>
                       )}
                     </div>
