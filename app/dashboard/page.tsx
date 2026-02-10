@@ -538,28 +538,40 @@ export default function DashboardPage() {
             </Link>
             
             {profile && (
-              <div className="relative" ref={profileMenuRef}>
-                <button
-                  onClick={() => setShowProfileMenu(v => !v)}
-                  className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 hover:border-[var(--primary)] transition-all group"
-                >
-                  {profile.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {profile.name[0]?.toUpperCase()}
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 px-4 py-2 bg-white rounded-full border border-gray-200 hover:border-[var(--primary)] transition-all group"
+              >
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {profile.name[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)] text-sm">
+                    {profile.name}
+                  </span>
+                  {/* Level Badge - Compact */}
+                  {profile.progression && (
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
+                        Lv {profile.progression.current_level}
+                      </span>
+                      <span className="text-gray-500">•</span>
+                      <span className="text-gray-600 font-medium">
+                        {profile.progression.total_xp.toLocaleString()} XP
+                      </span>
                     </div>
                   )}
-                  <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                    <span className="text-sm font-medium">{typeof profile.rating === 'number' ? profile.rating.toFixed(1) : '-'}</span>
-                  </div>
-                </button>
+                </div>
+              </Link>
+            )}
 
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
@@ -932,33 +944,47 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
                           {request.host?.avatar_url ? (
                             <img
                               src={request.host.avatar_url}
                               alt={request.host.name}
-                              className={`w-8 h-8 rounded-full object-cover border-2 flex-shrink-0 ${
-                                expired ? 'border-gray-300 opacity-75' : 'border-gray-200'
-                              }`}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
                             />
                           ) : (
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
-                              expired ? 'bg-gray-400' : 'bg-[var(--neutral)]'
-                            }`}>
+                            <div className="w-8 h-8 bg-[var(--neutral)] rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {request.host?.name[0]?.toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-medium truncate ${expired ? 'text-gray-500' : 'text-gray-700'}`}>
-                            {request.host?.name}
-                          </span>
-                        </div>
-                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full flex-shrink-0 ${
-                          expired ? 'bg-gray-200' : 'bg-pink-100'
-                        }`}>
-                          <Heart className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-pink-500 fill-pink-500'}`} />
-                          <span className={`text-sm font-bold ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
-                            {typeof request.host?.rating === 'number' ? request.host.rating.toFixed(1) : '-'}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-700">{request.host?.name}</span>
+                            {/* Level + Achievement Title */}
+                            {request.host?.progression && (
+                              <div className="flex items-center gap-1.5 text-xs">
+                                {/* Level Badge */}
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
+                                  Lv {request.host.progression.current_level}
+                                </span>
+                                {/* Achievement Title or Default Title */}
+                                <span className="text-gray-600">•</span>
+                                {request.host.displayed_achievement && ACHIEVEMENTS[request.host.displayed_achievement.achievement_key] ? (
+                                  <span className="flex items-center gap-1 text-amber-700 font-medium">
+                                    <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].icon}</span>
+                                    <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].name}</span>
+                                  </span>
+                                ) : (
+                                  // Default title based on level
+                                  <span className="text-gray-600 font-medium">
+                                    {request.host.progression.current_level >= 20 ? '👑 TableMesh Legend' :
+                                     request.host.progression.current_level >= 15 ? '💎 Elite Foodie' :
+                                     request.host.progression.current_level >= 10 ? '🏆 Veteran Diner' :
+                                     request.host.progression.current_level >= 5 ? '🍽️ Regular Diner' :
+                                     '🌱 Newcomer'}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
