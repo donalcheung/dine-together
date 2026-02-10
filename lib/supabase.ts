@@ -16,6 +16,7 @@ export interface Profile {
   food_preferences?: string
   rating: number
   total_ratings: number
+  total_likes: number
   created_at: string
   // Progression data (joined)
   progression?: UserProgression
