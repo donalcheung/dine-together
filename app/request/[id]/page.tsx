@@ -32,7 +32,29 @@ export default function RequestDetailPage() {
   const params = useParams()
   const requestId = params.id as string
 
-  // Share link helpers (must be after request is defined)
+  const [user, setUser] = useState<any>(null)
+  const [request, setRequest] = useState<DiningRequest | null>(null)
+  const [joins, setJoins] = useState<DiningJoin[]>([])
+  const [comments, setComments] = useState<Comment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [joinMessage, setJoinMessage] = useState('')
+  const [showJoinForm, setShowJoinForm] = useState(false)
+  const [userJoin, setUserJoin] = useState<DiningJoin | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editingTime, setEditingTime] = useState(false)
+  const [editingSeats, setEditingSeats] = useState(false)
+  const [editedDescription, setEditedDescription] = useState('')
+  const [editedTime, setEditedTime] = useState('')
+  const [editedSeats, setEditedSeats] = useState(1)
+  const [newComment, setNewComment] = useState('')
+  const [postingComment, setPostingComment] = useState(false)
+  const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo | null>(null)
+  const [loadingInfo, setLoadingInfo] = useState(false)
+  const [mealPhotos, setMealPhotos] = useState<any[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
+  // Share link helpers (placed after request state is declared)
   const requestUrl = typeof window !== 'undefined'
     ? window.location.href
     : `${process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'}/request/${requestId}`;
@@ -59,28 +81,6 @@ export default function RequestDetailPage() {
   const handleShareSlack = () => {
     window.open(`https://slack.com/app_redirect?channel=&message=${encodeURIComponent(shareText)}`)
   }
-
-  const [user, setUser] = useState<any>(null)
-  const [request, setRequest] = useState<DiningRequest | null>(null)
-  const [joins, setJoins] = useState<DiningJoin[]>([])
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [joinMessage, setJoinMessage] = useState('')
-  const [showJoinForm, setShowJoinForm] = useState(false)
-  const [userJoin, setUserJoin] = useState<DiningJoin | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editingTime, setEditingTime] = useState(false)
-  const [editingSeats, setEditingSeats] = useState(false)
-  const [editedDescription, setEditedDescription] = useState('')
-  const [editedTime, setEditedTime] = useState('')
-  const [editedSeats, setEditedSeats] = useState(1)
-  const [newComment, setNewComment] = useState('')
-  const [postingComment, setPostingComment] = useState(false)
-  const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo | null>(null)
-  const [loadingInfo, setLoadingInfo] = useState(false)
-  const [mealPhotos, setMealPhotos] = useState<any[]>([])
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     const init = async () => {
