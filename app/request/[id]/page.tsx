@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
+import { isImageSafe } from '@/lib/image-moderation'
 import { validateProfanity } from '@/lib/profanity-filter'
 import { sendJoinNotification, sendAcceptanceNotification } from '@/lib/send-notification'
 
@@ -246,6 +247,13 @@ export default function RequestDetailPage() {
 
     try {
       const file = e.target.files[0]
+      // Moderate image before upload
+      const safe = await isImageSafe(file)
+      if (!safe) {
+        alert('This image appears to contain inappropriate content and cannot be uploaded.')
+        setUploadingPhoto(false)
+        return
+      }
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}/${Date.now()}.${fileExt}`
 
