@@ -950,45 +950,60 @@ export default function RequestDetailPage() {
                 )}
 
                 {/* Join Button */}
-                {!isHost && !userJoin && request.seats_available > 0 && (
+                {/* Join Button or Status */}
+                {!isHost && request.seats_available > 0 && (
                   <div>
-                    {!showJoinForm ? (
-                      <button
-                        onClick={() => setShowJoinForm(true)}
-                        className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg"
-                      >
-                        Request to Join
-                      </button>
+                    {!userJoin ? (
+                      !showJoinForm ? (
+                        <button
+                          onClick={() => setShowJoinForm(true)}
+                          className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg"
+                        >
+                          Request to Join
+                        </button>
+                      ) : (
+                        <form onSubmit={handleJoinRequest} className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Message to Host (Optional)
+                            </label>
+                            <textarea
+                              value={joinMessage}
+                              onChange={(e) => setJoinMessage(e.target.value)}
+                              rows={3}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all resize-none"
+                              placeholder="Introduce yourself or share why you'd like to join..."
+                            />
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              type="submit"
+                              className="flex-1 py-3 bg-[var(--primary)] text-white rounded-xl font-bold hover:bg-[var(--primary-dark)] transition-all"
+                            >
+                              Send Request
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowJoinForm(false)}
+                              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      )
                     ) : (
-                      <form onSubmit={handleJoinRequest} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Message to Host (Optional)
-                          </label>
-                          <textarea
-                            value={joinMessage}
-                            onChange={(e) => setJoinMessage(e.target.value)}
-                            rows={3}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all resize-none"
-                            placeholder="Introduce yourself or share why you'd like to join..."
-                          />
-                        </div>
-                        <div className="flex gap-3">
-                          <button
-                            type="submit"
-                            className="flex-1 py-3 bg-[var(--primary)] text-white rounded-xl font-bold hover:bg-[var(--primary-dark)] transition-all"
-                          >
-                            Send Request
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowJoinForm(false)}
-                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
+                      <div className={`p-4 rounded-xl border text-center font-semibold ${
+                        userJoin.status === 'accepted'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : userJoin.status === 'pending'
+                          ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                          : 'bg-red-50 border-red-200 text-red-700'
+                      }`}>
+                        {userJoin.status === 'accepted' && '✓ Your request has been accepted!'}
+                        {userJoin.status === 'pending' && '⏳ Your request is pending approval'}
+                        {userJoin.status === 'declined' && '✗ Your request was declined'}
+                      </div>
                     )}
                   </div>
                 )}
