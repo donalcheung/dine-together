@@ -1,14 +1,15 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter, useParams } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from 'lucide-react'
-import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
-import { isImageSafe } from '@/lib/image-moderation'
-import { validateProfanity } from '@/lib/profanity-filter'
-import { sendJoinNotification, sendAcceptanceNotification } from '@/lib/send-notification'
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter, useParams } from "next/navigation";
+import { Utensils, MapPin, Clock, Users, Star, ArrowLeft, MessageSquare, Check, X, Trash2, Edit2, Send, Phone, Globe, ExternalLink, Camera, Heart, Lock } from "lucide-react";
+import { supabase, DiningRequest, DiningJoin, Profile } from "@/lib/supabase";
+import { isImageSafe } from "@/lib/image-moderation";
+import { validateProfanity } from "@/lib/profanity-filter";
+import { sendJoinNotification, sendAcceptanceNotification } from "@/lib/send-notification";
+import { ACHIEVEMENTS } from "@/lib/achievements";
 
 interface Comment {
   id: string
@@ -133,11 +134,15 @@ export default function RequestDetailPage() {
     try {
       const { data, error } = await supabase
         .from('dining_requests')
-          .select(`
+        .select(`
+          *,
+          host:profiles!dining_requests_host_id_fkey(
             *,
-            host:profiles!dining_requests_host_id_fkey(*),
-            group:groups(*)
-          `)
+            progression:user_progression!user_progression_user_id_fkey(*),
+            displayed_achievement:user_achievements!user_achievements_user_id_fkey(*)
+          ),
+          group:groups(*)
+        `)
         .eq('id', requestId)
         .single()
 
@@ -769,8 +774,21 @@ export default function RequestDetailPage() {
                       <div className="font-semibold text-lg text-[var(--neutral)]">{request.host?.name}</div>
                       <div className="flex items-center gap-2 text-gray-600">
                         <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-                        <span className="font-medium">{request.host?.total_likes} likes</span>
+                        <span className="font-medium">{request.host?.rating.toFixed(1)} rating</span>
                       </div>
+                      {/* Level Badge */}
+                      {request.host?.progression && (
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold mt-2">
+                          <span>Level {request.host.progression.current_level}</span>
+                        </div>
+                      )}
+                      {/* Achievement Title */}
+                      {request.host?.displayed_achievement && ACHIEVEMENTS[request.host.displayed_achievement.achievement_key] && (
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium border border-amber-300 mt-2">
+                          <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].icon}</span>
+                          <span>{ACHIEVEMENTS[request.host.displayed_achievement.achievement_key].name}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -830,7 +848,7 @@ export default function RequestDetailPage() {
                             <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                             <div className="flex items-center gap-1 text-sm text-gray-600">
                               <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                              <span>{join.user?.total_likes}</span>
+                              <span>{typeof join.user?.rating === "number" ? join.user.rating.toFixed(1) : "-"}</span>
                             </div>
                           </div>
                           <Check className="w-6 h-6 text-green-600" />
@@ -863,7 +881,7 @@ export default function RequestDetailPage() {
                               <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                               <div className="flex items-center gap-1 text-sm text-gray-600">
                                 <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                                <span>{join.user?.total_likes}</span>
+                                <span>{typeof join.user?.rating === "number" ? join.user.rating.toFixed(1) : "-"}</span>
                               </div>
                             </div>
                           </div>

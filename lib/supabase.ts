@@ -1,141 +1,27 @@
-// =====================================================
-// RESTAURANT OWNERS FEATURE - TypeScript Types
-// =====================================================
-// Add these to your lib/supabase.ts file
-
 import { createClient } from '@supabase/supabase-js'
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Minimal Profile type used across the app
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Type definitions for our database
 export interface Profile {
   id: string
+  email: string
   name: string
   avatar_url?: string
-  email?: string
-  total_likes?: number
-  created_at?: string
-}
-
-// Minimal Group type used by DiningRequest and UI
-export interface Group {
-  id: string
-  name: string
-  description?: string
-  cover_image_url?: string
-  join_code?: string
-  created_by?: string
-  member_count?: number
-  is_public?: boolean
-  created_at?: string
-  updated_at?: string
-}
-
-export interface GroupMember {
-  id: string
-  group_id: string
-  user_id: string
-  role?: 'member' | 'admin'
-  joined_at?: string
-  user?: Profile
-}
-
-export interface DiningJoin {
-  id: string
-  request_id: string
-  user_id: string
-  status: 'pending' | 'accepted' | 'declined'
-  message?: string
+  bio?: string
+  dietary_restrictions?: string
+  food_preferences?: string
+  rating: number
+  total_ratings: number
   created_at: string
-  user?: Profile
+  // Progression data (joined)
+  progression?: UserProgression
+  displayed_achievement?: UserAchievement
 }
 
-export interface Restaurant {
-  id: string
-  name: string
-  description?: string
-  address: string
-  city: string
-  state?: string
-  country: string
-  postal_code?: string
-  latitude?: number
-  longitude?: number
-  phone?: string
-  email?: string
-  website?: string
-  google_place_id?: string
-  google_business_verified: boolean
-  verification_status: 'unverified' | 'pending' | 'verified' | 'premium'
-  verification_method?: string
-  verified_at?: string
-  logo_url?: string
-  cover_image_url?: string
-  cuisine_types?: string[]
-  price_range?: number
-  capacity?: number
-  operating_hours?: {
-    [key: string]: {
-      open: string
-      close: string
-      closed?: boolean
-    }
-  }
-  features?: string[]
-  owner_id?: string
-  is_active: boolean
-  is_accepting_deals: boolean
-  created_at: string
-  updated_at: string
-  owner?: Profile
-}
-
-export interface RestaurantDeal {
-  id: string
-  restaurant_id: string
-  title: string
-  description: string
-  discount_type: 'percentage' | 'fixed_amount' | 'free_item'
-  discount_value: number
-  min_party_size: number
-  max_party_size?: number
-  min_spend?: number
-  valid_days?: number[] // 1-7 (Monday-Sunday)
-  valid_time_start?: string
-  valid_time_end?: string
-  starts_at: string
-  expires_at?: string
-  max_redemptions?: number
-  redemptions_count: number
-  max_per_user: number
-  is_active: boolean
-  created_at: string
-  updated_at: string
-  restaurant?: Restaurant
-}
-
-export interface DealRedemption {
-  id: string
-  deal_id: string
-  dining_request_id?: string
-  user_id: string
-  restaurant_id: string
-  party_size: number
-  discount_applied: number
-  redeemed_at: string
-  verification_code?: string
-  verified_by_restaurant: boolean
-  verified_at?: string
-  status: 'pending' | 'verified' | 'cancelled' | 'expired'
-  user?: Profile
-  deal?: RestaurantDeal
-  restaurant?: Restaurant
-}
-
-// Update DiningRequest interface to include restaurant
 export interface DiningRequest {
   id: string
   host_id: string
@@ -152,6 +38,121 @@ export interface DiningRequest {
   host?: Profile
   group_id?: string
   group?: Group
-  restaurant_id?: string  // ADD THIS
-  restaurant?: Restaurant  // ADD THIS
+}
+
+export interface DiningJoin {
+  id: string
+  request_id: string
+  user_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  message?: string
+  created_at: string
+  user?: Profile
+}
+
+export interface Rating {
+  id: string
+  from_user_id: string
+  to_user_id: string
+  request_id: string
+  rating: number
+  comment?: string
+  created_at: string
+}
+
+export interface Group {
+  id: string
+  name: string
+  description?: string
+  cover_image_url?: string
+  is_public: boolean
+  member_count: number
+  created_by: string
+  created_at: string
+}
+
+// NEW: Progression Types
+export interface UserProgression {
+  id: string
+  user_id: string
+  total_xp: number
+  current_level: number
+  meals_completed: number
+  meals_hosted: number
+  unique_dining_partners: number
+  cities_visited: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface UserAchievement {
+  id: string
+  user_id: string
+  achievement_key: string
+  progress: number
+  target: number
+  unlocked_at: string | null
+  is_displayed: boolean
+  created_at: string
+}
+
+export interface XPTransaction {
+  id: string
+  user_id: string
+  amount: number
+  reason: string
+  related_request_id?: string
+  created_at: string
+}
+
+export interface CuisineTracking {
+  id: string
+  user_id: string
+  cuisine_type: string
+  meal_count: number
+  last_meal_at: string
+  created_at: string
+}
+
+// Helper to get profile with progression data
+export async function getProfileWithProgression(userId: string): Promise<Profile | null> {
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) throw profileError
+
+    const { data: progression, error: progressionError } = await supabase
+      .from('user_progression')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (progressionError && progressionError.code !== 'PGRST116') {
+      console.error('Error fetching progression:', progressionError)
+    }
+
+    const { data: displayedAchievement, error: achievementError } = await supabase
+      .from('user_achievements')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_displayed', true)
+      .maybeSingle()
+
+    if (achievementError && achievementError.code !== 'PGRST116') {
+      console.error('Error fetching achievement:', achievementError)
+    }
+
+    return {
+      ...profile,
+      progression: progression || undefined,
+      displayed_achievement: displayedAchievement || undefined
+    }
+  } catch (error) {
+    console.error('Error getting profile with progression:', error)
+    return null
+  }
 }

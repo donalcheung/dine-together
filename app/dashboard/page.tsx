@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
+import { getProfileWithProgression } from '@/lib/supabase'
+import { ACHIEVEMENTS } from '@/lib/achievements'
 
 interface UserLocation {
   latitude: number
@@ -555,7 +557,7 @@ export default function DashboardPage() {
                   <span className="font-medium text-[var(--neutral)] group-hover:text-[var(--primary)]">{profile.name}</span>
                   <div className="flex items-center gap-1">
                     <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                    <span className="text-sm font-medium">{typeof profile.total_likes === 'number' ? profile.total_likes : '-'}</span>
+                    <span className="text-sm font-medium">{typeof profile.rating === 'number' ? profile.rating.toFixed(1) : '-'}</span>
                   </div>
                 </button>
 
@@ -955,7 +957,7 @@ export default function DashboardPage() {
                         }`}>
                           <Heart className={`w-4 h-4 ${expired ? 'text-gray-400' : 'text-pink-500 fill-pink-500'}`} />
                           <span className={`text-sm font-bold ${expired ? 'text-gray-600' : 'text-[var(--neutral)]'}`}>
-                            {request.host?.total_likes}
+                            {typeof request.host?.rating === 'number' ? request.host.rating.toFixed(1) : '-'}
                           </span>
                         </div>
                       </div>
