@@ -28,6 +28,33 @@ interface RestaurantInfo {
 }
 
 export default function RequestDetailPage() {
+    // Share link helpers
+    const requestUrl = typeof window !== 'undefined'
+      ? window.location.href
+      : `${process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'}/request/${requestId}`;
+
+    const shareText = request && request.restaurant_name
+      ? `Join my TableMesh meal at ${request.restaurant_name} on ${formatTime(request.dining_time)}!\n${requestUrl}`
+      : `Join my TableMesh meal!\n${requestUrl}`;
+
+    const handleCopyLink = async () => {
+      try {
+        await navigator.clipboard.writeText(requestUrl)
+        alert('Link copied!')
+      } catch {
+        alert('Failed to copy link')
+      }
+    }
+
+    const handleShareSMS = () => {
+      window.open(`sms:?body=${encodeURIComponent(shareText)}`)
+    }
+    const handleShareWhatsApp = () => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`)
+    }
+    const handleShareSlack = () => {
+      window.open(`https://slack.com/app_redirect?channel=&message=${encodeURIComponent(shareText)}`)
+    }
   const router = useRouter()
   const params = useParams()
   const requestId = params.id as string
@@ -681,6 +708,37 @@ export default function RequestDetailPage() {
                 </div>
 
                 {/* Host Info with Description */}
+                {/* Share Button */}
+                <div className="mb-6 flex gap-3 items-center">
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200 font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Copy Link
+                  </button>
+                  <button
+                    onClick={handleShareSMS}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 border border-green-200 font-medium"
+                  >
+                    <Phone className="w-4 h-4" />
+                    SMS
+                  </button>
+                  <button
+                    onClick={handleShareWhatsApp}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 border border-emerald-200 font-medium"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={handleShareSlack}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 border border-purple-200 font-medium"
+                  >
+                    <Users className="w-4 h-4" />
+                    Slack
+                  </button>
+                </div>
                 <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-bold text-[var(--neutral)]">Hosted by</h3>
