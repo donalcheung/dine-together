@@ -71,6 +71,15 @@ export interface Group {
   created_at: string
 }
 
+export interface GroupMember {
+  id: string
+  group_id: string
+  user_id: string
+  role: 'admin' | 'member'
+  joined_at: string
+  user?: Profile
+}
+
 // NEW: Progression Types
 export interface UserProgression {
   id: string
