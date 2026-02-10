@@ -28,7 +28,7 @@ interface RestaurantInfo {
 }
 
 export default function RequestDetailPage() {
-    // Share link helpers
+    // Share link helpers (must be after requestId is defined)
     const requestUrl = typeof window !== 'undefined'
       ? window.location.href
       : `${process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'}/request/${requestId}`;
