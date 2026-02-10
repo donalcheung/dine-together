@@ -571,7 +571,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               </Link>
-            )}
+            }
 
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
