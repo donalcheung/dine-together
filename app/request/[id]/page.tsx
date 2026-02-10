@@ -54,10 +54,13 @@ export default function RequestDetailPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
-    checkUser()
-    loadRequest()
-    loadComments()
-    loadMealPhotos()
+    const init = async () => {
+      await checkUser()
+      loadRequest()
+      loadComments()
+      loadMealPhotos()
+    }
+    init()
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -79,17 +82,22 @@ export default function RequestDetailPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [requestId, user?.id])
+  }, [requestId])
+
+  // Load joins after user is set
+  useEffect(() => {
+    if (user && requestId) {
+      loadJoins()
+    }
+  }, [user, requestId])
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) {
       router.push('/auth')
       return
     }
-    
-    setUser(user)
+    setUser(authUser)
   }
 
   const loadRequest = async () => {
