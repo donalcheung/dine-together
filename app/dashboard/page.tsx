@@ -106,7 +106,7 @@ export default function DashboardPage() {
   }
 
   const calculateDistance = (lat1: number, lon1: number, lat2?: number, lon2?: number): number => {
-    if (!lat2 || !lon2) return Infinity
+              }
     
     const R = 3959
     const dLat = (lat2 - lat1) * Math.PI / 180
