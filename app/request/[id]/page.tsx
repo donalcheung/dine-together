@@ -28,33 +28,37 @@ interface RestaurantInfo {
 }
 
 export default function RequestDetailPage() {
-    // Share link helpers (must be after requestId is defined)
-    const requestUrl = typeof window !== 'undefined'
-      ? window.location.href
-      : `${process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'}/request/${requestId}`;
+  const router = useRouter()
+  const params = useParams()
+  const requestId = params.id as string
 
-    const shareText = request && request.restaurant_name
-      ? `Join my TableMesh meal at ${request.restaurant_name} on ${formatTime(request.dining_time)}!\n${requestUrl}`
-      : `Join my TableMesh meal!\n${requestUrl}`;
+  // Share link helpers (must be after requestId is defined)
+  const requestUrl = typeof window !== 'undefined'
+    ? window.location.href
+    : `${process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'}/request/${requestId}`;
 
-    const handleCopyLink = async () => {
-      try {
-        await navigator.clipboard.writeText(requestUrl)
-        alert('Link copied!')
-      } catch {
-        alert('Failed to copy link')
-      }
-    }
+  const shareText = typeof request !== 'undefined' && request && request.restaurant_name
+    ? `Join my TableMesh meal at ${request.restaurant_name} on ${typeof formatTime !== 'undefined' && request.dining_time ? formatTime(request.dining_time) : ''}!\n${requestUrl}`
+    : `Join my TableMesh meal!\n${requestUrl}`;
 
-    const handleShareSMS = () => {
-      window.open(`sms:?body=${encodeURIComponent(shareText)}`)
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(requestUrl)
+      alert('Link copied!')
+    } catch {
+      alert('Failed to copy link')
     }
-    const handleShareWhatsApp = () => {
-      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`)
-    }
-    const handleShareSlack = () => {
-      window.open(`https://slack.com/app_redirect?channel=&message=${encodeURIComponent(shareText)}`)
-    }
+  }
+
+  const handleShareSMS = () => {
+    window.open(`sms:?body=${encodeURIComponent(shareText)}`)
+  }
+  const handleShareWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`)
+  }
+  const handleShareSlack = () => {
+    window.open(`https://slack.com/app_redirect?channel=&message=${encodeURIComponent(shareText)}`)
+  }
   const router = useRouter()
   const params = useParams()
   const requestId = params.id as string
