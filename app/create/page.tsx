@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, MapPin, Clock, Users, ArrowLeft, Navigation, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { validateProfanity } from '@/lib/profanity-filter'
+import { awardXP } from '@/lib/progression'
+import { XP_REWARDS } from '@/lib/achievements'
 
 // Load Google Maps script
 const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
@@ -210,6 +212,8 @@ function CreateRequestForm() {
         .single()
 
       if (error) throw error
+
+      await awardXP(user.id, XP_REWARDS.CREATE_REQUEST, 'Created dining request', data.id)
 
       // NEW: Redirect to group page if created from group
       if (selectedGroupId) {

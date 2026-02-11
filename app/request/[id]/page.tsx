@@ -9,7 +9,8 @@ import { supabase, DiningRequest, DiningJoin, Profile } from "@/lib/supabase";
 import { isImageSafe } from "@/lib/image-moderation";
 import { validateProfanity } from "@/lib/profanity-filter";
 import { sendJoinNotification, sendAcceptanceNotification } from "@/lib/send-notification";
-import { ACHIEVEMENTS } from "@/lib/achievements";
+import { ACHIEVEMENTS, XP_REWARDS } from "@/lib/achievements";
+import { awardXP } from "@/lib/progression";
 
 interface Comment {
   id: string
@@ -361,6 +362,8 @@ export default function RequestDetailPage() {
         ])
 
       if (dbError) throw dbError
+
+      await awardXP(user.id, XP_REWARDS.UPLOAD_PHOTO, 'Uploaded meal photo', requestId)
 
       // Reload photos
       loadMealPhotos()

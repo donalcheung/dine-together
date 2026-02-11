@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Check, X, Upload, Heart, Camera } from 'lucide-react'
 import { supabase, DiningRequest, DiningJoin, Profile } from '@/lib/supabase'
+import { awardXP } from '@/lib/progression'
+import { XP_REWARDS } from '@/lib/achievements'
 
 interface AttendanceStatus {
   user_id: string
@@ -176,6 +178,9 @@ export default function CompleteMealPage() {
         }))
 
         await supabase.from('meal_photos').insert(photoRecords)
+
+        const photoXp = XP_REWARDS.UPLOAD_PHOTO * uploadedPhotoUrls.length
+        await awardXP(user.id, photoXp, `Uploaded ${uploadedPhotoUrls.length} meal photo${uploadedPhotoUrls.length === 1 ? '' : 's'}`, requestId)
       }
 
       // Save attendance records
@@ -206,6 +211,13 @@ export default function CompleteMealPage() {
         if (likeError) {
           console.error('Error saving likes:', likeError)
           // Continue anyway - don't fail the whole operation
+        } else {
+          const uniqueRecipients = Array.from(new Set(likeRecords.map(r => r.to_user_id)))
+          await Promise.all(
+            uniqueRecipients.map(recipientId =>
+              awardXP(recipientId, XP_REWARDS.RECEIVE_LIKE, 'Received a meal like', requestId)
+            )
+          )
         }
       }
 
