@@ -62,11 +62,24 @@ CREATE INDEX idx_dining_joins_request_id ON dining_joins(request_id);
 CREATE INDEX idx_dining_joins_user_id ON dining_joins(user_id);
 CREATE INDEX idx_ratings_to_user_id ON ratings(to_user_id);
 
+-- Create profile_likes table (for liking user profiles)
+CREATE TABLE profile_likes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  from_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  to_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(from_user_id, to_user_id)
+);
+
+CREATE INDEX idx_profile_likes_to_user_id ON profile_likes(to_user_id);
+CREATE INDEX idx_profile_likes_from_user_id ON profile_likes(from_user_id);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dining_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dining_joins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profile_likes ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
 CREATE POLICY "Profiles are viewable by everyone" 
@@ -121,7 +134,20 @@ CREATE POLICY "Ratings are viewable by everyone"
 CREATE POLICY "Users can create ratings" 
   ON ratings FOR INSERT 
   WITH CHECK (auth.uid() = from_user_id);
+Profile likes policies
+CREATE POLICY "Profile likes are viewable by everyone" 
+  ON profile_likes FOR SELECT 
+  USING (true);
 
+CREATE POLICY "Users can create profile likes" 
+  ON profile_likes FOR INSERT 
+  WITH CHECK (auth.uid() = from_user_id);
+
+CREATE POLICY "Users can delete own profile likes" 
+  ON profile_likes FOR DELETE 
+  USING (auth.uid() = from_user_id);
+
+-- 
 -- Function to update user rating after new rating is added
 CREATE OR REPLACE FUNCTION update_user_rating()
 RETURNS TRIGGER AS $$
@@ -136,7 +162,39 @@ BEGIN
     total_likes = (
       SELECT COUNT(*)
       FROM ratings
+      WHERE to_update total_likes after profile like is added/removed
+CREATE OR REPLACE FUNCTION update_profile_likes_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+    UPDATE profiles
+    SET total_likes = (
+      SELECT COUNT(*)
+      FROM profile_likes
       WHERE to_user_id = NEW.to_user_id
+    )
+    WHERE id = NEW.to_user_id;
+    RETURN NEW;
+  ELSIF (TG_OP = 'DELETE') THEN
+    UPDATE profiles
+    SET total_likes = (
+      SELECT COUNT(*)
+      FROM profile_likes
+      WHERE to_user_id = OLD.to_user_id
+    )
+    WHERE id = OLD.to_user_id;
+    RETURN OLD;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update profile likes count
+CREATE TRIGGER on_profile_like_changed
+  AFTER INSERT OR DELETE ON profile_likes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_profile_likes_count();
+
+-- Function to user_id = NEW.to_user_id
     )
   WHERE id = NEW.to_user_id;
   

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Heart, AlertCircle } from 'lucide-react'
 import { getProfileWithProgression, Profile } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 
 export default function PublicProfilePage() {
@@ -15,11 +16,20 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [hasLiked, setHasLiked] = useState<boolean>(false)
+  const [likeLoading, setLikeLoading] = useState(false)
+  const [likesCount, setLikesCount] = useState<number>(0)
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         setLoading(true)
+        
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        setCurrentUserId(user?.id || null)
+
         const data = await getProfileWithProgression(profileId)
         if (!data) {
           setError('Profile not found')
@@ -27,6 +37,21 @@ export default function PublicProfilePage() {
           return
         }
         setProfile(data)
+        setLikesCount(data.total_likes || 0)
+
+        // Check if current user has liked this profile
+        if (user?.id && user.id !== profileId) {
+          const { data: likeData, error: likeError } = await supabase
+            .from('profile_likes')
+            .select('id')
+            .eq('from_user_id', user.id)
+            .eq('to_user_id', profileId)
+            .single()
+
+          if (!likeError && likeData) {
+            setHasLiked(true)
+          }
+        }
       } catch (err: any) {
         setError(err?.message || 'Failed to load profile')
       } finally {
@@ -38,6 +63,55 @@ export default function PublicProfilePage() {
       loadProfile()
     }
   }, [profileId])
+
+  const toggleLike = async () => {
+    if (!currentUserId) {
+      setError('You must be logged in to like profiles')
+      return
+    }
+
+    if (currentUserId === profileId) {
+      setError("You can''t like your own profile")
+      return
+    }
+
+    try {
+      setLikeLoading(true)
+      setError('')
+
+      if (hasLiked) {
+        // Unlike
+        const { error: deleteError } = await supabase
+          .from('profile_likes')
+          .delete()
+          .eq('from_user_id', currentUserId)
+          .eq('to_user_id', profileId)
+
+        if (deleteError) throw deleteError
+
+        setHasLiked(false)
+        setLikesCount(prev => Math.max(0, prev - 1))
+      } else {
+        // Like
+        const { error: insertError } = await supabase
+          .from('profile_likes')
+          .insert({
+            from_user_id: currentUserId,
+            to_user_id: profileId
+          })
+
+        if (insertError) throw insertError
+
+        setHasLiked(true)
+        setLikesCount(prev => prev + 1)
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update like')
+      console.error('Like error:', err)
+    } finally {
+      setLikeLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -102,7 +176,7 @@ export default function PublicProfilePage() {
                   <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
                     Lv {profile.progression.current_level}
                   </span>
-                  <span className="text-gray-500">•</span>
+                  <span className="text-gray-500"></span>
                   {profile.displayed_achievement && ACHIEVEMENTS[profile.displayed_achievement.achievement_key] ? (
                     <span className="flex items-center gap-1 text-amber-700 font-medium">
                       <span>{ACHIEVEMENTS[profile.displayed_achievement.achievement_key].icon}</span>
@@ -110,18 +184,34 @@ export default function PublicProfilePage() {
                     </span>
                   ) : (
                     <span className="text-gray-600 font-medium">
-                      {profile.progression.current_level >= 20 ? '👑 Legend' :
-                       profile.progression.current_level >= 15 ? '💎 Elite' :
-                       profile.progression.current_level >= 10 ? '🏆 Veteran' :
-                       profile.progression.current_level >= 5 ? '🍽️ Regular' :
-                       '🌱 Newcomer'}
+                      {profile.progression.current_level >= 20 ? ' Legend' :
+                       profile.progression.current_level >= 15 ? ' Elite' :
+                       profile.progression.current_level >= 10 ? ' Veteran' :
+                       profile.progression.current_level >= 5 ? ' Regular' :
+                       ' Newcomer'}
                     </span>
                   )}
                 </div>
               )}
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-                <span className="font-medium">{profile.total_likes || 0} likes</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
+                  <span className="font-medium">{likesCount} likes</span>
+                </div>
+                {currentUserId && currentUserId !== profileId && (
+                  <button
+                    onClick={toggleLike}
+                    disabled={likeLoading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
+                      hasLiked
+                        ? 'bg-pink-500 text-white hover:bg-pink-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } ${likeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <Heart className={`w-4 h-4 ${hasLiked ? 'fill-white' : ''}`} />
+                    {hasLiked ? 'Liked' : 'Like'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
