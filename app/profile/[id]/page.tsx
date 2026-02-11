@@ -87,7 +87,10 @@ export default function PublicProfilePage() {
           .eq('from_user_id', currentUserId)
           .eq('to_user_id', profileId)
 
-        if (deleteError) throw deleteError
+        if (deleteError) {
+          console.error('Delete error:', deleteError)
+          throw deleteError
+        }
 
         setHasLiked(false)
         setLikesCount(prev => Math.max(0, prev - 1))
@@ -100,10 +103,19 @@ export default function PublicProfilePage() {
             to_user_id: profileId
           })
 
-        if (insertError) throw insertError
+        if (insertError) {
+          console.error('Insert error:', insertError)
+          throw insertError
+        }
 
         setHasLiked(true)
         setLikesCount(prev => prev + 1)
+      }
+
+      // Refresh profile to sync with database
+      const refreshedProfile = await getProfileWithProgression(profileId)
+      if (refreshedProfile) {
+        setLikesCount(refreshedProfile.total_likes || 0)
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to update like')
@@ -176,7 +188,7 @@ export default function PublicProfilePage() {
                   <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
                     Lv {profile.progression.current_level}
                   </span>
-                  <span className="text-gray-500"></span>
+                  <span className="text-gray-500">•</span>
                   {profile.displayed_achievement && ACHIEVEMENTS[profile.displayed_achievement.achievement_key] ? (
                     <span className="flex items-center gap-1 text-amber-700 font-medium">
                       <span>{ACHIEVEMENTS[profile.displayed_achievement.achievement_key].icon}</span>
@@ -184,21 +196,17 @@ export default function PublicProfilePage() {
                     </span>
                   ) : (
                     <span className="text-gray-600 font-medium">
-                      {profile.progression.current_level >= 20 ? ' Legend' :
-                       profile.progression.current_level >= 15 ? ' Elite' :
-                       profile.progression.current_level >= 10 ? ' Veteran' :
-                       profile.progression.current_level >= 5 ? ' Regular' :
-                       ' Newcomer'}
+                      {profile.progression.current_level >= 20 ? '👑 Legend' :
+                       profile.progression.current_level >= 15 ? '💎 Elite' :
+                       profile.progression.current_level >= 10 ? '🏆 Veteran' :
+                       profile.progression.current_level >= 5 ? '🍽️ Regular' :
+                       '🌱 Newcomer'}
                     </span>
                   )}
                 </div>
               )}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
-                  <span className="font-medium">{likesCount} likes</span>
-                </div>
-                {currentUserId && currentUserId !== profileId && (
+              <div className="flex items-center gap-3 mt-2">
+                {currentUserId && currentUserId !== profileId ? (
                   <button
                     onClick={toggleLike}
                     disabled={likeLoading}
@@ -209,8 +217,13 @@ export default function PublicProfilePage() {
                     } ${likeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Heart className={`w-4 h-4 ${hasLiked ? 'fill-white' : ''}`} />
-                    {hasLiked ? 'Liked' : 'Like'}
+                    <span>{likesCount} {likesCount === 1 ? 'Like' : 'Likes'}</span>
                   </button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-700">
+                    <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+                    <span className="font-medium">{likesCount} {likesCount === 1 ? 'Like' : 'Likes'}</span>
+                  </div>
                 )}
               </div>
             </div>
