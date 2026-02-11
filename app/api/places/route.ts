@@ -44,7 +44,7 @@ export async function GET(req: Request) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.priceLevel'
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.priceLevel,places.types'
       },
       body: JSON.stringify({
         textQuery: searchQuery
@@ -64,7 +64,8 @@ export async function GET(req: Request) {
           formatted_phone_number: place.nationalPhoneNumber,
           website: place.websiteUri,
           rating: place.rating,
-          price_level: place.priceLevel ? place.priceLevel : undefined
+          price_level: place.priceLevel ? place.priceLevel : undefined,
+          types: place.types || []
         }
         
         console.log('[Places API] ✅ Returning formatted result:', result)
@@ -116,7 +117,7 @@ export async function GET(req: Request) {
     console.log('[Places API] ✅ Found place_id:', placeId)
 
     // Step 2: Get place details
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number,website,opening_hours,rating,price_level&key=${apiKey}`
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number,website,opening_hours,rating,price_level,types&key=${apiKey}`
 
     console.log('[Places API] 📞 Fetching place details...')
     const detailsRes = await fetch(detailsUrl)

@@ -28,6 +28,8 @@ CREATE TABLE dining_requests (
   total_seats INTEGER NOT NULL CHECK (total_seats > 0),
   description TEXT,
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed', 'completed')),
+  price_level TEXT,
+  cuisine_type TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

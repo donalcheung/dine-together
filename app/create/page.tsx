@@ -51,6 +51,8 @@ function CreateRequestForm() {
     description: '',
     latitude: null as number | null,
     longitude: null as number | null,
+    price_level: null as string | null,
+    cuisine_type: null as string | null,
   })
 
   useEffect(() => {
@@ -124,21 +126,113 @@ function CreateRequestForm() {
       }
     )
 
-    autocomplete.addListener('place_changed', () => {
+    autocomplete.addListener('place_changed', async () => {
       const place = autocomplete.getPlace()
 
       if (place.geometry && place.geometry.location) {
+        // Fetch additional restaurant details from our API
+        const placeDetails = await fetchRestaurantDetails(
+          place.name || '',
+          place.formatted_address || ''
+        )
+
         setFormData(prev => ({
           ...prev,
           restaurant_name: place.name || '',
           restaurant_address: place.formatted_address || '',
           latitude: place.geometry.location.lat(),
           longitude: place.geometry.location.lng(),
+          price_level: placeDetails?.price_level || null,
+          cuisine_type: placeDetails?.cuisine_type || null,
         }))
       }
     })
 
     autocompleteRef.current = autocomplete
+  }
+
+  // Helper function to extract cuisine from types array
+  const extractCuisine = (types: string[]): string | null => {
+    if (!types || types.length === 0) return null
+    
+    // Common cuisine type mappings
+    const cuisineMap: Record<string, string> = {
+      'italian_restaurant': 'Italian',
+      'chinese_restaurant': 'Chinese',
+      'japanese_restaurant': 'Japanese',
+      'mexican_restaurant': 'Mexican',
+      'thai_restaurant': 'Thai',
+      'indian_restaurant': 'Indian',
+      'french_restaurant': 'French',
+      'korean_restaurant': 'Korean',
+      'vietnamese_restaurant': 'Vietnamese',
+      'greek_restaurant': 'Greek',
+      'spanish_restaurant': 'Spanish',
+      'mediterranean_restaurant': 'Mediterranean',
+      'american_restaurant': 'American',
+      'seafood_restaurant': 'Seafood',
+      'steakhouse': 'Steakhouse',
+      'sushi_restaurant': 'Sushi',
+      'pizza_restaurant': 'Pizza',
+      'bakery': 'Bakery',
+      'cafe': 'Cafe',
+      'bar': 'Bar & Grill',
+      'fast_food_restaurant': 'Fast Food',
+      'sandwich_shop': 'Sandwiches',
+      'breakfast_restaurant': 'Breakfast',
+      'brunch_restaurant': 'Brunch',
+      'barbecue_restaurant': 'BBQ',
+      'hamburger_restaurant': 'Burgers',
+      'ramen_restaurant': 'Ramen',
+      'noodle_house': 'Noodles',
+    }
+
+    // Find the first matching cuisine type
+    for (const type of types) {
+      if (cuisineMap[type]) {
+        return cuisineMap[type]
+      }
+    }
+
+    // If no specific cuisine found, check for generic "restaurant"
+    if (types.includes('restaurant')) {
+      return 'Restaurant'
+    }
+
+    return null
+  }
+
+  // Fetch restaurant details including price level and types
+  const fetchRestaurantDetails = async (name: string, address: string) => {
+    try {
+      const response = await fetch(
+        `/api/places?name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`
+      )
+      
+      if (!response.ok) return null
+      
+      const data = await response.json()
+      
+      if (!data) return null
+
+      // Convert price_level to readable format
+      let priceLevel = null
+      if (data.price_level !== undefined && data.price_level !== null) {
+        const priceLevels = ['Free', '$', '$$', '$$$', '$$$$']
+        priceLevel = priceLevels[parseInt(data.price_level)] || null
+      }
+
+      // Extract cuisine from types
+      const cuisineType = data.types ? extractCuisine(data.types) : null
+
+      return {
+        price_level: priceLevel,
+        cuisine_type: cuisineType,
+      }
+    } catch (error) {
+      console.error('Error fetching restaurant details:', error)
+      return null
+    }
   }
 
   const checkUser = async () => {
@@ -205,6 +299,8 @@ function CreateRequestForm() {
             total_seats: formData.seats_available,
             description: formData.description,
             status: 'open',
+            price_level: formData.price_level,
+            cuisine_type: formData.cuisine_type,
             group_id: selectedGroupId || null, // NEW: Save group_id
           }
         ])

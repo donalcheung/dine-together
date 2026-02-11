@@ -35,6 +35,8 @@ export interface DiningRequest {
   total_seats: number
   description?: string
   status: 'active' | 'completed' | 'cancelled'
+  price_level?: string
+  cuisine_type?: string
   created_at: string
   host?: Profile
   group_id?: string

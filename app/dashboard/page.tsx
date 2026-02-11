@@ -45,6 +45,8 @@ export default function DashboardPage() {
   const [cityCenters, setCityCenters] = useState<Record<string, { lat: number; lng: number }>>({})
   const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const [selectedCuisine, setSelectedCuisine] = useState<string>('all')
+  const [selectedPriceLevel, setSelectedPriceLevel] = useState<string>('all')
 
   useEffect(() => {
     checkUser()
@@ -260,6 +262,27 @@ export default function DashboardPage() {
       }
     })
     return Array.from(cities).sort()
+  }
+
+  const getUniqueCuisines = (): string[] => {
+    const cuisines = new Set<string>()
+    requests.forEach(r => {
+      if (r.cuisine_type) {
+        cuisines.add(r.cuisine_type)
+      }
+    })
+    return Array.from(cuisines).sort()
+  }
+
+  const getUniquePriceLevels = (): string[] => {
+    const levels = new Set<string>()
+    requests.forEach(r => {
+      if (r.price_level) {
+        levels.add(r.price_level)
+      }
+    })
+    // Return in order: $, $$, $$$, $$$$
+    return Array.from(levels).sort((a, b) => a.length - b.length)
   }
 
   const loadCachedCityCenters = () => {
@@ -489,6 +512,16 @@ export default function DashboardPage() {
       if (!matchesRestaurantName && !matchesAddress && !matchesDescription && !matchesHostName) {
         return false
       }
+    }
+
+    // Cuisine filter
+    if (selectedCuisine !== 'all' && r.cuisine_type !== selectedCuisine) {
+      return false
+    }
+
+    // Price level filter
+    if (selectedPriceLevel !== 'all' && r.price_level !== selectedPriceLevel) {
+      return false
     }
     
     return true
@@ -776,13 +809,43 @@ export default function DashboardPage() {
                     <input type="range" min="1" max="100" value={maxRange} onChange={(e) => setMaxRange(parseInt(e.target.value))} className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer" style={{background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(maxRange/100)*100}%, #d1d5db ${(maxRange/100)*100}%, #d1d5db 100%)`}} />
                     <span className="text-lg font-bold text-[var(--primary)] min-w-12">{maxRange} mi</span>
                   </div>
+                </div>
 
-                  {/* Clear Filters inside more */}
-                  <div>
-                    {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50 || dateRangeOption !== 'all' || rangeStartDate || rangeEndDate) && (
-                      <button onClick={() => { setFilterStatus({ active: true, expired: false, completed: false }); setSelectedCity('current'); setCityInput(''); setMaxRange(50); setSearchQuery(''); setDateRangeOption('all'); setRangeStartDate(''); setRangeEndDate('') }} className="mt-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">Clear Filters</button>
-                    )}
-                  </div>
+                {/* Cuisine Type */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">Cuisine Type</label>
+                  <select
+                    value={selectedCuisine}
+                    onChange={(e) => setSelectedCuisine(e.target.value)}
+                    className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white"
+                  >
+                    <option value="all">All Cuisines</option>
+                    {getUniqueCuisines().map(cuisine => (
+                      <option key={cuisine} value={cuisine}>{cuisine}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Price Level */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">Price Level</label>
+                  <select
+                    value={selectedPriceLevel}
+                    onChange={(e) => setSelectedPriceLevel(e.target.value)}
+                    className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-[var(--primary)] focus:outline-none transition-colors font-medium text-gray-700 bg-white"
+                  >
+                    <option value="all">All Prices</option>
+                    {getUniquePriceLevels().map(level => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Clear Filters */}
+                <div className="flex items-end">
+                  {(searchQuery || !filterStatus.active || filterStatus.expired || filterStatus.completed || selectedCity !== 'current' || maxRange !== 50 || dateRangeOption !== 'all' || rangeStartDate || rangeEndDate || selectedCuisine !== 'all' || selectedPriceLevel !== 'all') && (
+                    <button onClick={() => { setFilterStatus({ active: true, expired: false, completed: false }); setSelectedCity('current'); setCityInput(''); setMaxRange(50); setSearchQuery(''); setDateRangeOption('all'); setRangeStartDate(''); setRangeEndDate(''); setSelectedCuisine('all'); setSelectedPriceLevel('all') }} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border-2 border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">Clear Filters</button>
+                  )}
                 </div>
               </div>
             </div>
