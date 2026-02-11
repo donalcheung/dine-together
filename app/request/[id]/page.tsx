@@ -808,7 +808,10 @@ export default function RequestDetailPage() {
                       </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 mb-4">
+                  <Link
+                    href={`/profile/${request.host_id}`}
+                    className="flex items-center gap-4 mb-4 hover:opacity-90 transition-opacity"
+                  >
                     {request.host?.avatar_url ? (
                       <img
                         src={request.host.avatar_url}
@@ -854,7 +857,7 @@ export default function RequestDetailPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Link>
                   
                   {!editing ? (
                     request.description && (
@@ -897,19 +900,23 @@ export default function RequestDetailPage() {
                     <div className="space-y-3">
                       {acceptedJoins.map((join) => (
                         <div key={join.id} className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
-                          {join.user?.avatar_url ? (
-                            <img
-                              src={join.user.avatar_url}
-                              alt={join.user.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                              {join.user?.name[0]}
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
+                          <Link
+                            href={`/profile/${join.user_id}`}
+                            className="flex items-center gap-4 flex-1 hover:opacity-90 transition-opacity"
+                          >
+                            {join.user?.avatar_url ? (
+                              <img
+                                src={join.user.avatar_url}
+                                alt={join.user.name}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                                {join.user?.name[0]}
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                             
                             {/* Level + Achievement Display */}
                             {join.user?.progression && (
@@ -934,7 +941,8 @@ export default function RequestDetailPage() {
                                 )}
                               </div>
                             )}
-                          </div>
+                            </div>
+                          </Link>
                           <Check className="w-6 h-6 text-green-600" />
                         </div>
                       ))}
@@ -950,19 +958,23 @@ export default function RequestDetailPage() {
                       {pendingJoins.map((join) => (
                         <div key={join.id} className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                           <div className="flex items-center gap-4 mb-3">
-                            {join.user?.avatar_url ? (
-                              <img
-                                src={join.user.avatar_url}
-                                alt={join.user.name}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-[var(--accent)] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                                {join.user?.name[0]}
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
+                            <Link
+                              href={`/profile/${join.user_id}`}
+                              className="flex items-center gap-4 flex-1 hover:opacity-90 transition-opacity"
+                            >
+                              {join.user?.avatar_url ? (
+                                <img
+                                  src={join.user.avatar_url}
+                                  alt={join.user.name}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-[var(--accent)] rounded-full flex items-center justify-center text-white text-xl font-bold">
+                                  {join.user?.name[0]}
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
                               
                               {/* Level + Achievement Display */}
                               {join.user?.progression && (
@@ -987,7 +999,8 @@ export default function RequestDetailPage() {
                                   )}
                                 </div>
                               )}
-                            </div>
+                              </div>
+                            </Link>
                           </div>
                           {join.message && (
                             <div className="mb-3 p-3 bg-white rounded-lg text-sm text-gray-700">
@@ -1056,20 +1069,30 @@ export default function RequestDetailPage() {
                     ) : (
                       comments.map((comment) => (
                         <div key={comment.id} className="flex gap-3 p-4 bg-gray-50 rounded-xl">
-                          {comment.user?.avatar_url ? (
-                            <img
-                              src={comment.user.avatar_url}
-                              alt={comment.user.name}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                              {comment.user?.name[0]}
-                            </div>
-                          )}
+                          <Link
+                            href={`/profile/${comment.user_id}`}
+                            className="flex items-start gap-3 hover:opacity-90 transition-opacity"
+                          >
+                            {comment.user?.avatar_url ? (
+                              <img
+                                src={comment.user.avatar_url}
+                                alt={comment.user.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                {comment.user?.name[0]}
+                              </div>
+                            )}
+                          </Link>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-[var(--neutral)]">{comment.user?.name}</span>
+                              <Link
+                                href={`/profile/${comment.user_id}`}
+                                className="font-semibold text-[var(--neutral)] hover:text-[var(--primary)] transition-colors"
+                              >
+                                {comment.user?.name}
+                              </Link>
                               <span className="text-xs text-gray-500">{formatCommentTime(comment.created_at)}</span>
                             </div>
                             <p className="text-gray-700">{comment.comment}</p>
@@ -1125,7 +1148,10 @@ export default function RequestDetailPage() {
                               className="w-full h-48 object-cover rounded-xl"
                             />
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 rounded-b-xl">
-                              <div className="flex items-center gap-2">
+                              <Link
+                                href={`/profile/${photo.user?.id}`}
+                                className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+                              >
                                 {photo.user?.avatar_url ? (
                                   <img
                                     src={photo.user.avatar_url}
@@ -1138,7 +1164,7 @@ export default function RequestDetailPage() {
                                   </div>
                                 )}
                                 <span className="text-white text-sm font-medium">{photo.user?.name}</span>
-                              </div>
+                              </Link>
                             </div>
                           </div>
                         ))}

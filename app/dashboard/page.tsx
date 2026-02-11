@@ -947,7 +947,10 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Link
+                          href={`/profile/${request.host_id}`}
+                          className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90 transition-opacity"
+                        >
                           {request.host?.avatar_url ? (
                             <img
                               src={request.host.avatar_url}
@@ -993,7 +996,7 @@ export default function DashboardPage() {
                               </div>
                             )}
                           </div>
-                        </div>
+                        </Link>
                       </div>
                     </div>
 
