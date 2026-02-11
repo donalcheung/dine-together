@@ -71,7 +71,7 @@ export default function PublicProfilePage() {
     }
 
     if (currentUserId === profileId) {
-      setError("You can''t like your own profile")
+      setError("You can't like your own profile")
       return
     }
 
@@ -81,11 +81,15 @@ export default function PublicProfilePage() {
 
       if (hasLiked) {
         // Unlike
-        const { error: deleteError } = await supabase
+        console.log('Attempting to unlike profile:', profileId)
+        const { error: deleteError, data: deleteData } = await supabase
           .from('profile_likes')
           .delete()
           .eq('from_user_id', currentUserId)
           .eq('to_user_id', profileId)
+          .select()
+
+        console.log('Delete result:', { deleteError, deleteData })
 
         if (deleteError) {
           console.error('Delete error:', deleteError)
@@ -96,12 +100,16 @@ export default function PublicProfilePage() {
         setLikesCount(prev => Math.max(0, prev - 1))
       } else {
         // Like
-        const { error: insertError } = await supabase
+        console.log('Attempting to like profile:', profileId)
+        const { error: insertError, data: insertData } = await supabase
           .from('profile_likes')
           .insert({
             from_user_id: currentUserId,
             to_user_id: profileId
           })
+          .select()
+
+        console.log('Insert result:', { insertError, insertData })
 
         if (insertError) {
           console.error('Insert error:', insertError)
@@ -112,14 +120,21 @@ export default function PublicProfilePage() {
         setLikesCount(prev => prev + 1)
       }
 
+      // Wait a moment for trigger to execute
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       // Refresh profile to sync with database
+      console.log('Refreshing profile data...')
       const refreshedProfile = await getProfileWithProgression(profileId)
+      console.log('Refreshed profile total_likes:', refreshedProfile?.total_likes)
       if (refreshedProfile) {
         setLikesCount(refreshedProfile.total_likes || 0)
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to update like')
       console.error('Like error:', err)
+      // Revert optimistic update on error
+      setHasLiked(!hasLiked)
     } finally {
       setLikeLoading(false)
     }
