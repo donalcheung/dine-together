@@ -240,13 +240,42 @@ export default function RequestDetailPage() {
         .order('created_at', { ascending: true })
 
       if (error) throw error
-      setJoins(data || [])
-
-      // Always update userJoin based on current user
-      if (user && data) {
-        const myJoin = data.find(j => j.user_id === user.id)
-        setUserJoin(myJoin || null)
+      
+      // Fetch progression data for each user
+      if (data && data.length > 0) {
+        const userIds = data.map(j => j.user_id)
+        
+        const { data: progressionData } = await supabase
+          .from('user_progression')
+          .select('*')
+          .in('user_id', userIds)
+        
+        const { data: achievementData } = await supabase
+          .from('user_achievements')
+          .select('*')
+          .in('user_id', userIds)
+          .eq('is_displayed', true)
+        
+        // Attach progression and achievement to each join's user
+        const enrichedJoins = data.map(join => {
+          if (join.user) {
+            join.user.progression = progressionData?.find(p => p.user_id === join.user_id)
+            join.user.displayed_achievement = achievementData?.find(a => a.user_id === join.user_id)
+          }
+          return join
+        })
+        
+        setJoins(enrichedJoins)
+        
+        // Always update userJoin based on current user
+        if (user) {
+          const myJoin = enrichedJoins.find(j => j.user_id === user.id)
+          setUserJoin(myJoin || null)
+        } else {
+          setUserJoin(null)
+        }
       } else {
+        setJoins([])
         setUserJoin(null)
       }
     } catch (error) {
@@ -878,10 +907,30 @@ export default function RequestDetailPage() {
                           )}
                           <div className="flex-1">
                             <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
-                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                              <span>{typeof join.user?.rating === "number" ? join.user.rating.toFixed(1) : "-"}</span>
-                            </div>
+                            
+                            {/* Level + Achievement Display */}
+                            {join.user?.progression && (
+                              <div className="flex items-center gap-1.5 text-xs mt-1">
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
+                                  Lv {join.user.progression.current_level}
+                                </span>
+                                <span className="text-gray-500">•</span>
+                                {join.user.displayed_achievement && ACHIEVEMENTS[join.user.displayed_achievement.achievement_key] ? (
+                                  <span className="flex items-center gap-1 text-amber-700 font-medium">
+                                    <span>{ACHIEVEMENTS[join.user.displayed_achievement.achievement_key].icon}</span>
+                                    <span>{ACHIEVEMENTS[join.user.displayed_achievement.achievement_key].name}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-600 font-medium">
+                                    {join.user.progression.current_level >= 20 ? '👑 Legend' :
+                                     join.user.progression.current_level >= 15 ? '💎 Elite' :
+                                     join.user.progression.current_level >= 10 ? '🏆 Veteran' :
+                                     join.user.progression.current_level >= 5 ? '🍽️ Regular' :
+                                     '🌱 Newcomer'}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <Check className="w-6 h-6 text-green-600" />
                         </div>
@@ -911,10 +960,30 @@ export default function RequestDetailPage() {
                             )}
                             <div className="flex-1">
                               <div className="font-semibold text-[var(--neutral)]">{join.user?.name}</div>
-                              <div className="flex items-center gap-1 text-sm text-gray-600">
-                                <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
-                                <span>{typeof join.user?.rating === "number" ? join.user.rating.toFixed(1) : "-"}</span>
-                              </div>
+                              
+                              {/* Level + Achievement Display */}
+                              {join.user?.progression && (
+                                <div className="flex items-center gap-1.5 text-xs mt-1">
+                                  <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
+                                    Lv {join.user.progression.current_level}
+                                  </span>
+                                  <span className="text-gray-500">•</span>
+                                  {join.user.displayed_achievement && ACHIEVEMENTS[join.user.displayed_achievement.achievement_key] ? (
+                                    <span className="flex items-center gap-1 text-amber-700 font-medium">
+                                      <span>{ACHIEVEMENTS[join.user.displayed_achievement.achievement_key].icon}</span>
+                                      <span>{ACHIEVEMENTS[join.user.displayed_achievement.achievement_key].name}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-600 font-medium">
+                                      {join.user.progression.current_level >= 20 ? '👑 Legend' :
+                                       join.user.progression.current_level >= 15 ? '💎 Elite' :
+                                       join.user.progression.current_level >= 10 ? '🏆 Veteran' :
+                                       join.user.progression.current_level >= 5 ? '🍽️ Regular' :
+                                       '🌱 Newcomer'}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                           {join.message && (
