@@ -4,10 +4,25 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, Heart, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Heart, AlertCircle, Calendar, Users, CheckCircle } from 'lucide-react'
 import { getProfileWithProgression, Profile } from '@/lib/supabase'
 import { supabase } from '@/lib/supabase'
 import { ACHIEVEMENTS } from '@/lib/achievements'
+
+interface DiningRequest {
+  id: string
+  restaurant_name: string
+  dining_time: string
+  status: string
+  seats_available: number
+  total_seats: number
+}
+
+interface Stats {
+  totalCreated: number
+  totalCompleted: number
+  totalJoined: number
+}
 
 export default function PublicProfilePage() {
   const params = useParams()
@@ -20,6 +35,8 @@ export default function PublicProfilePage() {
   const [hasLiked, setHasLiked] = useState<boolean>(false)
   const [likeLoading, setLikeLoading] = useState(false)
   const [likesCount, setLikesCount] = useState<number>(0)
+  const [recentRequests, setRecentRequests] = useState<DiningRequest[]>([])
+  const [stats, setStats] = useState<Stats>({ totalCreated: 0, totalCompleted: 0, totalJoined: 0 })
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -52,6 +69,78 @@ export default function PublicProfilePage() {
             setHasLiked(true)
           }
         }
+
+        // Fetch recent requests (both as host and guest)
+        const { data: hostedRequests } = await supabase
+          .from('dining_requests')
+          .select('id, restaurant_name, dining_time, status, seats_available, total_seats')
+          .eq('host_id', profileId)
+          .order('dining_time', { ascending: false })
+          .limit(3)
+
+        const { data: joinedRequestIds } = await supabase
+          .from('dining_joins')
+          .select('request_id')
+          .eq('user_id', profileId)
+          .eq('status', 'accepted')
+
+        let joinedRequests: DiningRequest[] = []
+        if (joinedRequestIds && joinedRequestIds.length > 0) {
+          const { data } = await supabase
+            .from('dining_requests')
+            .select('id, restaurant_name, dining_time, status, seats_available, total_seats')
+            .in('id', joinedRequestIds.map(j => j.request_id))
+            .order('dining_time', { ascending: false })
+            .limit(3)
+          joinedRequests = data || []
+        }
+
+        // Combine and sort by dining_time
+        const allRequests = [...(hostedRequests || []), ...joinedRequests]
+          .sort((a, b) => new Date(b.dining_time).getTime() - new Date(a.dining_time).getTime())
+          .slice(0, 3)
+        setRecentRequests(allRequests)
+
+        // Calculate stats
+        const { count: createdCount } = await supabase
+          .from('dining_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('host_id', profileId)
+
+        const { count: completedAsHostCount } = await supabase
+          .from('dining_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('host_id', profileId)
+          .eq('status', 'completed')
+
+        const { count: joinedCount } = await supabase
+          .from('dining_joins')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', profileId)
+          .eq('status', 'accepted')
+
+        // Get completed requests they joined
+        const { data: completedJoinedIds } = await supabase
+          .from('dining_joins')
+          .select('request_id')
+          .eq('user_id', profileId)
+          .eq('status', 'accepted')
+
+        let completedAsGuestCount = 0
+        if (completedJoinedIds && completedJoinedIds.length > 0) {
+          const { count } = await supabase
+            .from('dining_requests')
+            .select('*', { count: 'exact', head: true })
+            .in('id', completedJoinedIds.map(j => j.request_id))
+            .eq('status', 'completed')
+          completedAsGuestCount = count || 0
+        }
+
+        setStats({
+          totalCreated: createdCount || 0,
+          totalCompleted: (completedAsHostCount || 0) + completedAsGuestCount,
+          totalJoined: joinedCount || 0
+        })
       } catch (err: any) {
         setError(err?.message || 'Failed to load profile')
       } finally {
@@ -248,6 +337,74 @@ export default function PublicProfilePage() {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* Stats Section */}
+          <div className="grid grid-cols-3 gap-4 mb-6 pb-6 border-b border-gray-200">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Calendar className="w-4 h-4 text-orange-500" />
+                <span className="text-2xl font-bold text-[var(--neutral)]">{stats.totalCreated}</span>
+              </div>
+              <p className="text-sm text-gray-600">Created</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span className="text-2xl font-bold text-[var(--neutral)]">{stats.totalCompleted}</span>
+              </div>
+              <p className="text-sm text-gray-600">Completed</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-blue-500" />
+                <span className="text-2xl font-bold text-[var(--neutral)]">{stats.totalJoined}</span>
+              </div>
+              <p className="text-sm text-gray-600">Joined</p>
+            </div>
+          </div>
+
+          {/* Recent Requests Section */}
+          {recentRequests.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-700 mb-4">Recent Dining Requests</h4>
+              <div className="space-y-3">
+                {recentRequests.map((request) => (
+                  <Link
+                    key={request.id}
+                    href={`/request/${request.id}`}
+                    className="block p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-[var(--neutral)] mb-1">{request.restaurant_name}</h5>
+                        <p className="text-sm text-gray-600">
+                          {new Date(request.dining_time).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          request.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          request.status === 'closed' ? 'bg-gray-100 text-gray-700' :
+                          'bg-orange-100 text-orange-700'
+                        }`}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {request.seats_available}/{request.total_seats} seats
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 
