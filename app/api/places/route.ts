@@ -60,11 +60,24 @@ export async function GET(req: Request) {
       if (newApiData.places && newApiData.places.length > 0) {
         const place = newApiData.places[0]
         
+        // Convert new API price level format to numeric
+        let numericPriceLevel = undefined
+        if (place.priceLevel) {
+          const priceLevelMap: Record<string, number> = {
+            'PRICE_LEVEL_FREE': 0,
+            'PRICE_LEVEL_INEXPENSIVE': 1,
+            'PRICE_LEVEL_MODERATE': 2,
+            'PRICE_LEVEL_EXPENSIVE': 3,
+            'PRICE_LEVEL_VERY_EXPENSIVE': 4
+          }
+          numericPriceLevel = priceLevelMap[place.priceLevel]
+        }
+        
         const result = {
           formatted_phone_number: place.nationalPhoneNumber,
           website: place.websiteUri,
           rating: place.rating,
-          price_level: place.priceLevel ? place.priceLevel : undefined,
+          price_level: numericPriceLevel,
           types: place.types || []
         }
         
