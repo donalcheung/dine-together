@@ -5,8 +5,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Utensils, ArrowLeft, User, Mail, FileText, UtensilsCrossed, AlertCircle, Save, Heart, Camera, Upload } from 'lucide-react'
-import { supabase, Profile } from '@/lib/supabase'
+import { supabase, Profile, getProfileWithProgression } from '@/lib/supabase'
 import { validateProfanity } from '@/lib/profanity-filter'
+import { ACHIEVEMENTS } from '@/lib/achievements'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -43,12 +44,8 @@ export default function ProfilePage() {
     
     setUser(user)
     
-    // Load profile
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+    // Load profile with progression + displayed achievement
+    const profile = await getProfileWithProgression(user.id)
     
     if (profile) {
       setProfile(profile)
@@ -266,6 +263,28 @@ export default function ProfilePage() {
 
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-[var(--neutral)] mb-1">{formData.name}</h3>
+              {profile?.progression && (
+                <div className="flex flex-wrap items-center gap-2 text-sm mb-2">
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold">
+                    Lv {profile.progression.current_level}
+                  </span>
+                  <span className="text-gray-500">•</span>
+                  {profile.displayed_achievement && ACHIEVEMENTS[profile.displayed_achievement.achievement_key] ? (
+                    <span className="flex items-center gap-1 text-amber-700 font-medium">
+                      <span>{ACHIEVEMENTS[profile.displayed_achievement.achievement_key].icon}</span>
+                      <span>{ACHIEVEMENTS[profile.displayed_achievement.achievement_key].name}</span>
+                    </span>
+                  ) : (
+                    <span className="text-gray-600 font-medium">
+                      {profile.progression.current_level >= 20 ? '👑 Legend' :
+                       profile.progression.current_level >= 15 ? '💎 Elite' :
+                       profile.progression.current_level >= 10 ? '🏆 Veteran' :
+                       profile.progression.current_level >= 5 ? '🍽️ Regular' :
+                       '🌱 Newcomer'}
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex items-center gap-2 text-gray-600 mb-2">
                 <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
                 <span className="font-medium">{profile?.total_likes || 0} likes</span>
