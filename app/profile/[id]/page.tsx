@@ -123,9 +123,6 @@ export default function PublicProfilePage() {
                 <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
                 <span className="font-medium">{profile.total_likes || 0} likes</span>
               </div>
-              <div className="text-sm text-gray-500">
-                Rating: {profile.rating?.toFixed(1) || '0.0'} ({profile.total_ratings || 0} ratings)
-              </div>
             </div>
           </div>
 
