@@ -34,6 +34,8 @@ function CreateRequestForm() {
   const [mapsLoaded, setMapsLoaded] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
+  const [dailyRequestCount, setDailyRequestCount] = useState<number | null>(null)
+  const [dailyLimitReached, setDailyLimitReached] = useState(false)
   
   // NEW: Group support
   const [userGroups, setUserGroups] = useState<any[]>([])
@@ -82,6 +84,32 @@ function CreateRequestForm() {
       initializeAutocomplete()
     }
   }, [mapsLoaded])
+
+  useEffect(() => {
+    if (!user) return
+    checkDailyRequestLimit()
+  }, [user])
+
+  const checkDailyRequestLimit = async () => {
+    if (!user) return 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+
+    const { data: requestsToday, error: countError } = await supabase
+      .from('dining_requests')
+      .select('id', { count: 'exact' })
+      .eq('host_id', user.id)
+      .gte('created_at', today.toISOString())
+      .lt('created_at', tomorrow.toISOString())
+
+    if (countError) throw countError
+    const count = requestsToday?.length || 0
+    setDailyRequestCount(count)
+    setDailyLimitReached(count >= 3)
+    return count
+  }
 
   const initializeAutocomplete = () => {
     if (!searchInputRef.current || !(window as any).google) return
@@ -143,9 +171,22 @@ function CreateRequestForm() {
     setLoading(true)
 
     try {
+      if (!user) {
+        alert('Please sign in to create a request.')
+        setLoading(false)
+        return
+      }
+
       // Validate profanity in request description
       if (formData.description) {
         validateProfanity(formData.description, 'Request description')
+      }
+
+      const count = await checkDailyRequestLimit()
+      if (count >= 3) {
+        alert('You can only create up to 3 requests per day.')
+        setLoading(false)
+        return
       }
 
       const { data, error } = await supabase
@@ -235,6 +276,14 @@ function CreateRequestForm() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10">
+          {dailyLimitReached && (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+              <div className="font-semibold">Daily limit reached</div>
+              <p className="text-sm">
+                You have created {dailyRequestCount ?? 3} requests today. Try again tomorrow.
+              </p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Restaurant Search with Autocomplete */}
             <div>
@@ -413,7 +462,7 @@ function CreateRequestForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !formData.restaurant_name}
+              disabled={loading || !formData.restaurant_name || dailyLimitReached}
               className="w-full py-4 bg-[var(--primary)] text-white rounded-xl font-bold text-lg hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
