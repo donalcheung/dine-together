@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -40,7 +40,7 @@ interface LastMessageView {
   sender_id: string
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const groupParam = searchParams?.get('group')
@@ -735,5 +735,13 @@ export default function MessagesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50" />}>
+      <MessagesPageContent />
+    </Suspense>
   )
 }
