@@ -76,6 +76,7 @@ export default function DashboardPage() {
   const [lastMessages, setLastMessages] = useState<Record<string, LastMessageView>>({})
   const [loadingConversations, setLoadingConversations] = useState(false)
   const [openChats, setOpenChats] = useState<ChatTarget[]>([])
+  const [directTargetsByConversationId, setDirectTargetsByConversationId] = useState<Record<string, ChatTarget>>({})
 
   useEffect(() => {
     checkUser()
@@ -257,6 +258,51 @@ export default function DashboardPage() {
 
       setConversations(directConversations)
 
+      const pairKeyFallbacks: Record<string, string> = {}
+      const missingProfileIds: string[] = []
+
+      directConversations.forEach(conversation => {
+        const otherParticipant = conversation.participants?.find(p => p.user_id !== userId)
+        const hasProfile = !!otherParticipant?.profiles?.[0]
+        if (hasProfile) return
+
+        const pairKey = conversation.direct_pair_key
+        if (!pairKey) return
+        const [firstId, secondId] = pairKey.split(':')
+        const otherId = firstId === userId ? secondId : firstId
+        if (!otherId) return
+        pairKeyFallbacks[conversation.id] = otherId
+        if (!missingProfileIds.includes(otherId)) {
+          missingProfileIds.push(otherId)
+        }
+      })
+
+      if (missingProfileIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .in('id', missingProfileIds)
+
+        if (profilesError) throw profilesError
+
+        const profileMap = new Map((profiles || []).map(p => [p.id, p]))
+        const fallbackTargets: Record<string, ChatTarget> = {}
+
+        Object.entries(pairKeyFallbacks).forEach(([conversationId, otherId]) => {
+          const profile = profileMap.get(otherId)
+          if (profile) {
+            fallbackTargets[conversationId] = profile
+          }
+        })
+
+        if (Object.keys(fallbackTargets).length > 0) {
+          setDirectTargetsByConversationId(prev => ({
+            ...prev,
+            ...fallbackTargets
+          }))
+        }
+      }
+
       const conversationIds = directConversations.map(conv => conv.id)
       if (conversationIds.length > 0) {
         const { data: latestMessages, error: latestError } = await supabase
@@ -290,7 +336,7 @@ export default function DashboardPage() {
   const getDirectTarget = (conversation: ConversationView): ChatTarget | null => {
     if (!user?.id) return null
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user.id)
-    return otherParticipant?.profiles?.[0] || null
+    return otherParticipant?.profiles?.[0] || directTargetsByConversationId[conversation.id] || null
   }
 
   const handleOpenChat = (profile: ChatTarget) => {
