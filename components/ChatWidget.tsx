@@ -8,6 +8,9 @@ interface ChatWidgetProps {
   currentUserId: string
   target: Pick<Profile, 'id' | 'name' | 'avatar_url'>
   offsetIndex?: number
+  horizontalIndex?: number
+  baseRight?: number
+  baseBottom?: number
   onClose: () => void
 }
 
@@ -20,7 +23,15 @@ interface MessageView {
   sender?: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
 }
 
-export function ChatWidget({ currentUserId, target, offsetIndex = 0, onClose }: ChatWidgetProps) {
+export function ChatWidget({
+  currentUserId,
+  target,
+  offsetIndex = 0,
+  horizontalIndex,
+  baseRight = 24,
+  baseBottom = 24,
+  onClose
+}: ChatWidgetProps) {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<MessageView[]>([])
   const [messageBody, setMessageBody] = useState('')
@@ -171,10 +182,16 @@ export function ChatWidget({ currentUserId, target, offsetIndex = 0, onClose }: 
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  const width = 360
+  const gap = 16
+  const verticalStep = 420
+  const rightOffset = baseRight + (horizontalIndex !== undefined ? horizontalIndex * (width + gap) : 0)
+  const bottomOffset = horizontalIndex !== undefined ? baseBottom : baseBottom + offsetIndex * verticalStep
+
   return (
     <div
-      className="fixed right-6 w-[360px] bg-white rounded-2xl shadow-2xl border border-orange-100 flex flex-col overflow-hidden z-50"
-      style={{ bottom: 24 + offsetIndex * 420 }}
+      className="fixed w-[360px] bg-white rounded-2xl shadow-2xl border border-orange-100 flex flex-col overflow-hidden z-50"
+      style={{ right: rightOffset, bottom: bottomOffset }}
     >
       <div className="p-4 bg-orange-50 border-b border-orange-100 flex items-center justify-between">
         <div className="flex items-center gap-3">

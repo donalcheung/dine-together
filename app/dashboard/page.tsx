@@ -1388,7 +1388,9 @@ export default function DashboardPage() {
           key={chatUser.id}
           currentUserId={user.id}
           target={chatUser}
-          offsetIndex={index}
+          horizontalIndex={index}
+          baseRight={showMessagesPanel ? 400 : 24}
+          baseBottom={24}
           onClose={() => handleCloseChat(chatUser.id)}
         />
       ))}
