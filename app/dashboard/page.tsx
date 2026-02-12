@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell, MessageCircle } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell, MessageCircle, X } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 import { ACHIEVEMENTS } from '@/lib/achievements'
+import { ChatWidget } from '@/components/ChatWidget'
 
 interface UserLocation {
   latitude: number
@@ -18,6 +19,29 @@ interface FilterState {
   expired: boolean
   completed: boolean
 }
+
+interface ConversationParticipantView {
+  user_id: string
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
+}
+
+interface ConversationView {
+  id: string
+  type: 'direct' | 'group'
+  group_id?: string | null
+  direct_pair_key?: string | null
+  last_message_at?: string | null
+  created_at: string
+  participants?: ConversationParticipantView[]
+}
+
+interface LastMessageView {
+  body: string
+  created_at: string
+  sender_id: string
+}
+
+type ChatTarget = Pick<Profile, 'id' | 'name' | 'avatar_url'>
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -47,6 +71,11 @@ export default function DashboardPage() {
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
   const [selectedCuisine, setSelectedCuisine] = useState<string>('all')
   const [selectedPriceLevel, setSelectedPriceLevel] = useState<string>('all')
+  const [showMessagesPanel, setShowMessagesPanel] = useState(false)
+  const [conversations, setConversations] = useState<ConversationView[]>([])
+  const [lastMessages, setLastMessages] = useState<Record<string, LastMessageView>>({})
+  const [loadingConversations, setLoadingConversations] = useState(false)
+  const [openChats, setOpenChats] = useState<ChatTarget[]>([])
 
   useEffect(() => {
     checkUser()
@@ -68,6 +97,18 @@ export default function DashboardPage() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  useEffect(() => {
+    if (user?.id) {
+      loadConversations(user.id)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (showMessagesPanel && user?.id) {
+      loadConversations(user.id)
+    }
+  }, [showMessagesPanel, user?.id])
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -170,6 +211,105 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadConversations = async (userId: string) => {
+    try {
+      setLoadingConversations(true)
+      const { data: participantRows, error: participantError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', userId)
+
+      if (participantError) throw participantError
+
+      const directIds = (participantRows || []).map(row => row.conversation_id)
+      if (directIds.length === 0) {
+        setConversations([])
+        setLastMessages({})
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          type,
+          group_id,
+          direct_pair_key,
+          last_message_at,
+          created_at,
+          participants:conversation_participants(
+            user_id,
+            profiles:profiles(id, name, avatar_url)
+          )
+        `)
+        .eq('type', 'direct')
+        .in('id', directIds)
+
+      if (error) throw error
+
+      const directConversations = (data || []).sort((a, b) => {
+        const aTime = a.last_message_at || a.created_at
+        const bTime = b.last_message_at || b.created_at
+        return new Date(bTime).getTime() - new Date(aTime).getTime()
+      })
+
+      setConversations(directConversations)
+
+      const conversationIds = directConversations.map(conv => conv.id)
+      if (conversationIds.length > 0) {
+        const { data: latestMessages, error: latestError } = await supabase
+          .from('messages')
+          .select('conversation_id, body, created_at, sender_id')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: false })
+
+        if (latestError) throw latestError
+
+        const latestMap: Record<string, LastMessageView> = {}
+        ;(latestMessages || []).forEach(message => {
+          if (!latestMap[message.conversation_id]) {
+            latestMap[message.conversation_id] = {
+              body: message.body,
+              created_at: message.created_at,
+              sender_id: message.sender_id
+            }
+          }
+        })
+
+        setLastMessages(latestMap)
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    } finally {
+      setLoadingConversations(false)
+    }
+  }
+
+  const getDirectTarget = (conversation: ConversationView): ChatTarget | null => {
+    if (!user?.id) return null
+    const participant = (conversation.participants || [])
+      .map(item => item.profiles?.[0])
+      .find(profile => profile && profile.id !== user.id)
+
+    return participant || null
+  }
+
+  const handleOpenChat = (profile: ChatTarget) => {
+    setOpenChats(prev => {
+      if (prev.some(p => p.id === profile.id)) return prev
+      return [...prev, profile]
+    })
+  }
+
+  const handleCloseChat = (profileId: string) => {
+    setOpenChats(prev => prev.filter(p => p.id !== profileId))
+  }
+
+  const formatLastMessageTime = (timestamp?: string) => {
+    if (!timestamp) return ''
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   const handleSignOut = async () => {
@@ -565,13 +705,16 @@ export default function DashboardPage() {
               Groups
             </Link>
 
-            <Link
-              href="/messages"
+            <button
+              type="button"
+              onClick={() => setShowMessagesPanel(v => !v)}
               className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-full hover:bg-gray-50 transition-all border border-gray-200 hover:border-[var(--primary)] font-medium"
+              aria-haspopup="dialog"
+              aria-expanded={showMessagesPanel}
             >
               <MessageCircle className="w-5 h-5" />
               Messages
-            </Link>
+            </button>
             
             <Link
               href="/create"
@@ -1113,6 +1256,99 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {showMessagesPanel && (
+        <div className="fixed inset-0 z-40">
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={() => setShowMessagesPanel(false)}
+          />
+          <div className="absolute right-6 top-24 bottom-6 w-[360px] bg-white rounded-2xl shadow-2xl border border-orange-100 flex flex-col overflow-hidden">
+            <div className="p-4 bg-orange-50 border-b border-orange-100 flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-[var(--neutral)]">Messages</div>
+                <div className="text-xs text-gray-500">Your recent conversations</div>
+              </div>
+              <button
+                onClick={() => setShowMessagesPanel(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close messages"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {loadingConversations && (
+                <div className="p-4 text-sm text-gray-500">Loading conversations...</div>
+              )}
+
+              {!loadingConversations && conversations.length === 0 && (
+                <div className="p-6 text-sm text-gray-500 text-center">
+                  No conversations yet. Start a chat from a request page.
+                </div>
+              )}
+
+              {!loadingConversations && conversations.map(conversation => {
+                const target = getDirectTarget(conversation)
+                const lastMessage = lastMessages[conversation.id]
+
+                return (
+                  <button
+                    key={conversation.id}
+                    type="button"
+                    onClick={() => target && handleOpenChat(target)}
+                    className="w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-orange-50 transition-colors flex items-center gap-3"
+                    disabled={!target}
+                  >
+                    <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {target?.avatar_url ? (
+                        <img src={target.avatar_url} alt={target.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="font-bold text-orange-600">
+                          {target?.name?.[0]?.toUpperCase() || '?'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-semibold text-sm text-[var(--neutral)] truncate">
+                          {target?.name || 'Unknown user'}
+                        </div>
+                        <div className="text-[10px] text-gray-400">
+                          {formatLastMessageTime(lastMessage?.created_at)}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {lastMessage?.body || 'No messages yet'}
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="p-3 border-t border-gray-100">
+              <Link
+                href="/messages"
+                className="block text-center text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)]"
+              >
+                See all messages
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {user?.id && openChats.map((chatUser, index) => (
+        <ChatWidget
+          key={chatUser.id}
+          currentUserId={user.id}
+          target={chatUser}
+          offsetIndex={index}
+          onClose={() => handleCloseChat(chatUser.id)}
+        />
+      ))}
     </div>
   )
 }
