@@ -190,7 +190,7 @@ export function ChatWidget({
 
   return (
     <div
-      className="fixed w-[360px] bg-white rounded-2xl shadow-2xl border border-orange-100 flex flex-col overflow-hidden z-50"
+      className="fixed w-[360px] h-[420px] bg-white rounded-2xl shadow-2xl border border-orange-100 flex flex-col overflow-hidden z-50"
       style={{ right: rightOffset, bottom: bottomOffset }}
     >
       <div className="p-4 bg-orange-50 border-b border-orange-100 flex items-center justify-between">
