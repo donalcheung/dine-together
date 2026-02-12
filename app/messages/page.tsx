@@ -12,6 +12,8 @@ interface ConversationParticipantView {
   profiles: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
 }
 
+type SearchProfile = Pick<Profile, 'id' | 'name' | 'avatar_url'>
+
 interface ConversationView {
   id: string
   type: 'direct' | 'group'
@@ -51,7 +53,7 @@ export default function MessagesPage() {
   const [messageBody, setMessageBody] = useState('')
   const [showNewChat, setShowNewChat] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Profile[]>([])
+  const [searchResults, setSearchResults] = useState<SearchProfile[]>([])
   const [searching, setSearching] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
@@ -381,7 +383,7 @@ export default function MessagesPage() {
     return [firstId, secondId].sort().join(':')
   }
 
-  const startDirectConversation = async (target: Profile) => {
+  const startDirectConversation = async (target: SearchProfile) => {
     if (!user?.id) return
 
     const pairKey = buildDirectPairKey(user.id, target.id)
