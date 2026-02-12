@@ -125,26 +125,29 @@ export default function MessagesPage() {
 
       const directIds = (participantRows || []).map(row => row.conversation_id)
 
-      const directConversations = directIds.length > 0
-        ? await supabase
-            .from('conversations')
-            .select(`
-              id,
-              type,
-              group_id,
-              direct_pair_key,
-              last_message_at,
-              created_at,
-              participants:conversation_participants(
-                user_id,
-                profiles:profiles(id, name, avatar_url)
-              )
-            `)
-            .eq('type', 'direct')
-            .in('id', directIds)
-        : { data: [] as ConversationView[] }
+      let directConversationData: ConversationView[] = []
 
-      if (directConversations.error) throw directConversations.error
+      if (directIds.length > 0) {
+        const { data, error } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            type,
+            group_id,
+            direct_pair_key,
+            last_message_at,
+            created_at,
+            participants:conversation_participants(
+              user_id,
+              profiles:profiles(id, name, avatar_url)
+            )
+          `)
+          .eq('type', 'direct')
+          .in('id', directIds)
+
+        if (error) throw error
+        directConversationData = data || []
+      }
 
       const { data: groupMemberships, error: groupMemberError } = await supabase
         .from('group_members')
@@ -239,7 +242,7 @@ export default function MessagesPage() {
       }
 
       const combinedConversations = [
-        ...(directConversations.data || []),
+        ...directConversationData,
         ...groupConversations,
       ].sort((a, b) => {
         const aTime = a.last_message_at || a.created_at
