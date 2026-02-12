@@ -1,12 +1,20 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Search, MapPin, Phone, Mail, Globe, Image, Check, AlertCircle, Store } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function ClaimRestaurantPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50" /> }>
+      <ClaimRestaurantContent />
+    </Suspense>
+  )
+}
+
+function ClaimRestaurantContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
