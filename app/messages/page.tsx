@@ -9,7 +9,7 @@ import { supabase, Profile, Group } from '@/lib/supabase'
 
 interface ConversationParticipantView {
   user_id: string
-  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url'> | null
+  profiles: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
 }
 
 interface ConversationView {
@@ -443,7 +443,8 @@ export default function MessagesPage() {
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
-    return otherParticipant?.profiles?.name || 'Direct chat'
+    const profile = otherParticipant?.profiles?.[0]
+    return profile?.name || 'Direct chat'
   }
 
   const getConversationAvatar = (conversation: ConversationView) => {
@@ -452,7 +453,8 @@ export default function MessagesPage() {
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
-    return otherParticipant?.profiles?.avatar_url || ''
+    const profile = otherParticipant?.profiles?.[0]
+    return profile?.avatar_url || ''
   }
 
   const formatTime = (timestamp?: string | null) => {
