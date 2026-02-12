@@ -138,11 +138,61 @@ export default function ClaimRestaurantPage() {
     setFormData(prev => ({ ...prev, cuisine_types: cuisines }))
   }
 
+  const normalizeValue = (value: string) => value.trim()
+
+  const checkForDuplicate = async () => {
+    if (formData.google_place_id) {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('google_place_id', formData.google_place_id)
+        .limit(1)
+
+      if (error) throw error
+      return (data || []).length > 0
+    }
+
+    const name = normalizeValue(formData.name)
+    const address = normalizeValue(formData.address)
+    const city = normalizeValue(formData.city)
+    const state = normalizeValue(formData.state)
+    const postalCode = normalizeValue(formData.postal_code)
+
+    if (!name || !address || !city) return false
+
+    let query = supabase
+      .from('restaurants')
+      .select('id')
+      .ilike('name', name)
+      .ilike('address', address)
+      .ilike('city', city)
+      .limit(1)
+
+    if (state) {
+      query = query.ilike('state', state)
+    }
+
+    if (postalCode) {
+      query = query.eq('postal_code', postalCode)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return (data || []).length > 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      const isDuplicate = await checkForDuplicate()
+      if (isDuplicate) {
+        alert('A restaurant with these details already exists. Try claiming the existing listing instead.')
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .insert([
