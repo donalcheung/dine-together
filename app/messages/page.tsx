@@ -20,7 +20,7 @@ interface ConversationView {
   last_message_at?: string | null
   created_at: string
   participants?: ConversationParticipantView[]
-  group?: Group | null
+  group?: Group[] | null
 }
 
 interface MessageView {
@@ -439,7 +439,7 @@ export default function MessagesPage() {
 
   const getConversationTitle = (conversation: ConversationView) => {
     if (conversation.type === 'group') {
-      return conversation.group?.name || 'Group chat'
+      return conversation.group?.[0]?.name || 'Group chat'
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
@@ -449,7 +449,7 @@ export default function MessagesPage() {
 
   const getConversationAvatar = (conversation: ConversationView) => {
     if (conversation.type === 'group') {
-      return conversation.group?.cover_image_url || ''
+      return conversation.group?.[0]?.cover_image_url || ''
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
