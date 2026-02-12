@@ -29,7 +29,7 @@ interface MessageView {
   sender_id: string
   body: string
   created_at: string
-  sender?: Pick<Profile, 'id' | 'name' | 'avatar_url'> | null
+  sender?: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
 }
 
 interface LastMessageView {
@@ -608,6 +608,7 @@ export default function MessagesPage() {
 
                   {messages.map(message => {
                     const isMine = message.sender_id === user?.id
+                    const senderProfile = message.sender?.[0]
                     return (
                       <div
                         key={message.id}
@@ -620,7 +621,7 @@ export default function MessagesPage() {
                         }`}
                         >
                           <div className="text-sm font-semibold mb-1">
-                            {isMine ? 'You' : (message.sender?.name || 'Member')}
+                            {isMine ? 'You' : (senderProfile?.name || 'Member')}
                           </div>
                           <div className="text-sm leading-relaxed">{message.body}</div>
                           <div className={`text-xs mt-2 ${isMine ? 'text-white/80' : 'text-gray-500'}`}>
