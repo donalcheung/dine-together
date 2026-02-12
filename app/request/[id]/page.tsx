@@ -11,6 +11,7 @@ import { validateProfanity } from "@/lib/profanity-filter";
 import { sendJoinNotification, sendAcceptanceNotification } from "@/lib/send-notification";
 import { ACHIEVEMENTS, XP_REWARDS } from "@/lib/achievements";
 import { awardXP } from "@/lib/progression";
+import { ChatWidget } from "@/components/ChatWidget";
 
 interface Comment {
   id: string
@@ -55,6 +56,8 @@ export default function RequestDetailPage() {
   const [loadingInfo, setLoadingInfo] = useState(false)
   const [mealPhotos, setMealPhotos] = useState<any[]>([])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [profileActionUser, setProfileActionUser] = useState<Profile | null>(null)
+  const [openChats, setOpenChats] = useState<Profile[]>([])
 
   // Share link helpers (placed after request state is declared)
   const requestUrl = typeof window !== 'undefined'
@@ -72,6 +75,22 @@ export default function RequestDetailPage() {
     } catch {
       alert('Failed to copy link')
     }
+  }
+
+  const handleProfileAction = (profile?: Profile | null) => {
+    if (!profile) return
+    setProfileActionUser(profile)
+  }
+
+  const handleOpenChat = (profile: Profile) => {
+    setOpenChats(prev => {
+      if (prev.some(p => p.id === profile.id)) return prev
+      return [...prev, profile]
+    })
+  }
+
+  const handleCloseChat = (profileId: string) => {
+    setOpenChats(prev => prev.filter(p => p.id !== profileId))
   }
 
   const handleShareSMS = () => {
@@ -900,9 +919,10 @@ export default function RequestDetailPage() {
                     <div className="space-y-3">
                       {acceptedJoins.map((join) => (
                         <div key={join.id} className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
-                          <Link
-                            href={`/profile/${join.user_id}`}
-                            className="flex items-center gap-4 flex-1 hover:opacity-90 transition-opacity"
+                          <button
+                            type="button"
+                            onClick={() => handleProfileAction(join.user)}
+                            className="flex items-center gap-4 flex-1 hover:opacity-90 transition-opacity text-left"
                           >
                             {join.user?.avatar_url ? (
                               <img
@@ -942,7 +962,7 @@ export default function RequestDetailPage() {
                               </div>
                             )}
                             </div>
-                          </Link>
+                          </button>
                           <Check className="w-6 h-6 text-green-600" />
                         </div>
                       ))}
@@ -1069,8 +1089,9 @@ export default function RequestDetailPage() {
                     ) : (
                       comments.map((comment) => (
                         <div key={comment.id} className="flex gap-3 p-4 bg-gray-50 rounded-xl">
-                          <Link
-                            href={`/profile/${comment.user_id}`}
+                          <button
+                            type="button"
+                            onClick={() => handleProfileAction(comment.user)}
                             className="flex items-start gap-3 hover:opacity-90 transition-opacity"
                           >
                             {comment.user?.avatar_url ? (
@@ -1084,15 +1105,16 @@ export default function RequestDetailPage() {
                                 {comment.user?.name[0]}
                               </div>
                             )}
-                          </Link>
+                          </button>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <Link
-                                href={`/profile/${comment.user_id}`}
+                              <button
+                                type="button"
+                                onClick={() => handleProfileAction(comment.user)}
                                 className="font-semibold text-[var(--neutral)] hover:text-[var(--primary)] transition-colors"
                               >
                                 {comment.user?.name}
-                              </Link>
+                              </button>
                               <span className="text-xs text-gray-500">{formatCommentTime(comment.created_at)}</span>
                             </div>
                             <p className="text-gray-700">{comment.comment}</p>
@@ -1484,6 +1506,69 @@ export default function RequestDetailPage() {
           </div>
         </div>
       </main>
+
+      {profileActionUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
+                  {profileActionUser.avatar_url ? (
+                    <img
+                      src={profileActionUser.avatar_url}
+                      alt={profileActionUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="font-bold text-orange-600">{profileActionUser.name[0]?.toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold text-[var(--neutral)]">{profileActionUser.name}</div>
+                  <div className="text-xs text-gray-500">Choose an action</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setProfileActionUser(null)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <Link
+                href={`/profile/${profileActionUser.id}`}
+                className="w-full inline-flex items-center justify-center px-4 py-2 rounded-xl border border-gray-200 text-[var(--neutral)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all"
+                onClick={() => setProfileActionUser(null)}
+              >
+                View Profile
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  handleOpenChat(profileActionUser)
+                  setProfileActionUser(null)
+                }}
+                className="w-full inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-all"
+              >
+                Start Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {user?.id && openChats.map((chatUser, index) => (
+        <ChatWidget
+          key={chatUser.id}
+          currentUserId={user.id}
+          target={chatUser}
+          offsetIndex={index}
+          onClose={() => handleCloseChat(chatUser.id)}
+        />
+      ))}
     </div>
   )
 }

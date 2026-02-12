@@ -290,11 +290,7 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Conversations are viewable by participants"
   ON conversations FOR SELECT
   USING (
-    (type = 'direct' AND EXISTS (
-      SELECT 1 FROM conversation_participants cp
-      WHERE cp.conversation_id = conversations.id
-      AND cp.user_id = auth.uid()
-    ))
+    (type = 'direct' AND direct_pair_key LIKE '%' || auth.uid() || '%')
     OR
     (type = 'group' AND EXISTS (
       SELECT 1 FROM group_members gm
@@ -311,10 +307,12 @@ CREATE POLICY "Users can create conversations"
 CREATE POLICY "Participants are viewable by members"
   ON conversation_participants FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM conversation_participants cp
-      WHERE cp.conversation_id = conversation_participants.conversation_id
-      AND cp.user_id = auth.uid()
+    user_id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM conversations c
+      WHERE c.id = conversation_participants.conversation_id
+      AND c.type = 'direct'
+      AND c.direct_pair_key LIKE '%' || auth.uid() || '%'
     )
     OR EXISTS (
       SELECT 1 FROM conversations c
