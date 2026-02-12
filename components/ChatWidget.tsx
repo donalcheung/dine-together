@@ -138,6 +138,17 @@ export function ChatWidget({ currentUserId, target, offsetIndex = 0, onClose }: 
     const body = messageBody.trim()
     setMessageBody('')
 
+    const optimisticMessage: MessageView = {
+      id: `temp-${Date.now()}`,
+      conversation_id: conversationId,
+      sender_id: currentUserId,
+      body,
+      created_at: new Date().toISOString(),
+      sender: null
+    }
+
+    setMessages(prev => [...prev, optimisticMessage])
+
     const { error } = await supabase
       .from('messages')
       .insert([
@@ -148,7 +159,11 @@ export function ChatWidget({ currentUserId, target, offsetIndex = 0, onClose }: 
       console.error('Error sending message:', error)
       setMessageBody(body)
       setErrorMessage(error.message)
+      setMessages(prev => prev.filter(message => message.id !== optimisticMessage.id))
+      return
     }
+
+    await loadMessages(conversationId)
   }
 
   const formatTime = (timestamp: string) => {
