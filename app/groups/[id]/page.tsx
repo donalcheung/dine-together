@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useParams } from 'next/navigation'
-import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX, Camera } from 'lucide-react'
+import { Utensils, ArrowLeft, Users, Settings, Copy, Check, Crown, LogOut, MapPin, Clock, Plus, Trash2, UserX, Camera, MessageCircle } from 'lucide-react'
 import { supabase, Group, GroupMember, DiningRequest, Profile } from '@/lib/supabase'
 
 export default function GroupDetailPage() {
@@ -513,6 +513,16 @@ export default function GroupDetailPage() {
                 <Plus className="w-5 h-5" />
                 Create Group Request
               </Link>
+
+              {userMember && (
+                <Link
+                  href={`/messages?group=${groupId}`}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium border border-gray-200"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Open Group Chat
+                </Link>
+              )}
 
               {/* Join Group button for non-members */}
               {!userMember && (

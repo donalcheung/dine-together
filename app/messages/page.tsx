@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { MessageCircle, Users, Send, Search, Plus, ArrowLeft } from 'lucide-react'
 import { supabase, Profile, Group } from '@/lib/supabase'
 
@@ -42,6 +42,8 @@ interface LastMessageView {
 
 export default function MessagesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const groupParam = searchParams?.get('group')
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [conversations, setConversations] = useState<ConversationView[]>([])
@@ -66,6 +68,15 @@ export default function MessagesPage() {
       loadConversations(user.id)
     }
   }, [user?.id])
+
+  useEffect(() => {
+    if (!groupParam || conversations.length === 0) return
+    const target = conversations.find(conv => conv.type === 'group' && conv.group_id === groupParam)
+    if (target) {
+      setSelectedConversationId(target.id)
+      loadMessages(target.id)
+    }
+  }, [groupParam, conversations])
 
   useEffect(() => {
     if (!selectedConversationId) return
