@@ -289,11 +289,8 @@ export default function DashboardPage() {
 
   const getDirectTarget = (conversation: ConversationView): ChatTarget | null => {
     if (!user?.id) return null
-    const participant = (conversation.participants || [])
-      .map(item => item.profiles?.[0])
-      .find(profile => profile && profile.id !== user.id)
-
-    return participant || null
+    const otherParticipant = conversation.participants?.find(p => p.user_id !== user.id)
+    return otherParticipant?.profiles?.[0] || null
   }
 
   const handleOpenChat = (profile: ChatTarget) => {
