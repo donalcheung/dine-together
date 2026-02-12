@@ -84,6 +84,32 @@ export interface GroupMember {
   user?: Profile
 }
 
+export interface Conversation {
+  id: string
+  type: 'direct' | 'group'
+  created_by?: string | null
+  group_id?: string | null
+  direct_pair_key?: string | null
+  last_message_at?: string
+  created_at: string
+}
+
+export interface ConversationParticipant {
+  id: string
+  conversation_id: string
+  user_id: string
+  joined_at: string
+  last_read_at?: string | null
+}
+
+export interface ChatMessage {
+  id: string
+  conversation_id: string
+  sender_id: string
+  body: string
+  created_at: string
+}
+
 // NEW: Progression Types
 export interface UserProgression {
   id: string

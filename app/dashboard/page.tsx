@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell } from 'lucide-react'
+import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Navigation, Filter, Check, Store, Bell, MessageCircle } from 'lucide-react'
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 
@@ -563,6 +563,14 @@ export default function DashboardPage() {
             >
               <Users className="w-5 h-5" />
               Groups
+            </Link>
+
+            <Link
+              href="/messages"
+              className="flex items-center gap-2 px-5 py-2 bg-white text-gray-700 rounded-full hover:bg-gray-50 transition-all border border-gray-200 hover:border-[var(--primary)] font-medium"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Messages
             </Link>
             
             <Link

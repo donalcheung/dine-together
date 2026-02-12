@@ -220,3 +220,156 @@ BEGIN
   AND dining_time < NOW();
 END;
 $$ LANGUAGE plpgsql;
+
+-- Chat tables
+CREATE TABLE conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type TEXT NOT NULL CHECK (type IN ('direct', 'group')),
+  created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
+  direct_pair_key TEXT,
+  last_message_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_conversations_direct_pair_unique
+  ON conversations(direct_pair_key)
+  WHERE type = 'direct';
+
+CREATE UNIQUE INDEX idx_conversations_group_unique
+  ON conversations(group_id)
+  WHERE type = 'group';
+
+CREATE INDEX idx_conversations_last_message_at ON conversations(last_message_at);
+
+CREATE TABLE conversation_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_read_at TIMESTAMP WITH TIME ZONE,
+  UNIQUE(conversation_id, user_id)
+);
+
+CREATE INDEX idx_conversation_participants_user_id ON conversation_participants(user_id);
+CREATE INDEX idx_conversation_participants_conversation_id ON conversation_participants(conversation_id);
+
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+
+-- Update conversation activity when a message is created
+CREATE OR REPLACE FUNCTION update_conversation_last_message()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE conversations
+  SET last_message_at = NEW.created_at
+  WHERE id = NEW.conversation_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_message_created
+  AFTER INSERT ON messages
+  FOR EACH ROW
+  EXECUTE FUNCTION update_conversation_last_message();
+
+-- Enable RLS
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Conversations policies
+CREATE POLICY "Conversations are viewable by participants"
+  ON conversations FOR SELECT
+  USING (
+    (type = 'direct' AND EXISTS (
+      SELECT 1 FROM conversation_participants cp
+      WHERE cp.conversation_id = conversations.id
+      AND cp.user_id = auth.uid()
+    ))
+    OR
+    (type = 'group' AND EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = conversations.group_id
+      AND gm.user_id = auth.uid()
+    ))
+  );
+
+CREATE POLICY "Users can create conversations"
+  ON conversations FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+-- Conversation participants policies
+CREATE POLICY "Participants are viewable by members"
+  ON conversation_participants FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM conversation_participants cp
+      WHERE cp.conversation_id = conversation_participants.conversation_id
+      AND cp.user_id = auth.uid()
+    )
+    OR EXISTS (
+      SELECT 1 FROM conversations c
+      JOIN group_members gm ON gm.group_id = c.group_id
+      WHERE c.id = conversation_participants.conversation_id
+      AND c.type = 'group'
+      AND gm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can join conversations"
+  ON conversation_participants FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id
+    OR EXISTS (
+      SELECT 1 FROM conversations c
+      WHERE c.id = conversation_participants.conversation_id
+      AND c.created_by = auth.uid()
+    )
+  );
+
+-- Messages policies
+CREATE POLICY "Messages are viewable by members"
+  ON messages FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM conversation_participants cp
+      WHERE cp.conversation_id = messages.conversation_id
+      AND cp.user_id = auth.uid()
+    )
+    OR EXISTS (
+      SELECT 1 FROM conversations c
+      JOIN group_members gm ON gm.group_id = c.group_id
+      WHERE c.id = messages.conversation_id
+      AND c.type = 'group'
+      AND gm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can send messages"
+  ON messages FOR INSERT
+  WITH CHECK (
+    auth.uid() = sender_id
+    AND (
+      EXISTS (
+        SELECT 1 FROM conversation_participants cp
+        WHERE cp.conversation_id = messages.conversation_id
+        AND cp.user_id = auth.uid()
+      )
+      OR EXISTS (
+        SELECT 1 FROM conversations c
+        JOIN group_members gm ON gm.group_id = c.group_id
+        WHERE c.id = messages.conversation_id
+        AND c.type = 'group'
+        AND gm.user_id = auth.uid()
+      )
+    )
+  );
