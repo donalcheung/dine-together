@@ -58,6 +58,7 @@ function MessagesPageContent() {
   const [searchResults, setSearchResults] = useState<SearchProfile[]>([])
   const [searching, setSearching] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const [directTargetsByConversationId, setDirectTargetsByConversationId] = useState<Record<string, SearchProfile>>({})
 
   useEffect(() => {
     checkUser()
@@ -265,6 +266,52 @@ function MessagesPageContent() {
 
       setConversations(combinedConversations)
 
+      // Fetch missing profile data for direct conversations using direct_pair_key
+      const pairKeyFallbacks: Record<string, string> = {}
+      const missingProfileIds: string[] = []
+
+      directConversationData.forEach(conversation => {
+        const otherParticipant = conversation.participants?.find(p => p.user_id !== userId)
+        const hasProfile = !!otherParticipant?.profiles?.[0]
+        if (hasProfile) return
+
+        const pairKey = conversation.direct_pair_key
+        if (!pairKey) return
+        const [firstId, secondId] = pairKey.split(':')
+        const otherId = firstId === userId ? secondId : firstId
+        if (!otherId) return
+        pairKeyFallbacks[conversation.id] = otherId
+        if (!missingProfileIds.includes(otherId)) {
+          missingProfileIds.push(otherId)
+        }
+      })
+
+      if (missingProfileIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .in('id', missingProfileIds)
+
+        if (profilesError) throw profilesError
+
+        const profileMap = new Map((profiles || []).map(p => [p.id, p]))
+        const fallbackTargets: Record<string, SearchProfile> = {}
+
+        Object.entries(pairKeyFallbacks).forEach(([conversationId, otherId]) => {
+          const profile = profileMap.get(otherId)
+          if (profile) {
+            fallbackTargets[conversationId] = profile
+          }
+        })
+
+        if (Object.keys(fallbackTargets).length > 0) {
+          setDirectTargetsByConversationId(prev => ({
+            ...prev,
+            ...fallbackTargets
+          }))
+        }
+      }
+
       const conversationIds = combinedConversations.map(conv => conv.id)
       if (conversationIds.length > 0) {
         const { data: latestMessages, error: latestError } = await supabase
@@ -365,6 +412,10 @@ function MessagesPageContent() {
     if (error) {
       console.error('Error sending message:', error)
       setMessageBody(body)
+    } else {
+      // Force immediate refresh
+      await loadMessages(selectedConversationId)
+      await refreshLastMessage(selectedConversationId)
     }
   }
 
@@ -457,7 +508,7 @@ function MessagesPageContent() {
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
     const profile = otherParticipant?.profiles?.[0]
-    return profile?.name || 'Direct chat'
+    return profile?.name || directTargetsByConversationId[conversation.id]?.name || 'Direct chat'
   }
 
   const getConversationAvatar = (conversation: ConversationView) => {
@@ -467,7 +518,7 @@ function MessagesPageContent() {
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
     const profile = otherParticipant?.profiles?.[0]
-    return profile?.avatar_url || ''
+    return profile?.avatar_url || directTargetsByConversationId[conversation.id]?.avatar_url || ''
   }
 
   const formatTime = (timestamp?: string | null) => {
