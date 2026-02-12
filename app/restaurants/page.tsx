@@ -25,6 +25,7 @@ interface Restaurant {
 
 export default function BrowseRestaurantsPage() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -34,6 +35,15 @@ export default function BrowseRestaurantsPage() {
 
   useEffect(() => {
     loadRestaurants()
+  }, [])
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+
+    loadUser()
   }, [])
 
   const loadRestaurants = async () => {
@@ -174,6 +184,26 @@ export default function BrowseRestaurantsPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
+        {user && (
+          <div className="mb-8 bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--neutral)]">
+                Don't see your restaurant?
+              </h2>
+              <p className="text-gray-600">
+                Create a new claim and start the verification process.
+              </p>
+            </div>
+            <Link
+              href="/restaurants/claim?mode=manual"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all font-semibold"
+            >
+              <Store className="w-5 h-5" />
+              Create a Claim
+            </Link>
+          </div>
+        )}
+
         {/* Search & Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">

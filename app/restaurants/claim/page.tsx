@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Utensils, ArrowLeft, Search, MapPin, Phone, Mail, Globe, Image, Check, AlertCircle, Store } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function ClaimRestaurantPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'search' | 'details' | 'success'>('search')
@@ -36,6 +37,13 @@ export default function ClaimRestaurantPage() {
   useEffect(() => {
     checkUser()
   }, [])
+
+  useEffect(() => {
+    const mode = searchParams.get('mode')
+    if (mode === 'manual') {
+      setStep('details')
+    }
+  }, [searchParams])
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
