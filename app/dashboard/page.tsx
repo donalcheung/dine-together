@@ -481,6 +481,10 @@ export default function DashboardPage() {
     }
   }
 
+  const handleCloseChat = (userId: string) => {
+    setOpenChats(prev => prev.filter(c => c.id !== userId))
+  }
+
   const handleCloseGroupChat = (conversationId: string) => {
     setOpenGroupChats(prev => prev.filter(c => c.id !== conversationId))
   }
