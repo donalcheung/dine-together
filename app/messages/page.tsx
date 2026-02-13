@@ -503,7 +503,9 @@ function MessagesPageContent() {
 
   const getConversationTitle = (conversation: ConversationView) => {
     if (conversation.type === 'group') {
-      return conversation.group?.[0]?.name || 'Group chat'
+      // group is returned as an array, so check both [0] and direct access
+      const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+      return groupData?.name || 'Group chat'
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
@@ -513,7 +515,9 @@ function MessagesPageContent() {
 
   const getConversationAvatar = (conversation: ConversationView) => {
     if (conversation.type === 'group') {
-      return conversation.group?.[0]?.cover_image_url || ''
+      // group is returned as an array, so check both [0] and direct access
+      const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+      return groupData?.cover_image_url || ''
     }
 
     const otherParticipant = conversation.participants?.find(p => p.user_id !== user?.id)
