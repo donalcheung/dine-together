@@ -489,7 +489,6 @@ export default function DashboardPage() {
     const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
     return groupData || null
   }
-  }
 
   const formatLastMessageTime = (timestamp?: string) => {
     if (!timestamp) return ''
