@@ -25,6 +25,18 @@ interface ConversationParticipantView {
   profiles: Pick<Profile, 'id' | 'name' | 'avatar_url'>[] | null
 }
 
+interface Group {
+  id: string
+  name: string
+  description?: string
+  cover_image_url?: string
+  is_public: boolean
+  member_count: number
+  created_by: string
+  created_at: string
+  join_code?: string
+}
+
 interface ConversationView {
   id: string
   type: 'direct' | 'group'
@@ -33,6 +45,7 @@ interface ConversationView {
   last_message_at?: string | null
   created_at: string
   participants?: ConversationParticipantView[]
+  group?: Group[] | null
 }
 
 interface LastMessageView {
@@ -217,6 +230,7 @@ export default function DashboardPage() {
   const loadConversations = async (userId: string) => {
     try {
       setLoadingConversations(true)
+
       const { data: participantRows, error: participantError } = await supabase
         .from('conversation_participants')
         .select('conversation_id')
@@ -225,43 +239,140 @@ export default function DashboardPage() {
       if (participantError) throw participantError
 
       const directIds = (participantRows || []).map(row => row.conversation_id)
-      if (directIds.length === 0) {
-        setConversations([])
-        setLastMessages({})
-        return
+
+      let directConversationData: ConversationView[] = []
+
+      if (directIds.length > 0) {
+        const { data, error } = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            type,
+            group_id,
+            direct_pair_key,
+            last_message_at,
+            created_at,
+            participants:conversation_participants(
+              user_id,
+              profiles:profiles(id, name, avatar_url)
+            )
+          `)
+          .eq('type', 'direct')
+          .in('id', directIds)
+
+        if (error) throw error
+        directConversationData = data || []
       }
 
-      const { data, error } = await supabase
-        .from('conversations')
+      // Load group conversations
+      const { data: groupMemberships, error: groupMemberError } = await supabase
+        .from('group_members')
         .select(`
-          id,
-          type,
           group_id,
-          direct_pair_key,
-          last_message_at,
-          created_at,
-          participants:conversation_participants(
-            user_id,
-            profiles:profiles(id, name, avatar_url)
+          groups(
+            id,
+            name,
+            description,
+            cover_image_url,
+            is_public,
+            member_count,
+            created_by,
+            created_at,
+            join_code
           )
         `)
-        .eq('type', 'direct')
-        .in('id', directIds)
+        .eq('user_id', userId)
 
-      if (error) throw error
+      if (groupMemberError) throw groupMemberError
 
-      const directConversations = (data || []).sort((a, b) => {
+      const groupIds = (groupMemberships || []).map(row => row.group_id)
+
+      let groupConversations: ConversationView[] = []
+
+      if (groupIds.length > 0) {
+        const groupConvosResponse = await supabase
+          .from('conversations')
+          .select(`
+            id,
+            type,
+            group_id,
+            last_message_at,
+            created_at,
+            group:groups(
+              id,
+              name,
+              description,
+              cover_image_url,
+              is_public,
+              member_count,
+              created_by,
+              created_at,
+              join_code
+            )
+          `)
+          .eq('type', 'group')
+          .in('group_id', groupIds)
+
+        if (groupConvosResponse.error) throw groupConvosResponse.error
+
+        groupConversations = groupConvosResponse.data || []
+        const existingGroupIds = new Set(groupConversations.map(conv => conv.group_id))
+        const missingGroupIds = groupIds.filter(id => id && !existingGroupIds.has(id))
+
+        if (missingGroupIds.length > 0) {
+          await supabase
+            .from('conversations')
+            .insert(missingGroupIds.map(groupId => ({
+              type: 'group',
+              group_id: groupId,
+              created_by: userId
+            })))
+
+          const refreshed = await supabase
+            .from('conversations')
+            .select(`
+              id,
+              type,
+              group_id,
+              last_message_at,
+              created_at,
+              group:groups(
+                id,
+                name,
+                description,
+                cover_image_url,
+                is_public,
+                member_count,
+                created_by,
+                created_at,
+                join_code
+              )
+            `)
+            .eq('type', 'group')
+            .in('group_id', groupIds)
+
+          if (!refreshed.error) {
+            groupConversations = refreshed.data || []
+          }
+        }
+      }
+
+      const combinedConversations = [
+        ...directConversationData,
+        ...groupConversations,
+      ].sort((a, b) => {
         const aTime = a.last_message_at || a.created_at
         const bTime = b.last_message_at || b.created_at
         return new Date(bTime).getTime() - new Date(aTime).getTime()
       })
 
-      setConversations(directConversations)
+      setConversations(combinedConversations)
 
+      // Fetch missing profile data for direct conversations using direct_pair_key
       const pairKeyFallbacks: Record<string, string> = {}
       const missingProfileIds: string[] = []
 
-      directConversations.forEach(conversation => {
+      directConversationData.forEach(conversation => {
         const otherParticipant = conversation.participants?.find(p => p.user_id !== userId)
         const hasProfile = !!otherParticipant?.profiles?.[0]
         if (hasProfile) return
@@ -303,7 +414,7 @@ export default function DashboardPage() {
         }
       }
 
-      const conversationIds = directConversations.map(conv => conv.id)
+      const conversationIds = combinedConversations.map(conv => conv.id)
       if (conversationIds.length > 0) {
         const { data: latestMessages, error: latestError } = await supabase
           .from('messages')
@@ -339,11 +450,33 @@ export default function DashboardPage() {
     return otherParticipant?.profiles?.[0] || directTargetsByConversationId[conversation.id] || null
   }
 
-  const handleOpenChat = (profile: ChatTarget) => {
-    setOpenChats(prev => {
-      if (prev.some(p => p.id === profile.id)) return prev
-      return [...prev, profile]
-    })
+  const getConversationTitle = (conversation: ConversationView): string => {
+    if (conversation.type === 'group') {
+      const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+      return groupData?.name || 'Group chat'
+    }
+    const target = getDirectTarget(conversation)
+    return target?.name || 'Direct chat'
+  }
+
+  const handleOpenChat = (conversation: ConversationView) => {
+    if (conversation.type === 'group') {
+      // For groups, navigate to messages page with group param
+      const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+      if (groupData) {
+        window.location.href = `/messages?group=${groupData.id}`
+      }
+      return
+    }
+
+    // For direct chats, open chat widget
+    const target = getDirectTarget(conversation)
+    if (target) {
+      setOpenChats(prev => {
+        if (prev.some(p => p.id === target.id)) return prev
+        return [...prev, target]
+      })
+    }
   }
 
   const handleCloseChat = (profileId: string) => {
@@ -1333,30 +1466,38 @@ export default function DashboardPage() {
               )}
 
               {!loadingConversations && conversations.map(conversation => {
-                const target = getDirectTarget(conversation)
                 const lastMessage = lastMessages[conversation.id]
+                let avatarUrl = ''
+                
+                if (conversation.type === 'group') {
+                  const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+                  avatarUrl = groupData?.cover_image_url || ''
+                } else {
+                  const target = getDirectTarget(conversation)
+                  avatarUrl = target?.avatar_url || ''
+                }
+                const title = getConversationTitle(conversation)
 
                 return (
                   <button
                     key={conversation.id}
                     type="button"
-                    onClick={() => target && handleOpenChat(target)}
+                    onClick={() => handleOpenChat(conversation)}
                     className="w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-orange-50 transition-colors flex items-center gap-3"
-                    disabled={!target}
                   >
                     <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {target?.avatar_url ? (
-                        <img src={target.avatar_url} alt={target.name} className="w-full h-full object-cover" />
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt={title} className="w-full h-full object-cover" />
                       ) : (
                         <span className="font-bold text-orange-600">
-                          {target?.name?.[0]?.toUpperCase() || '?'}
+                          {title?.[0]?.toUpperCase() || '?'}
                         </span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="font-semibold text-sm text-[var(--neutral)] truncate">
-                          {target?.name || 'Unknown user'}
+                          {title}
                         </div>
                         <div className="text-[10px] text-gray-400">
                           {formatLastMessageTime(lastMessage?.created_at)}
