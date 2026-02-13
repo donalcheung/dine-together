@@ -8,6 +8,7 @@ import { Utensils, MapPin, Clock, Users, Plus, LogOut, User, Star, Heart, Naviga
 import { supabase, DiningRequest, Profile } from '@/lib/supabase'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { ChatWidget } from '@/components/ChatWidget'
+import { GroupChatWidget } from '@/components/GroupChatWidget'
 
 interface UserLocation {
   latitude: number
@@ -89,6 +90,7 @@ export default function DashboardPage() {
   const [lastMessages, setLastMessages] = useState<Record<string, LastMessageView>>({})
   const [loadingConversations, setLoadingConversations] = useState(false)
   const [openChats, setOpenChats] = useState<ChatTarget[]>([])
+  const [openGroupChats, setOpenGroupChats] = useState<(ConversationView & { group?: Group[] | null })[]>([])
   const [directTargetsByConversationId, setDirectTargetsByConversationId] = useState<Record<string, ChatTarget>>({})
 
   useEffect(() => {
@@ -461,11 +463,11 @@ export default function DashboardPage() {
 
   const handleOpenChat = (conversation: ConversationView) => {
     if (conversation.type === 'group') {
-      // For groups, navigate to messages page with group param
-      const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
-      if (groupData) {
-        window.location.href = `/messages?group=${groupData.id}`
-      }
+      // For groups, open as popup
+      setOpenGroupChats(prev => {
+        if (prev.some(c => c.id === conversation.id)) return prev
+        return [...prev, conversation]
+      })
       return
     }
 
@@ -479,8 +481,14 @@ export default function DashboardPage() {
     }
   }
 
-  const handleCloseChat = (profileId: string) => {
-    setOpenChats(prev => prev.filter(p => p.id !== profileId))
+  const handleCloseGroupChat = (conversationId: string) => {
+    setOpenGroupChats(prev => prev.filter(c => c.id !== conversationId))
+  }
+
+  const getGroupData = (conversation: ConversationView): Group | null => {
+    const groupData = Array.isArray(conversation.group) ? conversation.group?.[0] : conversation.group
+    return groupData || null
+  }
   }
 
   const formatLastMessageTime = (timestamp?: string) => {
@@ -1535,6 +1543,22 @@ export default function DashboardPage() {
           onClose={() => handleCloseChat(chatUser.id)}
         />
       ))}
+
+      {user?.id && openGroupChats.map((conversation, index) => {
+        const groupData = getGroupData(conversation)
+        return groupData ? (
+          <GroupChatWidget
+            key={conversation.id}
+            currentUserId={user.id}
+            conversationId={conversation.id}
+            group={groupData}
+            horizontalIndex={openChats.length + index}
+            baseRight={showMessagesPanel ? 400 : 24}
+            baseBottom={24}
+            onClose={() => handleCloseGroupChat(conversation.id)}
+          />
+        ) : null
+      })}
     </div>
   )
 }
