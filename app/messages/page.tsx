@@ -629,7 +629,7 @@ function MessagesPageContent() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg border border-orange-100 flex flex-col min-h-[640px]">
+          <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg border border-orange-100 flex flex-col h-[640px]">
             {!selectedConversation && (
               <div className="flex-1 flex items-center justify-center text-gray-500">
                 <div className="text-center">
@@ -641,7 +641,7 @@ function MessagesPageContent() {
 
             {selectedConversation && (
               <>
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
                       {getConversationAvatar(selectedConversation) ? (
@@ -661,7 +661,7 @@ function MessagesPageContent() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
                   {loadingMessages && (
                     <div className="text-center text-gray-500">Loading messages...</div>
                   )}
@@ -698,7 +698,7 @@ function MessagesPageContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-5 border-t border-gray-100">
+                <div className="p-5 border-t border-gray-100 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <input
                       value={messageBody}
