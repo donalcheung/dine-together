@@ -1,205 +1,208 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { Utensils, Users, MapPin, Star, Clock, Shield, Heart, Briefcase, Plane, Users2, TrendingUp } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'TableMesh — Effortless Group Dining',
+  description:
+    'Plan meals with friends, colleagues, or new people. Host a table, coordinate dinners, and discover shared dining experiences near you. Download the free app today.',
+}
 
 export default function Home() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    checkUser()
-  }, [])
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (user) {
-      // User is logged in, redirect to dashboard
-      router.push('/dashboard')
-    } else {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
-      {/* Navigation */}
+    <div className="min-h-screen bg-[var(--background)]">
+      {/* ── Navigation ── */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-orange-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
               alt="TableMesh Logo"
-              width={32}
-              height={32}
-              className="w-8 h-8"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-xl"
             />
-            <h1 className="text-2xl font-bold text-[var(--neutral)]">TableMesh</h1>
+            <span className="text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+              TableMesh
+            </span>
           </Link>
-          <div className="flex gap-4">
-            <Link 
-              href="/auth" 
-              className="px-4 py-2 text-[var(--neutral)] hover:text-[var(--primary)] transition-colors font-medium"
-            >
-              Sign In
+          <div className="flex items-center gap-6">
+            <Link href="/about-us" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              About
             </Link>
-            <Link 
-              href="/auth?signup=true" 
-              className="px-6 py-2 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg font-medium"
-            >
-              Get Started
+            <Link href="/safety-guidelines" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              Safety
             </Link>
+            <Link href="/contact" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              Contact
+            </Link>
+            <a
+              href="#download"
+              className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
+            >
+              Get the App
+            </a>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      {/* ── Hero Section ── */}
+      <section className="pt-36 pb-24 px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-block mb-6 px-4 py-2 bg-white rounded-full shadow-sm border border-orange-200">
-            <span className="text-[var(--primary)] font-medium">🍽️ The Social Dining Network</span>
+          <div className="inline-block mb-8">
+            <Image
+              src="/logo.png"
+              alt="TableMesh"
+              width={96}
+              height={96}
+              className="w-24 h-24 rounded-3xl shadow-xl mx-auto"
+            />
           </div>
-          
-          <h1 className="text-6xl md:text-7xl font-bold text-[var(--neutral)] mb-6 leading-tight">
-            Turn Every Meal<br />
-            Into an <span className="text-[var(--primary)] italic">Experience</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Whether you're traveling solo, grabbing lunch with coworkers, organizing group dinners, or just want to try more dishes—TableMesh connects you with the right dining companions.
-          </p>
-          <Link 
-            href="/create" 
-            className="px-8 py-4 bg-white text-[var(--neutral)] rounded-full text-lg font-semibold border-2 border-[var(--neutral)] hover:bg-[var(--neutral)] hover:text-white transition-all"
-          >
-            Post Your Plans
-          </Link>
-        </div>
 
-        {/* Trust Indicators */}
-        <div className="flex gap-8 justify-center mt-16 flex-wrap">
-          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-            <Shield className="w-5 h-5 text-green-500" />
-            <span className="font-medium text-gray-700">Verified Profiles</span>
+          <h1 className="text-5xl md:text-7xl font-bold text-[var(--neutral)] mb-6 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
+            Every Great Meal<br />
+            Starts with a <span className="text-[var(--primary)] italic">Table</span>
+          </h1>
+
+          <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+            The easiest way to organize group meals with friends, colleagues, or new people.
+            Host a table, coordinate plans, and bring everyone together.
+          </p>
+
+          {/* App Store Badges */}
+          <div id="download" className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            <a href="#" className="hover:opacity-80 transition-opacity" aria-label="Download on the App Store">
+              <Image
+                src="/app-store-badge.png"
+                alt="Download on the App Store"
+                width={200}
+                height={60}
+                className="h-[60px] w-auto"
+              />
+            </a>
+            <a href="#" className="hover:opacity-80 transition-opacity" aria-label="Get it on Google Play">
+              <Image
+                src="/google-play-badge.png"
+                alt="Get it on Google Play"
+                width={200}
+                height={60}
+                className="h-[60px] w-auto"
+              />
+            </a>
           </div>
-          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-            <span className="font-medium text-gray-700">Community Ratings</span>
-          </div>
-          <div className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md">
-            <MapPin className="w-5 h-5 text-blue-500" />
-            <span className="font-medium text-gray-700">Location-Based</span>
-          </div>
+
+          <p className="text-sm text-gray-400">Free to download. Free to use.</p>
         </div>
       </section>
 
-      {/* Use Cases */}
-      <section className="py-20 px-6 bg-white">
+      {/* ── Use Cases ── */}
+      <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold text-center mb-4 text-[var(--neutral)]">
-            One Platform, Endless Possibilities
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+            One App, Endless Tables
           </h2>
-          <p className="text-center text-xl text-gray-600 mb-16 max-w-2xl mx-auto">
-            From solo travelers to restaurant owners, TableMesh brings people together around great food
+          <p className="text-center text-lg text-gray-600 mb-16 max-w-2xl mx-auto">
+            Whether you are planning a team lunch, a friends&apos; night out, or looking to meet new people over food &mdash; TableMesh brings everyone to the table.
           </p>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Solo Travelers */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 card-hover">
-              <div className="w-16 h-16 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 animate-float">
-                <Plane className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Friend Groups */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 card-hover">
+              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Solo Travelers</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Friend Groups</h3>
               <p className="text-gray-600 leading-relaxed">
-                Exploring a new city alone? Find locals or fellow travelers to share authentic dishes and experiences with.
+                Finally agree on a place and time without the chaos of group texts. Share a link, let everyone RSVP, and just show up.
               </p>
-            </div>
+            </article>
 
-            {/* Coworkers */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 card-hover">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.1s'}}>
-                <Briefcase className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Work Teams */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 card-hover">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{ animationDelay: '0.1s' }}>
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z" />
+                </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Lunch Breaks</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Work Teams</h3>
               <p className="text-gray-600 leading-relaxed">
-                Signal to your coworkers where you're grabbing lunch. Turn solo breaks into casual team bonding.
+                The perfect tool for team lunches, offsites, and after-work dinners. Signal where you are grabbing lunch and turn solo breaks into team bonding.
               </p>
-            </div>
+            </article>
 
-            {/* Friends in Town */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 card-hover">
-              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.2s'}}>
-                <Heart className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Community */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 card-hover">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{ animationDelay: '0.2s' }}>
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Visiting Friends</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Community</h3>
               <p className="text-gray-600 leading-relaxed">
-                In town for the weekend? Let friends know you're around and available for spontaneous dinners.
+                A welcoming way to meet new people and discover your city&apos;s food culture. Join public tables or create your own community group.
               </p>
-            </div>
+            </article>
 
-            {/* Group Events */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 card-hover">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.3s'}}>
-                <Users2 className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Travelers */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 card-hover">
+              <div className="w-16 h-16 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{ animationDelay: '0.3s' }}>
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Community Groups</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Travelers</h3>
               <p className="text-gray-600 leading-relaxed">
-                Running a book club or meetup? Post your group's dinner plans and let others discover your community.
+                Exploring a new city? Find locals or fellow travelers to share authentic dishes and experiences with. Turn any trip into a food adventure.
               </p>
-            </div>
+            </article>
 
-            {/* Try New Dishes */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 card-hover">
-              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.4s'}}>
-                <Utensils className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Foodies */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 card-hover">
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{ animationDelay: '0.4s' }}>
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+                </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Food Explorers</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Foodies</h3>
               <p className="text-gray-600 leading-relaxed">
-                Want to try dim sum but can't order enough? Find others to split dishes and explore the full menu.
+                Want to try dim sum but can&apos;t order enough alone? Find others to split dishes and explore the full menu together.
               </p>
-            </div>
+            </article>
 
-            {/* Restaurant Promotions */}
-            <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 card-hover">
-              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{animationDelay: '0.5s'}}>
-                <TrendingUp className="w-8 h-8 text-white" strokeWidth={2.5} />
+            {/* Restaurants */}
+            <article className="text-center p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 card-hover">
+              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-float" style={{ animationDelay: '0.5s' }}>
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+                </svg>
               </div>
               <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Restaurants</h3>
               <p className="text-gray-600 leading-relaxed">
-                Fill tables during slow hours. Post special deals and attract groups looking for great dining experiences.
+                Fill tables during slow hours. Post special deals and attract groups looking for great dining experiences. Grow your community.
               </p>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
+      {/* ── How It Works ── */}
+      <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold text-center mb-16 text-[var(--neutral)]">
-            Simple as 1-2-3
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+            Simple as 1&#8209;2&#8209;3
           </h2>
-          
+
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center">
               <div className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 1
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Post Your Plans</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Host a Table</h3>
               <p className="text-gray-600 leading-relaxed">
-                Share where you're dining and how many seats are available. Add details about cuisine preferences or group vibe.
+                Create a dining request in seconds. Set the time, place, and number of guests. Share a link for your group to RSVP, or make it public for the community.
               </p>
             </div>
 
@@ -207,9 +210,9 @@ export default function Home() {
               <div className="w-20 h-20 bg-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 2
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Connect & Confirm</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Connect &amp; Confirm</h3>
               <p className="text-gray-600 leading-relaxed">
-                Browse requests near you or review join requests for yours. Message to coordinate details and confirm attendance.
+                Browse nearby tables or review join requests for yours. Use in-app chat to coordinate details and confirm attendance. No phone numbers needed.
               </p>
             </div>
 
@@ -217,190 +220,218 @@ export default function Home() {
               <div className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold text-white shadow-lg">
                 3
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Dine & Review</h3>
+              <h3 className="text-2xl font-bold mb-4 text-[var(--neutral)]">Dine Together</h3>
               <p className="text-gray-600 leading-relaxed">
-                Enjoy your meal together. Afterward, rate your dining companions to help build a trusted community.
+                Show up, enjoy the meal, and strengthen your connections &mdash; or make new ones. Rate your experience to help build a trusted community.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 px-6 bg-white">
+      {/* ── Features ── */}
+      <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-5xl font-bold text-center mb-16 text-[var(--neutral)]">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             Built for Real Diners
           </h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Clock className="w-12 h-12 text-blue-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Flexible Timing</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Post hours in advance or minutes before. See what's happening now or plan ahead for the weekend.
+              <svg className="w-12 h-12 text-blue-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Flexible Timing</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                Post hours in advance or minutes before. See what is happening now or plan ahead for the weekend.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Star className="w-12 h-12 text-purple-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Rating System</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Build your reputation as a reliable dining companion. See others' ratings before you commit.
+              <svg className="w-12 h-12 text-purple-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+              </svg>
+              <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Community Ratings</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                Build your reputation as a reliable dining companion. See others&apos; ratings before you commit.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <MapPin className="w-12 h-12 text-green-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Location-Based</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <svg className="w-12 h-12 text-green-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+              </svg>
+              <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Location-Based</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
                 See dining requests near you, sorted by distance. Never miss out on nearby opportunities.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-amber-50 to-yellow-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <Shield className="w-12 h-12 text-amber-500 mb-4" strokeWidth={2} />
-              <h3 className="text-2xl font-bold mb-3 text-[var(--neutral)]">Safe & Public</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Always meet in public restaurants. Verified profiles, ratings, and transparent communication.
+              <svg className="w-12 h-12 text-amber-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+              </svg>
+              <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Safe &amp; Verified</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                Always meet in public restaurants. Verified profiles, community ratings, and transparent communication.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-20 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
+      {/* ── Social Proof ── */}
+      <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl font-bold text-center mb-16 text-[var(--neutral)]">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             What Diners Say
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
               <div className="flex items-center gap-1 mb-4">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
                 ))}
               </div>
               <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "I travel for work constantly. TableMesh turned lonely hotel dinners into amazing conversations with locals. Best app for solo travelers!"
+                &ldquo;We use it to organize monthly dinners for our book club. Way easier than group texts. Everyone sees who is coming and where we are meeting.&rdquo;
               </p>
-              <div className="font-semibold text-[var(--neutral)]">— Sarah, Digital Nomad</div>
-            </div>
+              <footer className="font-semibold text-[var(--neutral)]">&mdash; Michael, Community Organizer</footer>
+            </blockquote>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
               <div className="flex items-center gap-1 mb-4">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
                 ))}
               </div>
               <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "We use it to organize monthly dinners for our book club. Way easier than group texts. Everyone sees who's coming and where we're meeting."
+                &ldquo;Our team uses TableMesh for Friday lunches. No more Slack polls. Someone hosts a table, everyone joins, done. It has genuinely improved our team culture.&rdquo;
               </p>
-              <div className="font-semibold text-[var(--neutral)]">— Michael, Community Organizer</div>
-            </div>
+              <footer className="font-semibold text-[var(--neutral)]">&mdash; Priya, Engineering Manager</footer>
+            </blockquote>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
               <div className="flex items-center gap-1 mb-4">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
                 ))}
               </div>
               <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "Finally tried that dim sum spot! Found 3 people to split dishes with. We ordered the whole menu and spent half what we would've alone."
+                &ldquo;Finally tried that dim sum spot! Found 3 people to split dishes with. We ordered the whole menu and spent half what we would have alone.&rdquo;
               </p>
-              <div className="font-semibold text-[var(--neutral)]">— Jamie, Food Enthusiast</div>
-            </div>
+              <footer className="font-semibold text-[var(--neutral)]">&mdash; Jamie, Food Enthusiast</footer>
+            </blockquote>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
               <div className="flex items-center gap-1 mb-4">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
                 ))}
               </div>
               <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "As a restaurant owner, Tuesday nights were dead. Now we post deals on TableMesh and fill 10-15 tables. Game changer for revenue."
+                &ldquo;As a restaurant owner, Tuesday nights were dead. Now we post deals on TableMesh and fill 10&ndash;15 extra tables. Game changer for revenue.&rdquo;
               </p>
-              <div className="font-semibold text-[var(--neutral)]">— David, Restaurant Owner</div>
-            </div>
+              <footer className="font-semibold text-[var(--neutral)]">&mdash; David, Restaurant Owner</footer>
+            </blockquote>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
+      {/* ── CTA / Download Section ── */}
+      <section className="py-24 px-6 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'Fraunces, serif' }}>
             Your Next Great Meal Is Waiting
           </h2>
-          <p className="text-xl text-white/90 mb-10 leading-relaxed">
-            Join thousands discovering that food tastes better when shared. Free to join, free to post.
+          <p className="text-xl text-white/90 mb-10 leading-relaxed max-w-2xl mx-auto">
+            Join the community discovering that food tastes better when shared. Whether it is your weekly team lunch or a spontaneous dinner with friends &mdash; TableMesh brings everyone to the table.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/auth?signup=true" 
-              className="inline-block px-10 py-4 bg-white text-[var(--primary)] rounded-full text-lg font-bold hover:shadow-2xl transition-all transform hover:scale-105"
-            >
-              Create Free Account
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className="inline-block px-10 py-4 bg-transparent border-2 border-white text-white rounded-full text-lg font-bold hover:bg-white hover:text-[var(--primary)] transition-all"
-            >
-              Browse Requests
-            </Link>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="#" className="hover:opacity-90 transition-opacity" aria-label="Download on the App Store">
+              <Image
+                src="/app-store-badge.png"
+                alt="Download on the App Store"
+                width={200}
+                height={60}
+                className="h-[60px] w-auto"
+              />
+            </a>
+            <a href="#" className="hover:opacity-90 transition-opacity" aria-label="Get it on Google Play">
+              <Image
+                src="/google-play-badge.png"
+                alt="Get it on Google Play"
+                width={200}
+                height={60}
+                className="h-[60px] w-auto"
+              />
+            </a>
           </div>
+
+          <p className="text-white/70 text-sm mt-6">Free to download. Available on iOS and Android.</p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[var(--neutral)] text-white py-12 px-6">
+      {/* ── Footer ── */}
+      <footer className="bg-[var(--neutral)] text-white py-16 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Utensils className="w-6 h-6" />
+              <div className="flex items-center gap-3 mb-4">
+                <Image
+                  src="/logo.png"
+                  alt="TableMesh"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-lg"
+                />
                 <span className="text-xl font-bold">TableMesh</span>
               </div>
-              <p className="text-white/70 text-sm">
-                The social dining network for travelers, groups, and food lovers.
+              <p className="text-white/70 text-sm leading-relaxed">
+                The social dining platform for friends, teams, and food lovers. Bringing people together, one table at a time.
               </p>
             </div>
-            
+
             <div>
-              <h4 className="font-bold mb-3">For Diners</h4>
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Find Dining Partners</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Create Request</a></li>
+                <li><a href="#download" className="hover:text-white transition-colors">Download App</a></li>
                 <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>
-            
+
             <div>
-              <h4 className="font-bold mb-3">For Restaurants</h4>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#" className="hover:text-white transition-colors">Restaurant Dashboard</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Post Deals</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Success Stories</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-3">Company</h4>
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">Company</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">Legal</h4>
+              <ul className="space-y-2 text-sm text-white/70">
                 <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
-          
-          <div className="border-t border-white/20 pt-8 text-center">
-            <p className="text-white/50 text-sm">© 2026 TableMesh. All rights reserved.</p>
+
+          <div className="border-t border-white/10 pt-8 text-center">
+            <p className="text-white/50 text-sm">
+              &copy; {new Date().getFullYear()} Sheep Labs LLC. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

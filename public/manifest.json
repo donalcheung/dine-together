@@ -1,0 +1,14 @@
+{
+  "name": "TableMesh",
+  "short_name": "TableMesh",
+  "description": "Effortless group dining. Plan meals with friends, teams, and community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdfcfb",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-384x384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
