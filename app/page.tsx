@@ -229,8 +229,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── App Preview ── */}
       <section className="py-24 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+            See It in Action
+          </h2>
+          <p className="text-center text-lg text-gray-600 mb-16 max-w-2xl mx-auto">
+            A glimpse of the TableMesh experience &mdash; from discovering meals to chatting with your group.
+          </p>
+
+          {/* Scrollable phone gallery */}
+          <div className="relative">
+            <div className="flex gap-8 overflow-x-auto pb-8 px-4 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {[
+                { src: '/screenshots/discover.png', label: 'Discover Meals', desc: 'Browse dining experiences near you' },
+                { src: '/screenshots/host-meal.png', label: 'Host a Table', desc: 'Create a meal in seconds' },
+                { src: '/screenshots/my-meals.png', label: 'My Meals', desc: 'Track upcoming and past meals' },
+                { src: '/screenshots/messages.png', label: 'Messages', desc: 'Chat with friends and groups' },
+                { src: '/screenshots/profile.png', label: 'Your Profile', desc: 'Build your dining reputation' },
+                { src: '/screenshots/groups.png', label: 'Groups', desc: 'Dine with your crew' },
+              ].map((screen, i) => (
+                <div key={i} className="flex-shrink-0 snap-center">
+                  <div className="relative mx-auto" style={{ width: '280px' }}>
+                    {/* Phone frame */}
+                    <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
+                      {/* Notch */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-10" />
+                      {/* Screen */}
+                      <div className="rounded-[2.5rem] overflow-hidden bg-white">
+                        <Image
+                          src={screen.src}
+                          alt={screen.label}
+                          width={280}
+                          height={607}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center mt-6">
+                    <h3 className="text-lg font-bold text-[var(--neutral)]">{screen.label}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{screen.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Scroll hint */}
+            <div className="flex justify-center mt-4 gap-2">
+              <span className="text-sm text-gray-400">Swipe to explore</span>
+              <svg className="w-5 h-5 text-gray-400 animate-bounce-x" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             Built for Real Diners
