@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Metadata } from 'next'
+import ScreenshotGallery from './ScreenshotGallery'
 
 export const metadata: Metadata = {
   title: 'TableMesh — Effortless Group Dining',
@@ -229,8 +230,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── App Preview ── */}
       <section className="py-24 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+            See It in Action
+          </h2>
+          <p className="text-center text-lg text-gray-600 mb-16 max-w-2xl mx-auto">
+            A glimpse of the TableMesh experience &mdash; from discovering meals to chatting with your group.
+          </p>
+
+          <ScreenshotGallery />
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             Built for Real Diners
