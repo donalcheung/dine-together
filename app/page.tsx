@@ -298,13 +298,17 @@ export default function Home() {
 
       {/* ── Social Proof ── */}
       <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             What Diners Say
           </h2>
+          <p className="text-center text-lg text-gray-600 mb-16 max-w-2xl mx-auto">
+            Real stories from people who turned ordinary meals into something better.
+          </p>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Testimonial 1 - 5 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
@@ -312,27 +316,38 @@ export default function Home() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4 leading-relaxed italic">
-                &ldquo;We use it to organize monthly dinners for our book club. Way easier than group texts. Everyone sees who is coming and where we are meeting.&rdquo;
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;My roommates and I could never agree on where to eat. Now one of us just hosts a table on TableMesh and everyone votes with their feet. Last Friday we ended up at a Thai place none of us had tried &mdash; it was incredible.&rdquo;
               </p>
-              <footer className="font-semibold text-[var(--neutral)]">&mdash; Michael, Community Organizer</footer>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">Alyssa K.</span>
+                <span className="text-sm text-gray-500 block">College Student, Boston</span>
+              </footer>
             </blockquote>
 
-            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
+            {/* Testimonial 2 - 4 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((i) => (
+                {[1, 2, 3, 4].map((i) => (
                   <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
                     <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
                   </svg>
                 ))}
+                <svg className="w-5 h-5 text-gray-300 fill-gray-300" viewBox="0 0 24 24">
+                  <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                </svg>
               </div>
-              <p className="text-gray-700 mb-4 leading-relaxed italic">
-                &ldquo;Our team uses TableMesh for Friday lunches. No more Slack polls. Someone hosts a table, everyone joins, done. It has genuinely improved our team culture.&rdquo;
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;Moved to a new city for work and didn&apos;t know anyone. Felt weird at first joining a stranger&apos;s table, but honestly? Three of us from that first dinner still grab lunch together every week. Wish the app had more users in my area though.&rdquo;
               </p>
-              <footer className="font-semibold text-[var(--neutral)]">&mdash; Priya, Engineering Manager</footer>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">Marcus T.</span>
+                <span className="text-sm text-gray-500 block">Software Engineer, Austin</span>
+              </footer>
             </blockquote>
 
-            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
+            {/* Testimonial 3 - 5 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
@@ -340,13 +355,17 @@ export default function Home() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4 leading-relaxed italic">
-                &ldquo;Finally tried that dim sum spot! Found 3 people to split dishes with. We ordered the whole menu and spent half what we would have alone.&rdquo;
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;Our office killed the sad desk lunch. We created a group on TableMesh and now 8&ndash;12 of us go out together most days. Even people from different departments who never talked before. HR loves it.&rdquo;
               </p>
-              <footer className="font-semibold text-[var(--neutral)]">&mdash; Jamie, Food Enthusiast</footer>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">Priya S.</span>
+                <span className="text-sm text-gray-500 block">Engineering Manager, San Francisco</span>
+              </footer>
             </blockquote>
 
-            <blockquote className="bg-white p-8 rounded-2xl shadow-lg">
+            {/* Testimonial 4 - 5 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
@@ -354,10 +373,52 @@ export default function Home() {
                   </svg>
                 ))}
               </div>
-              <p className="text-gray-700 mb-4 leading-relaxed italic">
-                &ldquo;As a restaurant owner, Tuesday nights were dead. Now we post deals on TableMesh and fill 10&ndash;15 extra tables. Game changer for revenue.&rdquo;
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;Korean BBQ needs at least 4 people to be worth it. Posted a table for Saturday night, had 5 people join within an hour. We ordered everything on the menu and split the bill. $18 each. Unreal.&rdquo;
               </p>
-              <footer className="font-semibold text-[var(--neutral)]">&mdash; David, Restaurant Owner</footer>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">Jordan L.</span>
+                <span className="text-sm text-gray-500 block">Foodie, New York</span>
+              </footer>
+            </blockquote>
+
+            {/* Testimonial 5 - 4 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
+                ))}
+                <svg className="w-5 h-5 text-gray-300 fill-gray-300" viewBox="0 0 24 24">
+                  <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                </svg>
+              </div>
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;I run a small Italian place and Tuesday nights used to be empty. Started posting a weekly pasta special on TableMesh and now we get groups of 6&ndash;8 coming in regularly. The app basically does the marketing for me.&rdquo;
+              </p>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">David R.</span>
+                <span className="text-sm text-gray-500 block">Restaurant Owner, Chicago</span>
+              </footer>
+            </blockquote>
+
+            {/* Testimonial 6 - 5 stars */}
+            <blockquote className="bg-white p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                  </svg>
+                ))}
+              </div>
+              <p className="text-gray-700 mb-6 leading-relaxed italic flex-grow">
+                &ldquo;Traveling solo in Tokyo and dreading another meal alone at a conveyor belt sushi place. Found a table of 4 other travelers on TableMesh. We ended up at this tiny ramen shop a local recommended. Best night of my trip.&rdquo;
+              </p>
+              <footer>
+                <span className="font-semibold text-[var(--neutral)]">Sarah M.</span>
+                <span className="text-sm text-gray-500 block">Travel Blogger, London</span>
+              </footer>
             </blockquote>
           </div>
         </div>
