@@ -8,7 +8,7 @@ const screens = [
   { src: '/screenshots/host-meal.png', label: 'Host a Table', desc: 'Create a meal in seconds' },
   { src: '/screenshots/my-meals.png', label: 'My Meals', desc: 'Track upcoming and past meals' },
   { src: '/screenshots/messages.png', label: 'Messages', desc: 'Chat with friends and groups' },
-  { src: '/screenshots/profile.png', label: 'Your Profile', desc: 'Build your dining reputation' },
+  { src: '/screenshots/profile.png', label: 'Your Profile', desc: 'Level up as you dine' },
   { src: '/screenshots/groups.png', label: 'Groups', desc: 'Dine with your crew' },
 ]
 

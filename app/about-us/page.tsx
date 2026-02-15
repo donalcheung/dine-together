@@ -29,7 +29,7 @@ export default function AboutUs() {
 
             <p className="leading-relaxed">We started TableMesh because we noticed something: planning a group meal is harder than it should be. Whether it is a team lunch that devolves into an endless Slack thread, a friends&apos; dinner that never gets past &ldquo;we should totally do that,&rdquo; or a traveler eating alone in a new city &mdash; the friction of coordinating a shared meal stops too many great experiences from happening.</p>
 
-            <p className="leading-relaxed">TableMesh removes that friction. In a few taps, you can host a table, invite your group, or discover public meals happening near you. Our in-app chat keeps everything organized, and community ratings help build trust so you can dine with confidence.</p>
+            <p className="leading-relaxed">TableMesh removes that friction. In a few taps, you can host a table, invite your group, or discover public meals happening near you. Our in-app chat keeps everything organized, and our likes and leveling system helps build trust so you can dine with confidence.</p>
 
             <h2 className="text-2xl font-bold text-[var(--neutral)] mt-12 mb-4" style={{ fontFamily: 'Fraunces, serif' }}>Our Mission</h2>
             <p className="leading-relaxed">We believe that shared meals are one of the most powerful ways to build relationships &mdash; between friends, colleagues, neighbors, and strangers who become friends. Our mission is to make it effortless for anyone to bring people together around a table.</p>

@@ -266,10 +266,10 @@ export default function Home() {
               <svg className="w-12 h-12 text-purple-500 mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
               </svg>
-              <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Community Ratings</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">
-                Build your reputation as a reliable dining companion. See others&apos; ratings before you commit.
-              </p>
+<h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Likes &amp; Levels</h3>
+               <p className="text-gray-600 leading-relaxed text-sm">
+                 Earn likes from fellow diners and level up with titles that show you&apos;re a seasoned companion. The more you dine, the more you grow.
+               </p>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all">
@@ -289,7 +289,7 @@ export default function Home() {
               </svg>
               <h3 className="text-xl font-bold mb-3 text-[var(--neutral)]">Safe &amp; Verified</h3>
               <p className="text-gray-600 leading-relaxed text-sm">
-                Always meet in public restaurants. Verified profiles, community ratings, and transparent communication.
+                Always meet in public restaurants. Verified profiles, diner levels, and transparent communication.
               </p>
             </div>
           </div>

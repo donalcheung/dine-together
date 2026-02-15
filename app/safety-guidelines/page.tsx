@@ -32,7 +32,7 @@ export default function SafetyGuidelines() {
               <ul className="list-disc pl-6 space-y-3">
                 <li><strong>Always meet in public restaurants.</strong> TableMesh is designed for dining at public establishments. Never agree to meet at a private residence.</li>
                 <li><strong>Share your plans.</strong> Let a friend or family member know where you are going, who you are meeting, and when you expect to be back.</li>
-                <li><strong>Check profiles and ratings.</strong> Review the host&apos;s or guest&apos;s profile, community ratings, and past dining history before committing.</li>
+                <li><strong>Check profiles and levels.</strong> Review the host&apos;s or guest&apos;s profile, diner level, likes, and past dining history before committing.</li>
                 <li><strong>Use in-app chat.</strong> Keep your conversations within the app. Avoid sharing personal contact information until you feel comfortable.</li>
               </ul>
             </div>
@@ -50,7 +50,7 @@ export default function SafetyGuidelines() {
             <div className="bg-white p-8 rounded-2xl shadow-lg border border-orange-100">
               <h2 className="text-xl font-bold text-[var(--neutral)] mb-4">After the Meal</h2>
               <ul className="list-disc pl-6 space-y-3">
-                <li><strong>Rate your experience.</strong> Honest ratings help the community identify great dining companions and flag problematic behavior.</li>
+                <li><strong>Like great companions.</strong> Give a like to fellow diners who made the meal enjoyable. Likes help the community identify great dining companions and build trust.</li>
                 <li><strong>Report concerns.</strong> If you experienced any inappropriate behavior, use the in-app report feature or email us at <a href="mailto:contact@tablemesh.com" className="text-[var(--primary)] font-semibold hover:underline">contact@tablemesh.com</a>.</li>
                 <li><strong>Block if needed.</strong> You can block any user at any time from their profile. Blocked users cannot see your activity or contact you.</li>
               </ul>
