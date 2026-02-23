@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import ScreenshotGallery from './ScreenshotGallery'
 import WaitlistForm from './WaitlistForm'
+import RestaurantWaitlistForm from './RestaurantWaitlistForm'
 
 export const metadata: Metadata = {
   title: 'TableMesh — Organize Group Meals Effortlessly',
@@ -284,6 +285,98 @@ export default function Home() {
               fill
               className="object-cover"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Restaurant Deals Section ── */}
+      <section id="for-restaurants" className="py-24 px-6 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+              For Diners &amp; Restaurants
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-[var(--neutral)] mb-6" style={{ fontFamily: 'Fraunces, serif' }}>
+              Group Deals That Actually Make Sense
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Restaurants post deals designed for groups &mdash; the bigger your party, the better the offer. When you create a meal on TableMesh, matching deals appear automatically. Everyone wins.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+            {/* Diner side */}
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-orange-100">
+              <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mb-6">
+                <svg className="w-7 h-7 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-[var(--neutral)] mb-3" style={{ fontFamily: 'Fraunces, serif' }}>For Diners</h3>
+              <p className="text-gray-600 mb-6">Deals appear automatically when you pick a restaurant that has active offers. No coupon codes, no searching &mdash; just better prices for bringing friends.</p>
+              <ul className="space-y-3 text-gray-600">
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>&ldquo;Bring 4+, get 20% off&rdquo; &mdash; deals tied to party size</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>Deals show up when you create a meal &mdash; zero effort</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>More people = better deal. Rally the crew.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Restaurant side */}
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-orange-100">
+              <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-6">
+                <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-[var(--neutral)] mb-3" style={{ fontFamily: 'Fraunces, serif' }}>For Restaurants</h3>
+              <p className="text-gray-600 mb-6">Fill empty tables by reaching groups who are already planning to eat out. Post deals that reward bigger parties and watch your slow nights come alive.</p>
+              <ul className="space-y-3 text-gray-600">
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>Groups spend 2&ndash;3x more per visit than solo diners</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>Target slow nights &mdash; &ldquo;Tuesday: 6+ gets free appetizer&rdquo;</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                  <span>Self-serve dashboard starting at $49/mo</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Restaurant partner signup */}
+          <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-orange-100 text-center">
+            <h3 className="text-2xl font-bold text-[var(--neutral)] mb-2" style={{ fontFamily: 'Fraunces, serif' }}>
+              Own a Restaurant?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Join our early restaurant partner program and start reaching groups of hungry diners in your area.
+            </p>
+            <RestaurantWaitlistForm />
           </div>
         </div>
       </section>
