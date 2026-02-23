@@ -29,15 +29,15 @@ export default function Home() {
             </span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/about-us" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
-              About
-            </Link>
-            <Link href="/safety-guidelines" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
-              Safety
-            </Link>
-            <Link href="/contact" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
-              Contact
-            </Link>
+            <a href="#how-it-works" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              How It Works
+            </a>
+            <a href="#for-teams" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              For Teams
+            </a>
+            <a href="#for-foodies" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+              For Foodies
+            </a>
             <a
               href="#download"
               className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
@@ -58,7 +58,7 @@ export default function Home() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/20" />
           <div className="absolute inset-0 flex items-center">
             <div className="max-w-6xl mx-auto px-6 w-full">
               <div className="max-w-2xl">
@@ -159,7 +159,7 @@ export default function Home() {
         </div>
 
         {/* Scenario 2: Signal Your Lunch Break */}
-        <div className="grid md:grid-cols-2 items-center">
+        <div id="for-teams" className="grid md:grid-cols-2 items-center scroll-mt-24">
           <div className="p-10 md:p-16 order-2 md:order-1">
             <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
               For Coworkers
@@ -202,7 +202,7 @@ export default function Home() {
         </div>
 
         {/* Scenario 3: Tackle the Full Menu */}
-        <div className="grid md:grid-cols-2 items-center">
+        <div id="for-foodies" className="grid md:grid-cols-2 items-center scroll-mt-24">
           <div className="relative h-[400px] md:h-[500px]">
             <Image
               src="/photos/korean-bbq-group.jpg"
@@ -289,7 +289,7 @@ export default function Home() {
       </section>
 
       {/* ── How It Works ── */}
-      <section className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
+      <section id="how-it-works" className="py-24 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             Simple as 1&#8209;2&#8209;3
