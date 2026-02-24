@@ -217,7 +217,7 @@ export default function Home() {
               For Foodies
             </div>
             <h3 className="text-3xl md:text-4xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
-              Tackle the Full Menu Together
+              Taste the Full Menu Together
             </h3>
             <p className="text-gray-600 text-lg leading-relaxed mb-6">
               Korean BBQ needs a group. Dim sum is better shared. Tasting menus often require a minimum party size. TableMesh helps you rally the right number of people so you can experience food the way it was meant to be enjoyed.
