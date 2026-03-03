@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import ScreenshotGallery from './ScreenshotGallery'
 import WaitlistForm from './WaitlistForm'
+import DownloadButtons from './DownloadButtons'
 import RestaurantWaitlistForm from './RestaurantWaitlistForm'
 
 export const metadata: Metadata = {
@@ -43,7 +44,7 @@ export default function Home() {
               href="#download"
               className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
             >
-              Join Waitlist
+              Get the App
             </a>
           </div>
         </div>
@@ -77,7 +78,7 @@ export default function Home() {
                   Coordinate dinners with your friend group. Signal your lunch break to coworkers. Rally people for Korean BBQ. TableMesh is the tool that gets everyone to the table.
                 </p>
 
-                <WaitlistForm variant="hero" />
+                <DownloadButtons variant="hero" />
               </div>
             </div>
           </div>
@@ -704,7 +705,7 @@ export default function Home() {
             Whether it&apos;s your weekly team lunch, a spontaneous dinner with friends, or rallying people for that tasting menu you&apos;ve been eyeing &mdash; TableMesh brings everyone to the table.
           </p>
 
-          <WaitlistForm variant="cta" />
+          <DownloadButtons variant="cta" />
         </div>
       </section>
 
@@ -731,7 +732,7 @@ export default function Home() {
             <div>
               <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#download" className="hover:text-white transition-colors">Join Waitlist</a></li>
+                <li><a href="#download" className="hover:text-white transition-colors">Download</a></li>
                 <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>
