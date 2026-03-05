@@ -2,9 +2,11 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
+import { PreviewProvider, usePreview } from '@/app/lib/preview-context'
+import PreviewBanner from '@/app/components/PreviewBanner'
 
 interface Restaurant {
   id: string
@@ -17,9 +19,11 @@ interface Subscription {
   status: string
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isPreviewMode, previewRestaurantId, exitPreview } = usePreview()
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,6 +33,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const loadData = async () => {
+      // In preview mode, load the specified restaurant
+      if (isPreviewMode && previewRestaurantId) {
+        const { data: rest } = await supabase
+          .from('restaurants')
+          .select('id, name, is_verified')
+          .eq('id', previewRestaurantId)
+          .single()
+
+        if (rest) {
+          setRestaurant(rest)
+
+          const { data: sub } = await supabase
+            .from('restaurant_subscriptions')
+            .select('plan, status')
+            .eq('restaurant_id', rest.id)
+            .single()
+
+          setSubscription(sub)
+        }
+        setLoading(false)
+        return
+      }
+
+      // Normal mode - check auth
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.push('/partner/login')
@@ -59,11 +87,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     loadData()
-  }, [supabase, router])
+  }, [supabase, router, isPreviewMode, previewRestaurantId])
 
   const handleSignOut = async () => {
+    if (isPreviewMode) {
+      exitPreview()
+      return
+    }
     await supabase.auth.signOut()
     router.push('/partner/login')
+  }
+
+  // Build nav hrefs with preview params preserved
+  const buildHref = (base: string) => {
+    if (isPreviewMode && previewRestaurantId) {
+      return `${base}?preview=true&restaurant_id=${previewRestaurantId}`
+    }
+    return base
   }
 
   const navItems = [
@@ -113,8 +153,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Preview Banner */}
+      <PreviewBanner />
+
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 w-full bg-white z-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className={`lg:hidden fixed ${isPreviewMode ? 'top-[44px]' : 'top-0'} w-full bg-white z-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-gray-100">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -133,7 +176,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed ${isPreviewMode ? 'top-[44px]' : 'top-0'} left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6">
           <Link href="/partner" className="flex items-center gap-3 mb-8">
             <Image src="/logo.png" alt="TableMesh" width={36} height={36} className="rounded-xl" />
@@ -144,7 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
 
           {/* Restaurant info */}
-          <div className="bg-gray-50 rounded-xl p-3 mb-6">
+          <div className={`rounded-xl p-3 mb-6 ${isPreviewMode ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
             <p className="font-semibold text-sm text-[var(--neutral)] truncate">{restaurant?.name}</p>
             <div className="flex items-center gap-2 mt-1">
               {restaurant?.is_verified ? (
@@ -160,6 +203,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-xs text-gray-300">|</span>
               <span className="text-xs text-gray-500 capitalize">{subscription?.plan || 'free'} plan</span>
             </div>
+            {isPreviewMode && (
+              <p className="text-xs text-purple-500 font-medium mt-1">Preview Mode</p>
+            )}
           </div>
 
           {/* Navigation */}
@@ -169,7 +215,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={buildHref(item.href)}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     isActive
@@ -187,7 +233,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Bottom section */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100">
-          {subscription?.plan === 'free' && (
+          {!isPreviewMode && subscription?.plan === 'free' && (
             <Link
               href="/partner/dashboard/billing"
               className="block w-full py-2.5 px-4 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] text-white rounded-xl text-sm font-semibold text-center mb-3 hover:shadow-lg transition-all"
@@ -202,17 +248,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
             </svg>
-            Sign Out
+            {isPreviewMode ? 'Exit Preview' : 'Sign Out'}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+      <main className={`lg:ml-64 ${isPreviewMode ? 'pt-[60px] lg:pt-[44px]' : 'pt-16 lg:pt-0'} min-h-screen`}>
         <div className="p-6 lg:p-8">
           {children}
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <PreviewProvider>
+      <Suspense fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-500">Loading dashboard...</p>
+          </div>
+        </div>
+      }>
+        <DashboardContent>{children}</DashboardContent>
+      </Suspense>
+    </PreviewProvider>
   )
 }

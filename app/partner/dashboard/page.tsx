@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
 
 interface DealSummary {
@@ -28,26 +29,37 @@ export default function DashboardOverview() {
   const [loading, setLoading] = useState(true)
 
   const supabase = createSupabaseBrowserClient()
+  const searchParams = useSearchParams()
+  const previewMode = searchParams.get('preview') === 'true'
+  const previewRestaurantId = searchParams.get('restaurant_id')
 
   useEffect(() => {
     const loadDashboard = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      let restId: string | null = null
 
-      const { data: restaurant } = await supabase
-        .from('restaurants')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single()
+      if (previewMode && previewRestaurantId) {
+        restId = previewRestaurantId
+      } else {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
 
-      if (!restaurant) return
-      setRestaurantId(restaurant.id)
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single()
+
+        if (!restaurant) return
+        restId = restaurant.id
+      }
+
+      setRestaurantId(restId)
 
       // Get deals
       const { data: deals } = await supabase
         .from('restaurant_deals')
         .select('id, title, discount_type, discount_value, is_active, redemptions_count')
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restId)
         .order('created_at', { ascending: false })
 
       const dealsList = deals || []
@@ -57,19 +69,19 @@ export default function DashboardOverview() {
       const { count: viewsCount } = await supabase
         .from('deal_views')
         .select('*', { count: 'exact', head: true })
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restId)
 
       // Get redemptions count
       const { count: redemptionsCount } = await supabase
         .from('deal_redemptions')
         .select('*', { count: 'exact', head: true })
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restId)
 
       // Get dining requests count
       const { count: requestsCount } = await supabase
         .from('dining_requests')
         .select('*', { count: 'exact', head: true })
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restId)
 
       setStats({
         totalDeals: dealsList.length,
