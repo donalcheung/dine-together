@@ -2,17 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia' as Stripe.LatestApiVersion,
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2024-12-18.acacia' as Stripe.LatestApiVersion,
+  })
+}
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = getStripe()
+    const supabase = getSupabase()
+
     const { restaurantId } = await request.json()
 
     if (!restaurantId) {
@@ -69,9 +76,6 @@ export async function POST(request: NextRequest) {
         }, { onConflict: 'restaurant_id' })
     }
 
-    // Create or get the Pro price
-    // In production, you'd create this once in Stripe dashboard
-    // For now, we'll use a price lookup or create inline
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'
 
     const session = await stripe.checkout.sessions.create({
