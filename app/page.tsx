@@ -4,7 +4,6 @@ import { Metadata } from 'next'
 import ScreenshotGallery from './ScreenshotGallery'
 import WaitlistForm from './WaitlistForm'
 import DownloadButtons from './DownloadButtons'
-import RestaurantWaitlistForm from './RestaurantWaitlistForm'
 
 export const metadata: Metadata = {
   title: 'TableMesh — Organize Group Meals Effortlessly',
@@ -375,15 +374,29 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Restaurant partner signup */}
+          {/* Restaurant partner CTA */}
           <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-orange-100 text-center">
             <h3 className="text-2xl font-bold text-[var(--neutral)] mb-2" style={{ fontFamily: 'Fraunces, serif' }}>
               Own a Restaurant?
             </h3>
             <p className="text-gray-600 mb-6">
-              Join our early restaurant partner program and start reaching groups of hungry diners in your area.
+              Join hundreds of restaurants using TableMesh to attract group diners and fill empty tables. Set up your profile, create deals, and start growing &mdash; all in under 5 minutes.
             </p>
-            <RestaurantWaitlistForm />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/partner/signup"
+                className="px-8 py-3.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg font-semibold text-lg"
+              >
+                Get Started Free
+              </Link>
+              <Link
+                href="/partner"
+                className="px-8 py-3.5 border-2 border-[var(--primary)] text-[var(--primary)] rounded-full hover:bg-orange-50 transition-all font-semibold text-lg"
+              >
+                Learn More
+              </Link>
+            </div>
+            <p className="text-sm text-gray-400 mt-4">No setup fees &middot; Free plan available &middot; Cancel anytime</p>
           </div>
         </div>
       </section>
