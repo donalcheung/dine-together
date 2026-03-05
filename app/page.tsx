@@ -40,6 +40,12 @@ export default function Home() {
             <a href="#for-foodies" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
               For Foodies
             </a>
+            <Link
+              href="/partner"
+              className="hidden md:block text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors border border-[var(--primary)] px-4 py-1.5 rounded-full"
+            >
+              For Restaurants
+            </Link>
             <a
               href="#download"
               className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
@@ -738,10 +744,10 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">Company</h4>
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">For Restaurants</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><Link href="/about-us" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/partner" className="hover:text-white transition-colors">Partner Program</Link></li>
+                <li><Link href="/partner/login" className="hover:text-white transition-colors">Restaurant Login</Link></li>
               </ul>
             </div>
 
