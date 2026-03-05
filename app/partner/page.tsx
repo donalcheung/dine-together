@@ -14,7 +14,7 @@ export default function PartnerLandingPage() {
       {/* ── Navigation ── */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-orange-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/partner" className="flex items-center gap-3">
             <Image
               src="/logo.png"
               alt="TableMesh Logo"
