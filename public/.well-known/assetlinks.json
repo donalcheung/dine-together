@@ -3,7 +3,7 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.tablemesh",
+      "package_name": "com.tablemeshnative",
       "sha256_cert_fingerprints": [
         "49:69:97:BE:F4:1B:08:D7:1D:A3:1C:59:D0:DF:FB:72:DC:CE:C0:05:26:4E:91:00:1C:8F:DC:6E:99:96:9A:C5"
       ]
