@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   category: "food & drink",
 };
 
-const jsonLd = {
+const appJsonLd = {
   "@context": "https://schema.org",
   "@type": "MobileApplication",
   name: "TableMesh",
@@ -91,6 +91,32 @@ const jsonLd = {
   },
 };
 
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "TableMesh",
+  url: "https://tablemesh.com",
+  logo: "https://tablemesh.com/icon-512x512.png",
+  description:
+    "TableMesh is the group dining coordination app for friends, coworkers, and food lovers.",
+  foundingDate: "2024",
+  sameAs: [
+    "https://www.reddit.com/r/SideProject/comments/1r0potl/built_a_social_dining_app_to_help_people_share/",
+  ],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "TableMesh",
+  url: "https://tablemesh.com",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://tablemesh.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -101,7 +127,15 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body>{children}</body>
