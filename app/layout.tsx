@@ -101,6 +101,9 @@ const orgJsonLd = {
     "TableMesh is the group dining coordination app for friends, coworkers, and food lovers.",
   foundingDate: "2024",
   sameAs: [
+    "https://www.instagram.com/tablemesh.official",
+    "https://www.youtube.com/@tablemeshofficial",
+    "https://www.tiktok.com/@tablemesh",
     "https://www.reddit.com/r/SideProject/comments/1r0potl/built_a_social_dining_app_to_help_people_share/",
   ],
 };
