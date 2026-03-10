@@ -15,6 +15,20 @@ type Stats = {
   recentSignups: number
 }
 
+type RecentUser = {
+  id: string
+  name: string
+  email: string
+  avatar_url: string | null
+  verified: boolean
+  gender: string | null
+  age_range: string | null
+  job_title: string | null
+  company: string | null
+  bio: string | null
+  created_at: string
+}
+
 export default function AdminDashboardPage() {
   const supabase = createSupabaseBrowserClient()
   const [stats, setStats] = useState<Stats>({
@@ -28,6 +42,7 @@ export default function AdminDashboardPage() {
     recentSignups: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
 
   const loadStats = useCallback(async () => {
     const [
@@ -60,6 +75,15 @@ export default function AdminDashboardPage() {
       proSubscriptions: proSubscriptions || 0,
       recentSignups: recentSignups || 0,
     })
+
+    // Fetch recent signups list
+    const { data: newUsers } = await supabase
+      .from('profiles')
+      .select('id, name, email, avatar_url, verified, gender, age_range, job_title, company, bio, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (newUsers) setRecentUsers(newUsers)
     setLoading(false)
   }, [supabase])
 
@@ -211,6 +235,116 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
         </div>
+      </div>
+
+      {/* Recent Signups */}
+      <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Recent Signups</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Latest users who joined the platform</p>
+          </div>
+          <Link
+            href="/admin/dashboard/users"
+            className="text-sm text-orange-400 hover:text-orange-300 transition-colors font-medium"
+          >
+            View all &rarr;
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">User</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Details</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Profile</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Joined</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700/50">
+              {recentUsers.map((user) => {
+                const profileFields = [user.name, user.bio, user.gender, user.age_range, user.job_title, user.company, user.avatar_url]
+                const filledFields = profileFields.filter(Boolean).length
+                const completeness = Math.round((filledFields / profileFields.length) * 100)
+                const now = new Date()
+                const created = new Date(user.created_at)
+                const diffMs = now.getTime() - created.getTime()
+                const diffMins = Math.floor(diffMs / 60000)
+                const diffHours = Math.floor(diffMs / 3600000)
+                const diffDays = Math.floor(diffMs / 86400000)
+                let timeAgo = ''
+                if (diffMins < 1) timeAgo = 'Just now'
+                else if (diffMins < 60) timeAgo = `${diffMins}m ago`
+                else if (diffHours < 24) timeAgo = `${diffHours}h ago`
+                else if (diffDays < 7) timeAgo = `${diffDays}d ago`
+                else timeAgo = created.toLocaleDateString()
+
+                return (
+                  <tr key={user.id} className="hover:bg-gray-700/30 transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-sm text-gray-400">{(user.name || '?')[0].toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{user.name || 'No name'}</p>
+                          <p className="text-xs text-gray-400">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {user.gender && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/15 text-purple-400">{user.gender}</span>
+                        )}
+                        {user.age_range && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-blue-500/15 text-blue-400">{user.age_range}</span>
+                        )}
+                        {user.job_title && (
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 max-w-[120px] truncate">{user.job_title}</span>
+                        )}
+                        {!user.gender && !user.age_range && !user.job_title && (
+                          <span className="text-xs text-gray-500 italic">No details yet</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              completeness >= 80 ? 'bg-green-500' : completeness >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${completeness}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">{completeness}%</span>
+                        {user.verified && (
+                          <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-gray-400">{timeAgo}</p>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {recentUsers.length === 0 && (
+          <div className="p-8 text-center">
+            <p className="text-gray-400">No users found.</p>
+          </div>
+        )}
       </div>
     </div>
   )
