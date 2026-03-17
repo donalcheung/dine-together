@@ -36,7 +36,7 @@ export default function DownloadButtons({ variant }: DownloadButtonsProps) {
             className="transition-transform hover:scale-105"
           >
             <Image
-              src="/app-store-badge.png"
+              src="/app-store-badge.svg"
               alt="Download on the App Store"
               width={180}
               height={54}
@@ -76,7 +76,7 @@ export default function DownloadButtons({ variant }: DownloadButtonsProps) {
           className="transition-transform hover:scale-105"
         >
           <Image
-            src="/app-store-badge.png"
+            src="/app-store-badge.svg"
             alt="Download on the App Store"
             width={200}
             height={60}
