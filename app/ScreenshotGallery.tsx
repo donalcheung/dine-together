@@ -4,12 +4,48 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 
 const screens = [
-  { src: '/screenshots/discover.png', label: 'Discover Meals', desc: 'Browse dining experiences near you' },
-  { src: '/screenshots/host-meal.png', label: 'Host a Table', desc: 'Create a meal in seconds' },
-  { src: '/screenshots/my-meals.png', label: 'My Meals', desc: 'Track upcoming and past meals' },
-  { src: '/screenshots/messages.png', label: 'Messages', desc: 'Chat with friends and groups' },
-  { src: '/screenshots/profile.png', label: 'Your Profile', desc: 'Level up as you dine' },
-  { src: '/screenshots/groups.png', label: 'Groups', desc: 'Dine with your crew' },
+  {
+    src: '/Screenshots/iPhone/Discover.png',
+    label: 'Discover Meals',
+    desc: 'Browse dining experiences near you',
+    tag: 'All Diners',
+    tagColor: 'bg-orange-100 text-orange-700',
+  },
+  {
+    src: '/Screenshots/iPhone/food buddies.png',
+    label: 'Find Food Buddies',
+    desc: 'Connect with locals who share your taste in food',
+    tag: 'Foodies & Explorers',
+    tagColor: 'bg-purple-100 text-purple-700',
+  },
+  {
+    src: '/Screenshots/iPhone/Group.png',
+    label: 'Dining Groups',
+    desc: 'Build your community — free for organizers',
+    tag: 'Community',
+    tagColor: 'bg-blue-100 text-blue-700',
+  },
+  {
+    src: '/Screenshots/iPhone/Map.png',
+    label: 'Discover on Map',
+    desc: 'See live meal requests near you',
+    tag: 'Travelers & Newcomers',
+    tagColor: 'bg-green-100 text-green-700',
+  },
+  {
+    src: '/Screenshots/iPhone/My Meals.png',
+    label: 'My Meals',
+    desc: 'Track upcoming and past meals',
+    tag: 'All Diners',
+    tagColor: 'bg-orange-100 text-orange-700',
+  },
+  {
+    src: '/Screenshots/iPhone/Profile.png',
+    label: 'Your Profile',
+    desc: 'Level up your foodie reputation as you dine',
+    tag: 'All Diners',
+    tagColor: 'bg-red-100 text-red-700',
+  },
 ]
 
 export default function ScreenshotGallery() {
@@ -39,16 +75,11 @@ export default function ScreenshotGallery() {
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current
     if (!el) return
-    const scrollAmount = 312 // card width (280) + gap (32)
-    el.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth',
-    })
+    el.scrollBy({ left: direction === 'left' ? -312 : 312, behavior: 'smooth' })
   }
 
   return (
     <div className="relative">
-      {/* Left arrow - desktop only */}
       {canScrollLeft && (
         <button
           onClick={() => scroll('left')}
@@ -60,8 +91,6 @@ export default function ScreenshotGallery() {
           </svg>
         </button>
       )}
-
-      {/* Right arrow - desktop only */}
       {canScrollRight && (
         <button
           onClick={() => scroll('right')}
@@ -74,10 +103,9 @@ export default function ScreenshotGallery() {
         </button>
       )}
 
-      {/* Scrollable gallery */}
       <div
         ref={scrollRef}
-        className="flex gap-8 overflow-x-auto pb-8 px-4 snap-x snap-mandatory scrollbar-hide"
+        className="flex gap-8 overflow-x-auto pb-8 px-4 snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {screens.map((screen, i) => (
@@ -85,9 +113,7 @@ export default function ScreenshotGallery() {
             <div className="relative mx-auto" style={{ width: '280px' }}>
               {/* Phone frame */}
               <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
-                {/* Notch */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-10" />
-                {/* Screen */}
                 <div className="rounded-[2.5rem] overflow-hidden bg-white">
                   <Image
                     src={screen.src}
@@ -100,6 +126,9 @@ export default function ScreenshotGallery() {
               </div>
             </div>
             <div className="text-center mt-6">
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${screen.tagColor}`}>
+                {screen.tag}
+              </span>
               <h3 className="text-lg font-bold text-[var(--neutral)]">{screen.label}</h3>
               <p className="text-sm text-gray-500 mt-1">{screen.desc}</p>
             </div>
@@ -107,10 +136,9 @@ export default function ScreenshotGallery() {
         ))}
       </div>
 
-      {/* Scroll hint - mobile only */}
       <div className="flex md:hidden justify-center mt-4 gap-2">
         <span className="text-sm text-gray-400">Swipe to explore</span>
-        <svg className="w-5 h-5 text-gray-400 animate-bounce-x" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
         </svg>
       </div>
