@@ -52,12 +52,16 @@ export default function ScreenshotGallery() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(0)
 
   const checkScroll = () => {
     const el = scrollRef.current
     if (!el) return
     setCanScrollLeft(el.scrollLeft > 10)
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10)
+    // Estimate active card index based on scroll position
+    const cardWidth = el.scrollWidth / screens.length
+    setActiveIndex(Math.round(el.scrollLeft / cardWidth))
   }
 
   useEffect(() => {
@@ -75,7 +79,10 @@ export default function ScreenshotGallery() {
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollBy({ left: direction === 'left' ? -312 : 312, behavior: 'smooth' })
+    // On mobile use smaller scroll amount to match smaller card size
+    const isMobile = window.innerWidth < 640
+    const amount = isMobile ? 220 : 312
+    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' })
   }
 
   return (
@@ -83,7 +90,7 @@ export default function ScreenshotGallery() {
       {canScrollLeft && (
         <button
           onClick={() => scroll('left')}
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all border border-gray-200"
+          className="hidden md:flex absolute left-0 top-[45%] -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all border border-gray-200"
           aria-label="Scroll left"
         >
           <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -94,7 +101,7 @@ export default function ScreenshotGallery() {
       {canScrollRight && (
         <button
           onClick={() => scroll('right')}
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all border border-gray-200"
+          className="hidden md:flex absolute right-0 top-[45%] -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 hover:shadow-xl transition-all border border-gray-200"
           aria-label="Scroll right"
         >
           <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -105,16 +112,16 @@ export default function ScreenshotGallery() {
 
       <div
         ref={scrollRef}
-        className="flex gap-8 overflow-x-auto pb-8 px-4 snap-x snap-mandatory"
+        className="flex gap-4 sm:gap-8 overflow-x-auto pb-6 sm:pb-8 px-2 sm:px-4 snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {screens.map((screen, i) => (
           <div key={i} className="flex-shrink-0 snap-center">
-            <div className="relative mx-auto" style={{ width: '280px' }}>
-              {/* Phone frame */}
-              <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-10" />
-                <div className="rounded-[2.5rem] overflow-hidden bg-white">
+            {/* Phone frame — smaller on mobile (200px) vs desktop (280px) */}
+            <div className="relative mx-auto w-[200px] sm:w-[280px]">
+              <div className="bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] p-2.5 sm:p-3 shadow-2xl">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-6 sm:h-7 bg-gray-900 rounded-b-2xl z-10" />
+                <div className="rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden bg-white">
                   <Image
                     src={screen.src}
                     alt={screen.label}
@@ -125,22 +132,28 @@ export default function ScreenshotGallery() {
                 </div>
               </div>
             </div>
-            <div className="text-center mt-6">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${screen.tagColor}`}>
+            <div className="text-center mt-4 sm:mt-6 w-[200px] sm:w-[280px] mx-auto">
+              <span className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-1 sm:mb-2 ${screen.tagColor}`}>
                 {screen.tag}
               </span>
-              <h3 className="text-lg font-bold text-[var(--neutral)]">{screen.label}</h3>
-              <p className="text-sm text-gray-500 mt-1">{screen.desc}</p>
+              <h3 className="text-sm sm:text-lg font-bold text-[var(--neutral)]">{screen.label}</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 hidden sm:block">{screen.desc}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex md:hidden justify-center mt-4 gap-2">
-        <span className="text-sm text-gray-400">Swipe to explore</span>
-        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-        </svg>
+      {/* Mobile: dot indicators + swipe hint */}
+      <div className="flex md:hidden flex-col items-center gap-2 mt-2">
+        <div className="flex gap-1.5">
+          {screens.map((_, i) => (
+            <div
+              key={i}
+              className={`rounded-full transition-all ${i === activeIndex ? 'w-4 h-2 bg-[var(--primary)]' : 'w-2 h-2 bg-gray-300'}`}
+            />
+          ))}
+        </div>
+        <span className="text-xs text-gray-400">Swipe to explore →</span>
       </div>
     </div>
   )
