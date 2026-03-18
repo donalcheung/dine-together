@@ -10,9 +10,8 @@ export default function ReferralPage() {
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('desktop');
   const [countdown, setCountdown] = useState(5);
 
-  const playStoreLink = `https://play.google.com/store/apps/details?id=com.tablemesh&referrer=utm_source%3Dreferral%26utm_content%3D${code}`;
-  // TODO: Replace with actual App Store link once available
-  const appStoreLink = `https://apps.apple.com/app/tablemesh/id0000000000`;
+  const playStoreLink = `https://play.google.com/store/apps/details?id=com.tablemeshnative&referrer=utm_source%3Dreferral%26utm_content%3D${code}`;
+  const appStoreLink = `https://apps.apple.com/us/app/tablemesh/id6760209899`;
 
   useEffect(() => {
     // Detect platform

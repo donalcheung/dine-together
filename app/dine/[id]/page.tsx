@@ -50,8 +50,8 @@ export default function DiningSharePage() {
   const [rsvpSuccess, setRsvpSuccess] = useState(false)
   const [rsvpError, setRsvpError] = useState('')
 
-  const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemesh'
-  const appStoreLink = 'https://apps.apple.com/app/tablemesh/id0000000000'
+  const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
+  const appStoreLink = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
 
   useEffect(() => {
     const ua = navigator.userAgent.toLowerCase()
