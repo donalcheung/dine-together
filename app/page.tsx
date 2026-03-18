@@ -40,6 +40,12 @@ export default function Home() {
               For Foodies
             </a>
             <Link
+              href="/blog"
+              className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
               href="/partner"
               className="hidden md:block text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors border border-[var(--primary)] px-4 py-1.5 rounded-full"
             >
@@ -714,6 +720,85 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── From the Blog ── */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
+              From the Blog
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Tips, guides, and stories about bringing people together over food.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Link href="/blog/how-to-organize-group-dinner" className="group">
+              <article className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 h-full hover:shadow-lg transition-all">
+                <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                  Tips &amp; Guides
+                </span>
+                <h3 className="text-xl font-bold text-[var(--neutral)] mb-3 group-hover:text-[var(--primary)] transition-colors">
+                  How to Organize a Group Dinner Without the Chaos
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  7 proven strategies to coordinate group dinners that actually happen &mdash; from picking the restaurant to splitting the bill.
+                </p>
+                <span className="text-[var(--primary)] font-medium text-sm">
+                  Read more &rarr;
+                </span>
+              </article>
+            </Link>
+
+            <Link href="/blog/best-team-lunch-ideas" className="group">
+              <article className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 h-full hover:shadow-lg transition-all">
+                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                  For Teams
+                </span>
+                <h3 className="text-xl font-bold text-[var(--neutral)] mb-3 group-hover:text-[var(--primary)] transition-colors">
+                  10 Team Lunch Ideas That Actually Build Culture
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  Skip the sad desk lunch. These team lunch formats turn midday meals into the best part of your workday.
+                </p>
+                <span className="text-[var(--primary)] font-medium text-sm">
+                  Read more &rarr;
+                </span>
+              </article>
+            </Link>
+
+            <Link href="/blog/social-dining-guide-for-introverts" className="group">
+              <article className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 h-full hover:shadow-lg transition-all">
+                <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                  Community
+                </span>
+                <h3 className="text-xl font-bold text-[var(--neutral)] mb-3 group-hover:text-[var(--primary)] transition-colors">
+                  The Introvert&apos;s Guide to Social Dining
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  Eating with new people doesn&apos;t have to be overwhelming. Here&apos;s how to enjoy group meals on your own terms.
+                </p>
+                <span className="text-[var(--primary)] font-medium text-sm">
+                  Read more &rarr;
+                </span>
+              </article>
+            </Link>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 px-8 py-3 border-2 border-[var(--primary)] text-[var(--primary)] rounded-full font-semibold hover:bg-[var(--primary)] hover:text-white transition-all"
+            >
+              View All Posts
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA / Download Section ── */}
       <section id="download" className="py-24 px-6 bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
         <div className="max-w-4xl mx-auto text-center">
@@ -763,6 +848,7 @@ export default function Home() {
               <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><a href="#download" className="hover:text-white transition-colors">Download</a></li>
+                <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                 <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>

@@ -50,8 +50,8 @@ export default function DiningSharePage() {
   const [rsvpSuccess, setRsvpSuccess] = useState(false)
   const [rsvpError, setRsvpError] = useState('')
 
-  const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemesh'
-  const appStoreLink = 'https://apps.apple.com/app/tablemesh/id0000000000'
+  const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
+  const appStoreLink = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
 
   useEffect(() => {
     const ua = navigator.userAgent.toLowerCase()
@@ -189,12 +189,18 @@ export default function DiningSharePage() {
   }
 
   const handleOpenApp = () => {
-    // Try deep link first, then fall back to store
-    window.location.href = `tablemesh://request/${requestId}`
-    setTimeout(() => {
-      if (platform === 'android') window.location.href = playStoreLink
-      else if (platform === 'ios') window.location.href = appStoreLink
-    }, 1500)
+    // Go directly to the appropriate store.
+    // We avoid the tablemesh:// custom URL scheme because Safari shows a
+    // 'cannot open page' error if the app is not installed, which is jarring
+    // for new users. Universal Links (HTTPS) would be the clean solution but
+    // require Associated Domains setup in the native app. For now, sending
+    // users straight to the store is the best experience.
+    if (platform === 'android') {
+      window.location.href = playStoreLink
+    } else {
+      // iOS and desktop both go to the App Store
+      window.location.href = appStoreLink
+    }
   }
 
   const seatsText = request
