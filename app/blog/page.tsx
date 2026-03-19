@@ -18,6 +18,15 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: 'loneliness-epidemic-social-dining',
+    title: 'The Loneliness Epidemic Has a Surprisingly Simple Cure: Dinner With Strangers',
+    excerpt:
+      'Solo dining is up 52% and 1 in 4 Americans now eat every meal alone. New research from the World Happiness Report reveals why shared meals may be one of the most powerful tools we have against the loneliness crisis — and how TableMesh is now on iOS to help.',
+    date: 'March 18, 2026',
+    readTime: '7 min read',
+    category: 'Insights',
+  },
+  {
     slug: 'how-to-organize-group-dinner',
     title: 'How to Organize a Group Dinner Without the Chaos',
     excerpt:
