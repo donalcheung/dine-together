@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [user, setUser] = useState<{ name?: string; avatar_url?: string } | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
@@ -20,12 +21,13 @@ export default function Navbar() {
           .single()
         setUser(profile ?? { name: data.user.email })
       }
+      setLoading(false)
     })
   }, [])
 
   return (
     <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-orange-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-8">
 
         {/* Logo — far left */}
         <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" onClick={() => setMenuOpen(false)}>
@@ -35,50 +37,50 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav — center links */}
-        <div className="hidden md:flex items-center gap-6">
+        {/* Nav links — center, grows to fill space */}
+        <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
           <Link href="/features" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Features</Link>
           <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Explore</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
           <Link href="/partner" className="text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-1.5 rounded-full hover:bg-orange-50 transition-colors">For Restaurants</Link>
         </div>
 
-        {/* Desktop right side — Sign In / avatar + Get the App */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
-          {user ? (
-            <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[var(--primary)] transition-colors">
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt="avatar" className="w-7 h-7 rounded-full object-cover border border-orange-200" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
-                  {(user.name ?? 'U')[0].toUpperCase()}
-                </div>
-              )}
-              <span>{user.name?.split(' ')[0] ?? 'Account'}</span>
-            </Link>
-          ) : (
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Sign In</Link>
+        {/* Right side — far right, shrink-0 so it never wraps */}
+        <div className="hidden md:flex items-center gap-3 shrink-0 ml-auto">
+          {!loading && (
+            user ? (
+              /* Logged in: just the profile, no duplicate CTA */
+              <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[var(--primary)] transition-colors">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-orange-200" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
+                    {(user.name ?? 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <span>{user.name?.split(' ')[0] ?? 'Account'}</span>
+              </Link>
+            ) : (
+              /* Logged out: Sign In (text) then Get the App (button) */
+              <>
+                <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+                  Sign In
+                </Link>
+                <a
+                  href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
+                >
+                  Get the App
+                </a>
+              </>
+            )
           )}
-          <a
-            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
-          >
-            Get the App
-          </a>
         </div>
 
-        {/* Mobile: Get the App + hamburger */}
-        <div className="flex md:hidden items-center gap-2">
-          <a
-            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold"
-          >
-            Get the App
-          </a>
+        {/* Mobile: hamburger only */}
+        <div className="flex md:hidden items-center gap-2 ml-auto">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
@@ -99,13 +101,13 @@ export default function Navbar() {
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-orange-100 px-4 py-4 flex flex-col gap-4">
-          <Link href="/features" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
-          <Link href="/explore" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
-          <Link href="/blog" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
-          <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
+        <div className="md:hidden bg-white border-t border-orange-100 px-4 py-4 flex flex-col gap-1">
+          <Link href="/features" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
+          <Link href="/explore" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
+          <Link href="/blog" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
+          <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
           {user ? (
-            <Link href="/account" className="flex items-center gap-2 text-base font-medium text-gray-700 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/account" className="flex items-center gap-2 text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt="avatar" className="w-7 h-7 rounded-full object-cover border border-orange-200" />
               ) : (
@@ -116,8 +118,17 @@ export default function Navbar() {
               My Account
             </Link>
           ) : (
-            <Link href="/login" className="text-base font-medium text-gray-700 py-2" onClick={() => setMenuOpen(false)}>Sign In</Link>
+            <Link href="/login" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sign In</Link>
           )}
+          <a
+            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 w-full text-center px-5 py-3 bg-[var(--primary)] text-white rounded-full text-base font-semibold"
+            onClick={() => setMenuOpen(false)}
+          >
+            Get the App
+          </a>
         </div>
       )}
     </nav>
