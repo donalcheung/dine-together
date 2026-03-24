@@ -12,65 +12,100 @@ export default function Navbar() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (data.user) {
+
+    // Initial session check
+    const loadUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('name, avatar_url')
-          .eq('id', data.user.id)
+          .eq('id', authUser.id)
           .single()
-        setUser(profile ?? { name: data.user.email })
+        setUser(profile ?? { name: authUser.email })
+      } else {
+        setUser(null)
+      }
+      setLoading(false)
+    }
+
+    loadUser()
+
+    // Listen for auth changes (login / logout on any tab)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, avatar_url')
+          .eq('id', session.user.id)
+          .single()
+        setUser(profile ?? { name: session.user.email })
+      } else {
+        setUser(null)
       }
       setLoading(false)
     })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  return (
-    <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-orange-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-8">
+  const initials = (user?.name ?? 'U')[0].toUpperCase()
 
-        {/* Logo — far left */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" onClick={() => setMenuOpen(false)}>
-          <Image src="/logo.png" alt="TableMesh Logo" width={36} height={36} className="w-9 h-9 rounded-xl" />
-          <span className="text-xl sm:text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
+  return (
+    <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0" onClick={() => setMenuOpen(false)}>
+          <Image src="/logo.png" alt="TableMesh" width={32} height={32} className="w-8 h-8 rounded-xl" />
+          <span className="text-xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             TableMesh
           </span>
         </Link>
 
-        {/* Nav links — center, grows to fill space */}
-        <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
-          <Link href="/features" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Features</Link>
-          <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Explore</Link>
-          <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
-          <Link href="/partner" className="text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-1.5 rounded-full hover:bg-orange-50 transition-colors">For Restaurants</Link>
+        {/* Desktop center links — kept minimal: 3 core links only */}
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="/explore" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Explore</Link>
+          <Link href="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
+          <Link href="/blog" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Blog</Link>
         </div>
 
-        {/* Right side — far right, shrink-0 so it never wraps */}
-        <div className="hidden md:flex items-center gap-3 shrink-0 ml-auto">
+        {/* Desktop right side */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           {!loading && (
             user ? (
-              /* Logged in: just the profile, no duplicate CTA */
-              <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[var(--primary)] transition-colors">
+              /* Logged in — profile avatar + name, far right */
+              <Link
+                href="/account"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
                 {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="avatar" className="w-8 h-8 rounded-full object-cover border border-orange-200" />
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name ?? 'Profile'}
+                    className="w-7 h-7 rounded-full object-cover ring-2 ring-orange-200"
+                  />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
-                    {(user.name ?? 'U')[0].toUpperCase()}
+                  <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
+                    {initials}
                   </div>
                 )}
-                <span>{user.name?.split(' ')[0] ?? 'Account'}</span>
+                <span className="text-sm font-medium text-gray-700">{user.name?.split(' ')[0] ?? 'Account'}</span>
               </Link>
             ) : (
-              /* Logged out: Sign In (text) then Get the App (button) */
+              /* Logged out — Sign In (ghost) + Get the App (filled) */
               <>
-                <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
+                >
                   Sign In
                 </Link>
                 <a
                   href="https://apps.apple.com/us/app/tablemesh/id6760209899"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
+                  className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--primary-dark)] transition-all hover:shadow-md"
                 >
                   Get the App
                 </a>
@@ -79,52 +114,48 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile: hamburger only */}
-        <div className="flex md:hidden items-center gap-2 ml-auto">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            )}
-          </button>
-        </div>
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-orange-100 px-4 py-4 flex flex-col gap-1">
-          <Link href="/features" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
-          <Link href="/explore" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
-          <Link href="/blog" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
-          <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
+        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col">
+          <Link href="/explore" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
+          <Link href="/features" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
+          <Link href="/blog" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
+          <Link href="/partner" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants</Link>
           {user ? (
-            <Link href="/account" className="flex items-center gap-2 text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>
+            <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt="avatar" className="w-7 h-7 rounded-full object-cover border border-orange-200" />
+                <img src={user.avatar_url} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
-                  {(user.name ?? 'U')[0].toUpperCase()}
-                </div>
+                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">{initials}</div>
               )}
               My Account
             </Link>
           ) : (
-            <Link href="/login" className="text-base font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sign In</Link>
+            <Link href="/login" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sign In</Link>
           )}
           <a
             href="https://apps.apple.com/us/app/tablemesh/id6760209899"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 w-full text-center px-5 py-3 bg-[var(--primary)] text-white rounded-full text-base font-semibold"
+            className="mt-3 w-full text-center py-3 bg-[var(--primary)] text-white rounded-full text-sm font-semibold"
             onClick={() => setMenuOpen(false)}
           >
             Get the App
