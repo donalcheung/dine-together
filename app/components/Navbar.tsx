@@ -7,13 +7,12 @@ import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [user, setUser] = useState<{ name?: string; avatar_url?: string } | null>(null)
-  const [loading, setLoading] = useState(true)
+  // null = not yet loaded, false = logged out, object = logged in
+  const [user, setUser] = useState<{ name?: string; avatar_url?: string } | false | null>(null)
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
 
-    // Initial session check
     const loadUser = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (authUser) {
@@ -24,14 +23,12 @@ export default function Navbar() {
           .single()
         setUser(profile ?? { name: authUser.email })
       } else {
-        setUser(null)
+        setUser(false)
       }
-      setLoading(false)
     }
 
     loadUser()
 
-    // Listen for auth changes (login / logout on any tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const { data: profile } = await supabase
@@ -41,15 +38,14 @@ export default function Navbar() {
           .single()
         setUser(profile ?? { name: session.user.email })
       } else {
-        setUser(null)
+        setUser(false)
       }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  const initials = (user?.name ?? 'U')[0].toUpperCase()
+  const initials = user && typeof user === 'object' ? (user.name ?? 'U')[0].toUpperCase() : null
 
   return (
     <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100">
@@ -63,55 +59,52 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop center links — kept minimal: 3 core links only */}
+        {/* Desktop center links */}
         <div className="hidden md:flex items-center gap-8">
           <Link href="/explore" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Explore</Link>
           <Link href="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Blog</Link>
         </div>
 
-        {/* Desktop right side */}
+        {/* Desktop right side — always visible */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
-          {!loading && (
-            user ? (
-              /* Logged in — profile avatar + name, far right */
-              <Link
-                href="/account"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.name ?? 'Profile'}
-                    className="w-7 h-7 rounded-full object-cover ring-2 ring-orange-200"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
-                    {initials}
-                  </div>
-                )}
-                <span className="text-sm font-medium text-gray-700">{user.name?.split(' ')[0] ?? 'Account'}</span>
-              </Link>
-            ) : (
-              /* Logged out — Sign In (ghost) + Get the App (filled) */
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
-                >
-                  Sign In
-                </Link>
-                <a
-                  href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--primary-dark)] transition-all hover:shadow-md"
-                >
-                  Get the App
-                </a>
-              </>
-            )
+          {/* Auth: show profile when logged in, Sign In when logged out or loading */}
+          {user && typeof user === 'object' ? (
+            <Link
+              href="/account"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name ?? 'Profile'}
+                  className="w-7 h-7 rounded-full object-cover ring-2 ring-orange-200"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
+                  {initials}
+                </div>
+              )}
+              <span className="text-sm font-medium text-gray-700">{user.name?.split(' ')[0] ?? 'Account'}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
+            >
+              Sign In
+            </Link>
           )}
+
+          {/* Get the App — always shown */}
+          <a
+            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--primary-dark)] transition-all hover:shadow-md"
+          >
+            Get the App
+          </a>
         </div>
 
         {/* Mobile hamburger */}
@@ -139,7 +132,7 @@ export default function Navbar() {
           <Link href="/features" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
           <Link href="/partner" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants</Link>
-          {user ? (
+          {user && typeof user === 'object' ? (
             <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>
               {user.avatar_url ? (
                 <img src={user.avatar_url} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
