@@ -1,8 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 import Navbar from '../components/Navbar'
 
 interface DiningRequest {
@@ -25,6 +23,7 @@ interface DiningRequest {
 }
 
 const CUISINES = ['All', 'Japanese', 'Korean', 'Chinese', 'Italian', 'Mexican', 'American', 'Indian', 'Thai', 'Mediterranean']
+const CARDS_PER_PAGE = 6
 
 const CUISINE_FALLBACKS: Record<string, string> = {
   japanese: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=75',
@@ -70,53 +69,9 @@ function cityFromAddress(address: string): string {
   return parts[0]
 }
 
-// ── Sign-up / Trial Modal ───────────────────────────────────────────────────
+// ── App Download Modal ──────────────────────────────────────────────────────
 
-interface SignUpModalProps {
-  targetId: string | null
-  onClose: () => void
-  onSuccess: () => void
-}
-
-function SignUpModal({ targetId, onClose, onSuccess }: SignUpModalProps) {
-  const [mode, setMode] = useState<'choose' | 'signup' | 'success'>('choose')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim() || !email.trim() || password.length < 6) {
-      setError('Please fill in all fields. Password must be at least 6 characters.')
-      return
-    }
-    setLoading(true)
-    setError('')
-    const supabase = createSupabaseBrowserClient()
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name } },
-    })
-    if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
-    }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('profiles').upsert({ id: user.id, email, name }, { onConflict: 'id' })
-    }
-    setLoading(false)
-    setMode('success')
-    setTimeout(() => {
-      onSuccess()
-      if (targetId) window.location.href = `/dine/${targetId}`
-    }, 1800)
-  }
-
+function AppDownloadModal({ onClose }: { onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -139,131 +94,53 @@ function SignUpModal({ targetId, onClose, onSuccess }: SignUpModalProps) {
             ×
           </button>
 
-          {mode === 'choose' && (
-            <>
-              {/* Trial badge */}
-              <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                <span>⭐</span> Limited time offer
-              </div>
+          {/* Icon */}
+          <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+            🍽
+          </div>
 
-              <h2 className="text-2xl font-bold text-gray-900 mb-1 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-                Join free & get 7 days of Plus
-              </h2>
-              <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                Sign up now and unlock a free 7-day trial of TableMesh Plus — message hosts, see who&apos;s going, and join any table.
-              </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
+            See the full details on the app
+          </h2>
+          <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+            Download TableMesh to view who&apos;s going, message the host, and join the table — all from your phone.
+          </p>
 
-              {/* Plus perks */}
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 mb-5 border border-orange-100">
-                <p className="text-xs font-bold text-orange-700 uppercase tracking-wide mb-3">What you unlock with Plus</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { icon: '💬', text: 'Message hosts' },
-                    { icon: '👥', text: 'See who\'s going' },
-                    { icon: '🍽', text: 'Join any table' },
-                    { icon: '⭐', text: 'Priority seating' },
-                    { icon: '🎁', text: 'Restaurant deals' },
-                    { icon: '🔔', text: 'Instant alerts' },
-                  ].map((p, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
-                      <span>{p.icon}</span> {p.text}
-                    </div>
-                  ))}
+          {/* App perks */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 mb-5 border border-orange-100">
+            <p className="text-xs font-bold text-orange-700 uppercase tracking-wide mb-3">What you get on the app</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { icon: '👥', text: 'See who\'s going' },
+                { icon: '💬', text: 'Message the host' },
+                { icon: '🪑', text: 'Reserve your seat' },
+                { icon: '🔔', text: 'Get instant alerts' },
+                { icon: '🗺', text: 'Find tables near you' },
+                { icon: '⭐', text: 'Free 7-day Plus trial' },
+              ].map((p, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
+                  <span>{p.icon}</span> {p.text}
                 </div>
-              </div>
-
-              <button
-                onClick={() => setMode('signup')}
-                className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl font-bold text-base mb-3 hover:from-orange-600 hover:to-amber-600 transition-all shadow-md shadow-orange-200"
-              >
-                Create Free Account →
-              </button>
-
-              <div className="relative flex items-center gap-3 my-3">
-                <div className="flex-1 h-px bg-gray-100" />
-                <span className="text-xs text-gray-400">or download the app</span>
-                <div className="flex-1 h-px bg-gray-100" />
-              </div>
-
-              <div className="flex gap-2.5">
-                <a
-                  href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-                  className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm text-center hover:bg-gray-800 transition-colors"
-                >
-                  🍎 App Store
-                </a>
-                <a
-                  href="https://play.google.com/store/apps/details?id=com.tablemeshnative"
-                  className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm text-center hover:bg-gray-800 transition-colors"
-                >
-                  ▶ Google Play
-                </a>
-              </div>
-              <p className="text-center text-xs text-gray-400 mt-3">No credit card required. Cancel anytime.</p>
-            </>
-          )}
-
-          {mode === 'signup' && (
-            <>
-              <button onClick={() => setMode('choose')} className="flex items-center gap-1 text-sm text-gray-400 mb-4 hover:text-gray-600">
-                ← Back
-              </button>
-              <h2 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Fraunces, serif' }}>
-                Create your account
-              </h2>
-              <p className="text-sm text-gray-400 mb-5">Your 7-day Plus trial starts immediately.</p>
-              <form onSubmit={handleSignUp} className="flex flex-col gap-3">
-                <input
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-orange-400 bg-gray-50"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-orange-400 bg-gray-50"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Password (min 6 characters)"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-orange-400 bg-gray-50"
-                  required
-                />
-                {error && <p className="text-red-500 text-xs px-1">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl font-bold text-base mt-1 hover:from-orange-600 hover:to-amber-600 transition-all disabled:opacity-60 shadow-md shadow-orange-200"
-                >
-                  {loading ? 'Creating account…' : 'Create Account & Start Trial'}
-                </button>
-              </form>
-              <p className="text-center text-xs text-gray-400 mt-3">
-                By signing up you agree to our{' '}
-                <Link href="/terms-of-service" className="text-orange-500 hover:underline">Terms</Link>
-                {' '}and{' '}
-                <Link href="/privacy-policy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
-              </p>
-            </>
-          )}
-
-          {mode === 'success' && (
-            <div className="text-center py-8">
-              <div className="text-5xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Fraunces, serif' }}>
-                Welcome to TableMesh!
-              </h2>
-              <p className="text-sm text-gray-500">Your 7-day Plus trial is active. Taking you to the table…</p>
+              ))}
             </div>
-          )}
+          </div>
+
+          {/* Download buttons */}
+          <div className="flex gap-3 mb-3">
+            <a
+              href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+              className="flex-1 py-3.5 bg-gray-900 text-white rounded-2xl font-bold text-sm text-center hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+            >
+              🍎 App Store
+            </a>
+            <a
+              href="https://play.google.com/store/apps/details?id=com.tablemeshnative"
+              className="flex-1 py-3.5 bg-gray-900 text-white rounded-2xl font-bold text-sm text-center hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+            >
+              ▶ Google Play
+            </a>
+          </div>
+          <p className="text-center text-xs text-gray-400">Free to download. No credit card required.</p>
         </div>
       </div>
 
@@ -368,59 +245,7 @@ function RestaurantCard({ request: r, onCardClick }: CardProps) {
   )
 }
 
-// ── App Download Wall ───────────────────────────────────────────────────────
-
-function AppWall({ hiddenCount, onSignUp }: { hiddenCount: number; onSignUp: () => void }) {
-  return (
-    <div className="relative mt-2">
-      {/* Blurred ghost cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pointer-events-none select-none">
-        {[0, 1, 2].map(i => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-72 opacity-40 blur-sm" />
-        ))}
-      </div>
-
-      {/* Overlay CTA */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="bg-white rounded-3xl shadow-2xl border border-orange-100 p-7 sm:p-9 text-center max-w-sm mx-4">
-          <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-            <span>⭐</span> Sign up offer
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-            View More on the App
-          </h3>
-          <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-            Sign up free and get a <strong className="text-orange-600">7-day Plus trial</strong> — join tables, message hosts, and see who&apos;s going.
-          </p>
-          <button
-            onClick={onSignUp}
-            className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl font-bold text-sm mb-3 hover:from-orange-600 hover:to-amber-600 transition-all shadow-md shadow-orange-200"
-          >
-            Sign Up Free & Start Trial
-          </button>
-          <div className="flex gap-2.5">
-            <a
-              href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-              className="flex-1 py-2.5 bg-gray-900 text-white rounded-xl font-semibold text-xs text-center hover:bg-gray-800 transition-colors"
-            >
-              🍎 App Store
-            </a>
-            <a
-              href="https://play.google.com/store/apps/details?id=com.tablemeshnative"
-              className="flex-1 py-2.5 bg-gray-900 text-white rounded-xl font-semibold text-xs text-center hover:bg-gray-800 transition-colors"
-            >
-              ▶ Google Play
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Main Page ───────────────────────────────────────────────────────────────
-
-const DEMO_LIMIT = 6
 
 export default function ExplorePage() {
   const [allItems, setAllItems] = useState<DiningRequest[]>([])
@@ -429,14 +254,8 @@ export default function ExplorePage() {
   const [cuisineFilter, setCuisineFilter] = useState('All')
   const [cities, setCities] = useState<string[]>([])
   const [cityFilter, setCityFilter] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [modalTargetId, setModalTargetId] = useState<string | null>(null)
-  const [showModalForWall, setShowModalForWall] = useState(false)
-
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
-    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session))
-  }, [])
+  const [showModal, setShowModal] = useState(false)
+  const [page, setPage] = useState(1)
 
   const fetchFeed = useCallback(async () => {
     setLoading(true)
@@ -450,6 +269,7 @@ export default function ExplorePage() {
       const data = await res.json()
       setAllItems(data.items || [])
       setTotalCount(data.totalCount || 0)
+      setPage(1) // reset to first page on filter change
 
       // Build city list
       const citySet = new Set<string>()
@@ -470,41 +290,25 @@ export default function ExplorePage() {
     ? allItems.filter(r => cityFromAddress(r.restaurant_address).toLowerCase() === cityFilter.toLowerCase())
     : allItems
 
-  const visibleItems = filtered.slice(0, DEMO_LIMIT)
-  const hiddenCount = Math.max(0, totalCount - DEMO_LIMIT)
+  const totalPages = Math.ceil(filtered.length / CARDS_PER_PAGE)
+  const start = (page - 1) * CARDS_PER_PAGE
+  const visibleItems = filtered.slice(start, start + CARDS_PER_PAGE)
 
-  const handleCardClick = (id: string) => {
-    if (isLoggedIn) {
-      window.location.href = `/dine/${id}`
-    } else {
-      setModalTargetId(id)
-      setShowModalForWall(false)
-    }
+  const handleCardClick = () => {
+    setShowModal(true)
   }
-
-  const handleWallSignUp = () => {
-    setModalTargetId(null)
-    setShowModalForWall(true)
-  }
-
-  const showModal = modalTargetId !== null || showModalForWall
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
-      {/* Sign-up modal */}
+      {/* App download modal */}
       {showModal && (
-        <SignUpModal
-          targetId={modalTargetId}
-          onClose={() => { setModalTargetId(null); setShowModalForWall(false) }}
-          onSuccess={() => setIsLoggedIn(true)}
-        />
+        <AppDownloadModal onClose={() => setShowModal(false)} />
       )}
 
       <Navbar />
 
       {/* Hero */}
       <section className="pt-24 pb-8 px-4 text-center bg-gradient-to-b from-orange-50 to-[#faf7f2]">
-        {/* Demo badge */}
         <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-full mb-4">
           <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
           Live tables near you
@@ -513,14 +317,14 @@ export default function ExplorePage() {
           Dining tables near you
         </h1>
         <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto mb-6">
-          Browse upcoming group meals hosted by real people. Join one, or host your own.
+          Browse upcoming group meals hosted by real people. Download the app to join one or host your own.
         </p>
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 justify-center max-w-xl mx-auto">
           <select
             value={cityFilter}
-            onChange={e => setCityFilter(e.target.value)}
+            onChange={e => { setCityFilter(e.target.value); setPage(1) }}
             className="px-4 py-2.5 rounded-full border border-gray-200 text-sm bg-white text-gray-700 focus:outline-none focus:border-orange-400 shadow-sm"
           >
             <option value="">All cities</option>
@@ -528,7 +332,7 @@ export default function ExplorePage() {
           </select>
           <select
             value={cuisineFilter}
-            onChange={e => setCuisineFilter(e.target.value)}
+            onChange={e => { setCuisineFilter(e.target.value); setPage(1) }}
             className="px-4 py-2.5 rounded-full border border-gray-200 text-sm bg-white text-gray-700 focus:outline-none focus:border-orange-400 shadow-sm"
           >
             {CUISINES.map(c => <option key={c} value={c}>{c === 'All' ? 'All cuisines' : c}</option>)}
@@ -558,11 +362,11 @@ export default function ExplorePage() {
         ) : (
           <>
             <p className="text-xs text-gray-400 mb-4 mt-1">
-              Showing {visibleItems.length} of {totalCount} upcoming tables
+              Showing {start + 1}–{Math.min(start + CARDS_PER_PAGE, filtered.length)} of {filtered.length} upcoming tables
               {cityFilter ? ` in ${cityFilter}` : ''}
             </p>
 
-            {/* 5 visible cards */}
+            {/* 6 cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {visibleItems.map(r => (
                 <RestaurantCard
@@ -573,11 +377,28 @@ export default function ExplorePage() {
               ))}
             </div>
 
-            {/* App wall — always shown after the 5 cards */}
-            <AppWall
-              hiddenCount={hiddenCount}
-              onSignUp={handleWallSignUp}
-            />
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-10">
+                <button
+                  onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                  disabled={page === 1}
+                  className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 bg-white hover:border-orange-400 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                >
+                  ← Previous
+                </button>
+                <span className="text-sm text-gray-400 font-medium">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                  disabled={page === totalPages}
+                  className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 bg-white hover:border-orange-400 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>

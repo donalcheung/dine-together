@@ -1,51 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  // null = not yet loaded, false = logged out, object = logged in
-  const [user, setUser] = useState<{ name?: string; avatar_url?: string } | false | null>(null)
-
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
-
-    const loadUser = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (authUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, avatar_url')
-          .eq('id', authUser.id)
-          .single()
-        setUser(profile ?? { name: authUser.email })
-      } else {
-        setUser(false)
-      }
-    }
-
-    loadUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, avatar_url')
-          .eq('id', session.user.id)
-          .single()
-        setUser(profile ?? { name: session.user.email })
-      } else {
-        setUser(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const initials = user && typeof user === 'object' ? (user.name ?? 'U')[0].toUpperCase() : null
 
   return (
     <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-100">
@@ -66,37 +26,8 @@ export default function Navbar() {
           <Link href="/blog" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Blog</Link>
         </div>
 
-        {/* Desktop right side — always visible */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
-          {/* Auth: show profile when logged in, Sign In when logged out or loading */}
-          {user && typeof user === 'object' ? (
-            <Link
-              href="/account"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.name ?? 'Profile'}
-                  className="w-7 h-7 rounded-full object-cover ring-2 ring-orange-200"
-                />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">
-                  {initials}
-                </div>
-              )}
-              <span className="text-sm font-medium text-gray-700">{user.name?.split(' ')[0] ?? 'Account'}</span>
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
-            >
-              Sign In
-            </Link>
-          )}
-
-          {/* Get the App — always shown */}
+        {/* Desktop right — Get the App only */}
+        <div className="hidden md:flex items-center shrink-0">
           <a
             href="https://apps.apple.com/us/app/tablemesh/id6760209899"
             target="_blank"
@@ -132,18 +63,6 @@ export default function Navbar() {
           <Link href="/features" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
           <Link href="/partner" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants</Link>
-          {user && typeof user === 'object' ? (
-            <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-600">{initials}</div>
-              )}
-              My Account
-            </Link>
-          ) : (
-            <Link href="/login" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sign In</Link>
-          )}
           <a
             href="https://apps.apple.com/us/app/tablemesh/id6760209899"
             target="_blank"
