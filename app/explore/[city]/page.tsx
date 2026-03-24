@@ -50,16 +50,17 @@ function cuisineEmoji(cuisine: string | null) {
   return '🍽'
 }
 
-export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
-  const city = slugToCity(params.city)
+export async function generateMetadata({ params }: { params: Promise<{ city: string }> }): Promise<Metadata> {
+  const { city: citySlug } = await params
+  const city = slugToCity(citySlug)
   return {
     title: `Group Dining in ${city} — TableMesh`,
     description: `Browse upcoming group dining tables in ${city}. Find people to eat with at local restaurants — Korean BBQ, dim sum, tasting menus and more. Join a table or host your own on TableMesh.`,
-    alternates: { canonical: `/explore/${params.city}` },
+    alternates: { canonical: `/explore/${citySlug}` },
     openGraph: {
       title: `Group Dining in ${city} — TableMesh`,
       description: `Upcoming group meals in ${city}. Join a table or host your own.`,
-      url: `https://tablemesh.com/explore/${params.city}`,
+      url: `https://tablemesh.com/explore/${citySlug}`,
     },
   }
 }
@@ -88,9 +89,10 @@ async function getRequestsForCity(citySlug: string): Promise<DiningRequest[]> {
   return data as unknown as DiningRequest[]
 }
 
-export default async function CityExplorePage({ params }: { params: { city: string } }) {
-  const city = slugToCity(params.city)
-  const requests = await getRequestsForCity(params.city)
+export default async function CityExplorePage({ params }: { params: Promise<{ city: string }> }) {
+  const { city: citySlug } = await params
+  const city = slugToCity(citySlug)
+  const requests = await getRequestsForCity(citySlug)
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
