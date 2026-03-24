@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
@@ -67,6 +68,7 @@ function statusBadge(status: string) {
 type Tab = 'profile' | 'gallery' | 'subscription'
 
 export default function AccountPage() {
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>('profile')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [photos, setPhotos] = useState<ProfilePhoto[]>([])
@@ -94,7 +96,7 @@ export default function AccountPage() {
 
   const loadData = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { window.location.href = '/login'; return }
+    if (!session) { router.replace('/login'); return }
 
     const userId = session.user.id
 
@@ -241,7 +243,7 @@ export default function AccountPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
+    router.push('/')
   }
 
   // ── Loading ─────────────────────────────────────────────────────────────────
