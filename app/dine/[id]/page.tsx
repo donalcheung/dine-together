@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
+import Navbar from '../../components/Navbar'
 
 interface DiningRequest {
   id: string
@@ -225,38 +226,7 @@ export default function DiningSharePage() {
       backgroundColor: '#faf7f2',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     }}>
-      {/* Nav */}
-      <nav style={{
-        padding: '12px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: '1px solid #f3f4f6',
-        backgroundColor: '#ffffff',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-      }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <Image src="/logo.png" alt="TableMesh" width={32} height={32} style={{ borderRadius: '8px' }} />
-          <span style={{ fontSize: '18px', fontWeight: 700, color: '#f97316' }}>TableMesh</span>
-        </Link>
-        <button
-          onClick={handleOpenApp}
-          style={{
-            backgroundColor: '#f97316',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Open App
-        </button>
-      </nav>
+      <Navbar />
 
       {/* Mobile App Banner */}
       {platform !== 'desktop' && (

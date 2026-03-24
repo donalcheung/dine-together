@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
+import Navbar from '../components/Navbar'
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'forgot'>('login')
@@ -51,14 +52,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#faf7f2] flex flex-col">
-      {/* Nav */}
-      <nav className="w-full bg-white border-b border-orange-100 px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="TableMesh" width={30} height={30} className="rounded-xl" />
-          <span className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Fraunces, serif' }}>TableMesh</span>
-        </Link>
-        <Link href="/explore" className="text-sm text-orange-500 font-semibold hover:underline">Explore tables</Link>
-      </nav>
+      <Navbar />
 
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">

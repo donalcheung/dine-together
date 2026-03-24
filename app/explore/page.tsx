@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
+import Navbar from '../components/Navbar'
 
 interface DiningRequest {
   id: string
@@ -499,25 +500,7 @@ export default function ExplorePage() {
         />
       )}
 
-      {/* Nav */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-40 border-b border-orange-100">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="TableMesh" width={32} height={32} className="rounded-xl" />
-            <span className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Fraunces, serif' }}>TableMesh</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/explore" className="text-sm font-semibold text-orange-500">Explore</Link>
-            <Link href="/blog" className="text-sm font-medium text-gray-500 hover:text-orange-500 hidden sm:block">Blog</Link>
-            <a
-              href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-              className="px-4 py-2 bg-orange-500 text-white rounded-full text-sm font-semibold hover:bg-orange-600 transition-all"
-            >
-              Get the App
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
       <section className="pt-24 pb-8 px-4 text-center bg-gradient-to-b from-orange-50 to-[#faf7f2]">

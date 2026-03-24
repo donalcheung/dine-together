@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
+import Navbar from '../../components/Navbar'
 
 interface DiningRequest {
   id: string
@@ -96,26 +97,7 @@ export default async function CityExplorePage({ params }: { params: Promise<{ ci
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-orange-100">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="TableMesh" width={32} height={32} className="rounded-xl" />
-            <span className="text-xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
-              TableMesh
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)]">← All cities</Link>
-            <a
-              href="https://apps.apple.com/us/app/tablemesh/id6760209899"
-              className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--primary-dark)] transition-all"
-            >
-              Get the App
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
       <section className="pt-24 pb-8 px-4 text-center bg-gradient-to-b from-orange-50 to-[var(--background)]">

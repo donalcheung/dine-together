@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
+import Navbar from '../components/Navbar'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -265,24 +266,16 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-40 border-b border-orange-100">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="TableMesh" width={30} height={30} className="rounded-xl" />
-            <span className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Fraunces, serif' }}>TableMesh</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/explore" className="text-sm text-gray-500 hover:text-orange-500 hidden sm:block">Explore</Link>
-            <button
-              onClick={handleSignOut}
-              className="text-sm text-gray-400 hover:text-red-500 transition-colors"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
+      {/* Sign out button */}
+      <div className="fixed top-0 right-4 z-50 h-14 flex items-center">
+        <button
+          onClick={handleSignOut}
+          className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+        >
+          Sign out
+        </button>
+      </div>
 
       <div className="max-w-4xl mx-auto px-4 pt-20 pb-16">
         {/* Profile header */}

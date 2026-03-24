@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Metadata } from 'next'
+import Navbar from '../../components/Navbar'
 
 export const metadata: Metadata = {
   title: 'Korean BBQ: Why It\'s Better with a Group (And How to Plan One) | TableMesh',
@@ -26,18 +27,7 @@ export default function BlogPost() {
   return (
     <div className="min-h-screen bg-white">
       <head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} /></head>
-
-      <header className="border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-900">
-            <img src="/icon-192x192.png" alt="TableMesh" className="w-8 h-8 rounded-lg" />TableMesh
-          </Link>
-          <nav className="flex items-center gap-6 text-sm text-gray-600">
-            <Link href="/" className="hover:text-gray-900">Home</Link>
-            <Link href="/blog" className="text-orange-600 font-medium">Blog</Link>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       <article className="max-w-3xl mx-auto px-6 py-12">
         <div className="mb-8">

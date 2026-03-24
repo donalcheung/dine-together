@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Metadata } from 'next'
 import DownloadButtons from '../DownloadButtons'
+import Navbar from '../components/Navbar'
 
 export const metadata: Metadata = {
   title: 'Features — TableMesh',
@@ -13,22 +14,7 @@ export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-[var(--background)]">
 
-      {/* ── Navigation ── */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-orange-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="TableMesh Logo" width={40} height={40} className="w-10 h-10 rounded-xl" />
-            <span className="text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>TableMesh</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/features" className="hidden md:block text-sm font-semibold text-[var(--primary)] transition-colors">Features</Link>
-            <Link href="/#how-it-works" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">How It Works</Link>
-            <Link href="/blog" className="hidden md:block text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
-            <Link href="/partner" className="hidden md:block text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors border border-[var(--primary)] px-4 py-1.5 rounded-full">For Restaurants</Link>
-            <a href="#download" className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold">Get the App</a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* ── Hero ── */}
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
