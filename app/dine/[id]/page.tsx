@@ -796,6 +796,33 @@ export default function DiningSharePage() {
                 📍 View {request.restaurant_name} on Google Maps
               </span>
             </a>
+
+            {/* Explore More Tables CTA */}
+            <div style={{
+              backgroundColor: '#fff7ed', borderRadius: '16px',
+              padding: '20px', marginBottom: '16px',
+              border: '1px solid #fed7aa',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontSize: '15px', fontWeight: 700, color: '#1f2937', margin: '0 0 6px' }}>
+                🍽 More tables near you
+              </p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 14px' }}>
+                Browse all upcoming group dining experiences on TableMesh.
+              </p>
+              <Link
+                href="/explore"
+                style={{
+                  display: 'inline-block',
+                  backgroundColor: '#f97316', color: '#fff',
+                  padding: '11px 24px', borderRadius: '10px',
+                  fontSize: '14px', fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Explore Tables →
+              </Link>
+            </div>
           </>
         )}
       </main>

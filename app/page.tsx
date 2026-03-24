@@ -26,6 +26,7 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-6">
             <Link href="/features" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Features</Link>
             <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">How It Works</a>
+            <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Explore</Link>
             <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
             <Link href="/partner" className="text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-1.5 rounded-full hover:bg-orange-50 transition-colors">For Restaurants</Link>
             <a href="#download" className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold">Get the App</a>
@@ -57,6 +58,7 @@ export default function Home() {
           <div className="md:hidden bg-white border-t border-orange-100 px-4 py-4 flex flex-col gap-4">
             <Link href="/features" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
             <a href="#how-it-works" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>How It Works</a>
+            <Link href="/explore" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
             <Link href="/blog" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
             <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-2" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
           </div>
