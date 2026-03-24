@@ -25,22 +25,26 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-orange-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 sm:gap-3" onClick={() => setMenuOpen(false)}>
+        {/* Logo — far left */}
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" onClick={() => setMenuOpen(false)}>
           <Image src="/logo.png" alt="TableMesh Logo" width={36} height={36} className="w-9 h-9 rounded-xl" />
           <span className="text-xl sm:text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             TableMesh
           </span>
         </Link>
 
-        {/* Desktop links */}
+        {/* Desktop nav — center links */}
         <div className="hidden md:flex items-center gap-6">
           <Link href="/features" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Features</Link>
           <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Explore</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
           <Link href="/partner" className="text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-1.5 rounded-full hover:bg-orange-50 transition-colors">For Restaurants</Link>
+        </div>
+
+        {/* Desktop right side — Sign In / avatar + Get the App */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           {user ? (
             <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[var(--primary)] transition-colors">
               {user.avatar_url ? (
@@ -55,12 +59,26 @@ export default function Navbar() {
           ) : (
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Sign In</Link>
           )}
-          <a href="https://apps.apple.com/us/app/tablemesh/id6760209899" target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold">Get the App</a>
+          <a
+            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold"
+          >
+            Get the App
+          </a>
         </div>
 
         {/* Mobile: Get the App + hamburger */}
         <div className="flex md:hidden items-center gap-2">
-          <a href="https://apps.apple.com/us/app/tablemesh/id6760209899" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold">Get the App</a>
+          <a
+            href="https://apps.apple.com/us/app/tablemesh/id6760209899"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-full text-sm font-semibold"
+          >
+            Get the App
+          </a>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
