@@ -1,11 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 import Navbar from '../components/Navbar'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [mode, setMode] = useState<'login' | 'forgot'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +18,7 @@ export default function LoginPage() {
     // If already logged in, redirect to account
     const supabase = createSupabaseBrowserClient()
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = '/account'
+      if (data.session) router.replace('/account')
     })
   }, [])
 
@@ -34,7 +35,7 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    window.location.href = '/account'
+    router.push('/account')
   }
 
   const handleForgot = async (e: React.FormEvent) => {
