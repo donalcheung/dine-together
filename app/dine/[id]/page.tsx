@@ -21,6 +21,7 @@ interface DiningRequest {
   payment_app: string | null
   visibility: string
   timezone: string | null
+  google_place_id: string | null
   host: {
     name: string
     avatar_url: string | null
@@ -28,6 +29,7 @@ interface DiningRequest {
   }
   joinCount: number
   guestCount: number
+  photoUrl?: string | null
 }
 
 type PageStatus = 'loading' | 'found' | 'not-found' | 'expired'
@@ -49,6 +51,7 @@ export default function DiningSharePage() {
   const [rsvpLoading, setRsvpLoading] = useState(false)
   const [rsvpSuccess, setRsvpSuccess] = useState(false)
   const [rsvpError, setRsvpError] = useState('')
+  const [restaurantPhoto, setRestaurantPhoto] = useState<string | null>(null)
 
   const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
   const appStoreLink = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
@@ -76,7 +79,7 @@ export default function DiningSharePage() {
           id, restaurant_name, restaurant_address, dining_time,
           seats_available, total_seats, description, status,
           cuisine_type, price_level, bill_split, payment_app,
-          visibility, timezone,
+          visibility, timezone, google_place_id,
           host:profiles!dining_requests_host_id_fkey(name, avatar_url, bio)
         `)
         .eq('id', requestId)
@@ -119,6 +122,14 @@ export default function DiningSharePage() {
 
       setRequest(diningRequest)
       setStatus('found')
+
+      // Fetch restaurant photo
+      if (diningRequest.google_place_id) {
+        fetch(`/api/places-photo?place_id=${encodeURIComponent(diningRequest.google_place_id)}`)
+          .then(r => r.json())
+          .then(data => { if (data.photoUrl) setRestaurantPhoto(data.photoUrl) })
+          .catch(() => {})
+      }
     }
 
     fetchRequest()
@@ -329,9 +340,24 @@ export default function DiningSharePage() {
               boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
               marginBottom: '16px',
             }}>
+              {/* Restaurant Photo Hero */}
+              {restaurantPhoto && (
+                <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
+                  <img
+                    src={restaurantPhoto}
+                    alt={request.restaurant_name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.5))',
+                  }} />
+                </div>
+              )}
+
               {/* Restaurant Header */}
               <div style={{
-                background: 'linear-gradient(135deg, #fff7ed, #fef3c7)',
+                background: restaurantPhoto ? '#fff' : 'linear-gradient(135deg, #fff7ed, #fef3c7)',
                 padding: '24px 20px 20px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
@@ -475,6 +501,53 @@ export default function DiningSharePage() {
                       TableMesh member
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Who's Going Teaser */}
+            <div style={{
+              backgroundColor: '#fff', borderRadius: '16px',
+              padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+              marginBottom: '16px', overflow: 'hidden', position: 'relative',
+            }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: '0 0 14px' }}>
+                👥 Who&apos;s going ({request.joinCount + request.guestCount}/{request.total_seats})
+              </h3>
+
+              {/* Blurred silhouette avatars */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', position: 'relative' }}>
+                {Array.from({ length: Math.min(request.joinCount + request.guestCount, 4) }).map((_, i) => (
+                  <div key={i} style={{
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    background: `hsl(${20 + i * 30}, 80%, 70%)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '22px', filter: 'blur(4px)',
+                    border: '2px solid #fff', flexShrink: 0,
+                  }}>👤</div>
+                ))}
+                {request.joinCount + request.guestCount === 0 && (
+                  <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0, alignSelf: 'center' }}>
+                    Be the first to join!
+                  </p>
+                )}
+              </div>
+
+              {/* Lock overlay */}
+              <div style={{
+                backgroundColor: '#faf7f2', borderRadius: '12px',
+                padding: '14px 16px', display: 'flex',
+                alignItems: 'center', gap: '12px',
+                border: '1px solid #fed7aa',
+              }}>
+                <span style={{ fontSize: '22px' }}>🔒</span>
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                    See who&apos;s going on the app
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>
+                    View profiles, shared interests, and chat with the group
+                  </p>
                 </div>
               </div>
             </div>
