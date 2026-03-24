@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     `)
     .eq('status', 'open')
     .eq('visibility', 'public')
+    .gt('dining_time', new Date().toISOString())
     .order('dining_time', { ascending: true })
 
   if (cuisine) query = query.ilike('cuisine_type', `%${cuisine}%`)
