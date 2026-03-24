@@ -386,7 +386,7 @@ function AppWall({ hiddenCount, onSignUp }: { hiddenCount: number; onSignUp: () 
             <span>⭐</span> Sign up offer
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-            {hiddenCount > 0 ? `${hiddenCount} more tables near you` : 'More tables near you'}
+            View More on the App
           </h3>
           <p className="text-sm text-gray-500 mb-5 leading-relaxed">
             Sign up free and get a <strong className="text-orange-600">7-day Plus trial</strong> — join tables, message hosts, and see who&apos;s going.
@@ -419,7 +419,7 @@ function AppWall({ hiddenCount, onSignUp }: { hiddenCount: number; onSignUp: () 
 
 // ── Main Page ───────────────────────────────────────────────────────────────
 
-const DEMO_LIMIT = 5
+const DEMO_LIMIT = 6
 
 export default function ExplorePage() {
   const [allItems, setAllItems] = useState<DiningRequest[]>([])
