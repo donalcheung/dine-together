@@ -29,6 +29,7 @@ export default function Home() {
             <Link href="/explore" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Explore</Link>
             <Link href="/blog" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Blog</Link>
             <Link href="/partner" className="text-sm font-medium text-[var(--primary)] border border-[var(--primary)] px-4 py-1.5 rounded-full hover:bg-orange-50 transition-colors">For Restaurants</Link>
+            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-[var(--primary)] transition-colors">Sign In</Link>
             <a href="#download" className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all hover:shadow-lg text-sm font-semibold">Get the App</a>
           </div>
 
@@ -60,7 +61,8 @@ export default function Home() {
             <a href="#how-it-works" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>How It Works</a>
             <Link href="/explore" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
             <Link href="/blog" className="text-base font-medium text-gray-700 py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
-            <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-2" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
+            <Link href="/partner" className="text-base font-medium text-[var(--primary)] py-2 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants →</Link>
+            <Link href="/login" className="text-base font-medium text-gray-700 py-2" onClick={() => setMenuOpen(false)}>Sign In</Link>
           </div>
         )}
       </nav>
