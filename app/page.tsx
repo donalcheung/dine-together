@@ -1,9 +1,9 @@
-'use client'
 import Image from 'next/image'
 import Link from 'next/link'
 import Navbar from './components/Navbar'
 import ScreenshotGallery from './ScreenshotGallery'
 import DownloadButtons from './DownloadButtons'
+
 export default function Home() {
 
   return (
