@@ -279,11 +279,23 @@ export default function PartnerLandingPage() {
       {/* ── Pricing Section ── */}
       <section id="pricing" className="py-20 px-6 bg-white scroll-mt-24">
         <div className="max-w-5xl mx-auto">
+
+          {/* Grand Opening Banner */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm">
+              <span className="text-base">🎊</span>
+              Grand Opening Pricing — Rates increase as we grow
+            </div>
+          </div>
+
           <h2 className="text-3xl md:text-4xl font-bold text-center text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
-            Simple, Transparent Pricing
+            Lock In Your Rate Today
           </h2>
-          <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            No commission fees. No hidden charges. Just a flat rate.
+          <p className="text-center text-lg text-gray-600 mb-3 max-w-2xl mx-auto">
+            Early partners keep this price for life — no commission fees, no hidden charges, just a flat rate.
+          </p>
+          <p className="text-center text-sm text-gray-400 mb-10 max-w-xl mx-auto">
+            Comparable restaurant marketing tools charge $149–$499/month. We&apos;re building with our early partners, and this rate reflects that partnership.
           </p>
 
           {/* Billing toggle note */}
@@ -304,7 +316,7 @@ export default function PartnerLandingPage() {
                 <span className="text-4xl font-bold text-[var(--neutral)]">$0</span>
                 <span className="text-gray-500">/month</span>
               </div>
-              <p className="text-sm text-gray-600 mb-6">Perfect for getting started</p>
+              <p className="text-sm text-gray-600 mb-6">Get listed and start reaching diners</p>
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -347,17 +359,26 @@ export default function PartnerLandingPage() {
 
             {/* Pro Plan */}
             <div className="bg-white border-2 border-[var(--primary)] rounded-2xl p-8 flex flex-col relative shadow-xl">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[var(--primary)] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                Most Popular
+              {/* Stacked badges */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[var(--primary)] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                Grand Opening Rate
               </div>
+
               <h3 className="text-xl font-bold text-[var(--neutral)] mb-2">Pro</h3>
-              <div className="mb-1">
+
+              {/* Price with future anchor */}
+              <div className="mb-1 flex items-end gap-2">
                 <span className="text-4xl font-bold text-[var(--primary)]">$49</span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-gray-500 mb-1">/month</span>
+                <span className="text-sm text-gray-400 line-through mb-1">$99+</span>
               </div>
+              <p className="text-xs text-amber-700 font-semibold bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mb-2">
+                🔒 Early partners lock in this rate — price increases as we grow
+              </p>
               <p className="text-sm text-green-600 font-semibold mb-1">or $470/year — save $118 (~$39/mo)</p>
-              <p className="text-xs text-blue-600 font-medium bg-blue-50 rounded-lg px-3 py-2 mb-4">🎉 1-month free trial — no charge until trial ends</p>
-              <p className="text-sm text-gray-600 mb-6">For restaurants ready to grow</p>
+              <p className="text-xs text-blue-600 font-medium bg-blue-50 rounded-lg px-3 py-2 mb-4">🎉 Start with a free 1-month trial — no charge until it ends</p>
+
+              <p className="text-sm text-gray-600 mb-6">For restaurants ready to fill seats and grow revenue</p>
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -394,10 +415,18 @@ export default function PartnerLandingPage() {
                 href="/partner/signup?plan=pro"
                 className="w-full py-3 bg-[var(--primary)] text-white rounded-xl hover:bg-[var(--primary-dark)] transition-all font-semibold text-center block"
               >
-                Start Free Trial
+                Start Free Trial — Lock In $49/mo
               </Link>
             </div>
           </div>
+
+          {/* Competitor context */}
+          <div className="mt-10 text-center">
+            <p className="text-sm text-gray-500 max-w-lg mx-auto">
+              OpenTable starts at <span className="font-semibold text-gray-700">$149/month</span>. Toast marketing tools start at <span className="font-semibold text-gray-700">$110/month</span>. TableMesh Pro is <span className="font-semibold text-[var(--primary)]">$49/month</span> — and early partners keep that rate as prices rise.
+            </p>
+          </div>
+
         </div>
       </section>
 
