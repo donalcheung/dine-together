@@ -41,8 +41,10 @@ function LoginForm() {
         .single()
 
       if (!restaurant) {
-        setError('No restaurant found for this account. Please sign up as a restaurant partner first.')
-        await supabase.auth.signOut()
+        // User is authenticated but has no restaurant yet.
+        // Redirect them to the restaurant registration step instead of blocking them.
+        // This allows existing app users to add their restaurant without a second account.
+        window.location.href = '/partner/signup?step=restaurant&existing=true'
         return
       }
 

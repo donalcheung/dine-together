@@ -282,18 +282,29 @@ export default function PartnerLandingPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
             Simple, Transparent Pricing
           </h2>
-          <p className="text-center text-lg text-gray-600 mb-16 max-w-2xl mx-auto">
-            No commission fees. No hidden charges. Just a flat monthly rate.
+          <p className="text-center text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            No commission fees. No hidden charges. Just a flat rate.
           </p>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {/* Basic Plan */}
+          {/* Billing toggle note */}
+          <div className="flex flex-col items-center gap-2 mb-12">
+            <div className="flex items-center gap-3 bg-gray-100 rounded-xl p-1">
+              <span className="px-4 py-2 rounded-lg bg-white shadow text-sm font-semibold text-[var(--neutral)]">Monthly — $49/mo</span>
+              <span className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-500">Yearly — $470/yr</span>
+            </div>
+            <p className="text-sm text-green-600 font-semibold">Save $118/year with annual billing — about $39/month</p>
+            <p className="text-xs text-gray-400">Switch billing period in your dashboard after signing up</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            {/* Free Plan */}
             <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
-              <h3 className="text-xl font-bold text-[var(--neutral)] mb-2">Basic</h3>
+              <h3 className="text-xl font-bold text-[var(--neutral)] mb-2">Free</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-[var(--neutral)]">Free</span>
+                <span className="text-4xl font-bold text-[var(--neutral)]">$0</span>
+                <span className="text-gray-500">/month</span>
               </div>
-              <p className="text-sm text-gray-600 mb-6">Perfect for trying out TableMesh</p>
+              <p className="text-sm text-gray-600 mb-6">Perfect for getting started</p>
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -311,26 +322,26 @@ export default function PartnerLandingPage() {
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Basic analytics
+                  Basic analytics (totals only)
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-400">
                   <svg className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
-                  Priority placement
+                  No auto-generated dining requests
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-400">
                   <svg className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
-                  Verified badge
+                  No per-deal analytics
                 </li>
               </ul>
               <Link
                 href="/partner/signup"
                 className="w-full py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all font-semibold text-center block"
               >
-                Get Started
+                Get Started Free
               </Link>
             </div>
 
@@ -340,47 +351,43 @@ export default function PartnerLandingPage() {
                 Most Popular
               </div>
               <h3 className="text-xl font-bold text-[var(--neutral)] mb-2">Pro</h3>
-              <div className="mb-4">
+              <div className="mb-1">
                 <span className="text-4xl font-bold text-[var(--primary)]">$49</span>
                 <span className="text-gray-500">/month</span>
               </div>
+              <p className="text-sm text-green-600 font-semibold mb-1">or $470/year — save $118 (~$39/mo)</p>
+              <p className="text-xs text-blue-600 font-medium bg-blue-50 rounded-lg px-3 py-2 mb-4">🎉 1-month free trial — no charge until trial ends</p>
               <p className="text-sm text-gray-600 mb-6">For restaurants ready to grow</p>
               <ul className="space-y-3 mb-8 flex-grow">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Unlimited active deals
+                  Up to 3 active deals
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Priority placement in app
+                  Auto-generated hostless dining requests
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Verified restaurant badge
+                  Full analytics + per-deal breakdown
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Advanced analytics dashboard
+                  Redemption history
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                   </svg>
-                  Auto-generated dining requests
-                </li>
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  Email support
+                  Cancel anytime
                 </li>
               </ul>
               <Link
@@ -388,53 +395,6 @@ export default function PartnerLandingPage() {
                 className="w-full py-3 bg-[var(--primary)] text-white rounded-xl hover:bg-[var(--primary-dark)] transition-all font-semibold text-center block"
               >
                 Start Free Trial
-              </Link>
-            </div>
-
-            {/* Enterprise Plan */}
-            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 flex flex-col">
-              <h3 className="text-xl font-bold text-[var(--neutral)] mb-2">Enterprise</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-[var(--neutral)]">Custom</span>
-              </div>
-              <p className="text-sm text-gray-600 mb-6">For restaurant groups and chains</p>
-              <ul className="space-y-3 mb-8 flex-grow">
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  Everything in Pro
-                </li>
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  Multi-location management
-                </li>
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  Custom branding
-                </li>
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  API access
-                </li>
-                <li className="flex items-start gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                  Dedicated account manager
-                </li>
-              </ul>
-              <Link
-                href="/contact"
-                className="w-full py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all font-semibold text-center block"
-              >
-                Contact Sales
               </Link>
             </div>
           </div>

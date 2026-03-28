@@ -2,11 +2,17 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
 
-export default function PartnerSignupPage() {
-  const [step, setStep] = useState<'account' | 'restaurant'>('account')
+function SignupForm() {
+  const searchParams = useSearchParams()
+  const isExistingUser = searchParams.get('existing') === 'true'
+  const initialStep = searchParams.get('step') === 'restaurant' ? 'restaurant' : 'account'
+
+  const [step, setStep] = useState<'account' | 'restaurant'>(initialStep)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -53,33 +59,43 @@ export default function PartnerSignupPage() {
     setError('')
 
     try {
-      // 1. Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            is_restaurant_owner: true,
+      let userId: string
+
+      if (isExistingUser) {
+        // User is already authenticated (came from login page) — skip account creation
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) throw new Error('Session expired. Please log in again.')
+        userId = user.id
+      } else {
+        // 1. Sign up the new user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              is_restaurant_owner: true,
+            },
           },
-        },
-      })
+        })
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Failed to create account')
+        if (authError) throw authError
+        if (!authData.user) throw new Error('Failed to create account')
+        userId = authData.user.id
 
-      // 2. Create profile if it doesn't exist
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          email: email,
-          name: fullName,
-        }, { onConflict: 'id' })
+        // 2. Create profile if it doesn't exist
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: email,
+            name: fullName,
+          }, { onConflict: 'id' })
 
-      if (profileError) {
-        console.error('Profile error:', profileError)
-        // Non-fatal - profile may be created by trigger
+        if (profileError) {
+          console.error('Profile error:', profileError)
+          // Non-fatal - profile may be created by trigger
+        }
       }
 
       // 3. Create the restaurant
@@ -87,7 +103,7 @@ export default function PartnerSignupPage() {
       const { error: restaurantError } = await supabase
         .from('restaurants')
         .insert({
-          owner_id: authData.user.id,
+          owner_id: userId,
           name: restaurantName,
           address: fullAddress,
           city: city,
@@ -108,7 +124,7 @@ export default function PartnerSignupPage() {
       const { data: restaurant } = await supabase
         .from('restaurants')
         .select('id')
-        .eq('owner_id', authData.user.id)
+        .eq('owner_id', userId)
         .single()
 
       if (restaurant) {
@@ -116,7 +132,7 @@ export default function PartnerSignupPage() {
           .from('restaurant_subscriptions')
           .insert({
             restaurant_id: restaurant.id,
-            owner_id: authData.user.id,
+            owner_id: userId,
             plan: 'free',
             status: 'active',
             price_cents: 0,
@@ -160,26 +176,35 @@ export default function PartnerSignupPage() {
 
       <div className="pt-28 pb-20 px-6">
         <div className="max-w-xl mx-auto">
-          {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className={`flex items-center gap-2 ${step === 'account' ? 'text-[var(--primary)]' : 'text-green-600'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'account' ? 'bg-[var(--primary)] text-white' : 'bg-green-100 text-green-600'}`}>
-                {step === 'restaurant' ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                  </svg>
-                ) : '1'}
+          {/* Progress indicator — hidden for existing users who skip account step */}
+          {!isExistingUser && (
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className={`flex items-center gap-2 ${step === 'account' ? 'text-[var(--primary)]' : 'text-green-600'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'account' ? 'bg-[var(--primary)] text-white' : 'bg-green-100 text-green-600'}`}>
+                  {step === 'restaurant' ? (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                  ) : '1'}
+                </div>
+                <span className="text-sm font-medium">Account</span>
               </div>
-              <span className="text-sm font-medium">Account</span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-200" />
-            <div className={`flex items-center gap-2 ${step === 'restaurant' ? 'text-[var(--primary)]' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'restaurant' ? 'bg-[var(--primary)] text-white' : 'bg-gray-100 text-gray-400'}`}>
-                2
+              <div className="w-12 h-0.5 bg-gray-200" />
+              <div className={`flex items-center gap-2 ${step === 'restaurant' ? 'text-[var(--primary)]' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'restaurant' ? 'bg-[var(--primary)] text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  2
+                </div>
+                <span className="text-sm font-medium">Restaurant</span>
               </div>
-              <span className="text-sm font-medium">Restaurant</span>
             </div>
-          </div>
+          )}
+
+          {/* Context banner for existing users */}
+          {isExistingUser && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+              You&apos;re signed in. Just add your restaurant details below to get started.
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
             {step === 'account' ? (
@@ -242,16 +267,22 @@ export default function PartnerSignupPage() {
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-4">
-                  <button onClick={() => { setStep('account'); setError('') }} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                    </svg>
-                  </button>
+                  {!isExistingUser && (
+                    <button onClick={() => { setStep('account'); setError('') }} className="text-gray-400 hover:text-gray-600">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                      </svg>
+                    </button>
+                  )}
                   <h1 className="text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
-                    Restaurant Details
+                    {isExistingUser ? 'Register Your Restaurant' : 'Restaurant Details'}
                   </h1>
                 </div>
-                <p className="text-gray-600 mb-6">Tell us about your restaurant.</p>
+                <p className="text-gray-600 mb-6">
+                  {isExistingUser
+                    ? 'Add your restaurant to start posting deals and reaching diners.'
+                    : 'Tell us about your restaurant.'}
+                </p>
 
                 <form onSubmit={handleRestaurantSubmit} className="space-y-4">
                   <div>
@@ -398,5 +429,17 @@ export default function PartnerSignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PartnerSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }
