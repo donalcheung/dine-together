@@ -29,20 +29,12 @@ export async function POST(request: NextRequest) {
     // Get restaurant and subscription info
     const { data: restaurant } = await supabase
       .from('restaurants')
-      .select('id, name, owner_id, is_verified, verification_status')
+      .select('id, name, owner_id')
       .eq('id', restaurantId)
       .single()
 
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
-    }
-
-    // Enforce verification gate — restaurant must be verified before subscribing
-    if (!restaurant.is_verified && restaurant.verification_status !== 'verified') {
-      return NextResponse.json(
-        { error: 'Your restaurant must be verified before upgrading. Please complete verification first.' },
-        { status: 403 }
-      )
     }
 
     // Get owner email

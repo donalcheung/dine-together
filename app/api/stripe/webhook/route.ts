@@ -75,16 +75,8 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString(),
             }, { onConflict: 'restaurant_id' })
 
-          // Mark restaurant as verified when they start a Pro trial or subscription
-          // Verification status is set by admin separately; is_verified tracks subscription-based verification
-          if (!isTrialing) {
-            // Only set is_verified on active (non-trial) subscriptions
-            // During trial, verification is still managed by admin review
-            await supabase
-              .from('restaurants')
-              .update({ is_verified: true })
-              .eq('id', restaurantId)
-          }
+          // Note: is_verified is managed exclusively by admin review.
+          // The Pro subscription does NOT grant or affect the verified status.
         }
         break
       }
@@ -132,13 +124,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('restaurant_id', sub.restaurant_id)
 
-          // Sync is_verified: set true when subscription becomes active (trial converted)
-          if (status === 'active') {
-            await supabase
-              .from('restaurants')
-              .update({ is_verified: true })
-              .eq('id', sub.restaurant_id)
-          }
+          // Note: is_verified is managed exclusively by admin review, not by subscription status.
         }
         break
       }
@@ -169,13 +155,8 @@ export async function POST(request: NextRequest) {
             })
             .eq('restaurant_id', sub.restaurant_id)
 
-          // Remove verified badge on cancellation
-          await supabase
-            .from('restaurants')
-            .update({ is_verified: false })
-            .eq('id', sub.restaurant_id)
-
           // Deactivate extra deals beyond free limit (1 deal max)
+          // Note: is_verified is NOT changed on cancellation — admin controls verification.
           const { data: activeDeals } = await supabase
             .from('restaurant_deals')
             .select('id, created_at')
@@ -236,12 +217,7 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString(),
             })
             .eq('restaurant_id', sub.restaurant_id)
-
-          // Ensure verified badge is set when payment succeeds
-          await supabase
-            .from('restaurants')
-            .update({ is_verified: true })
-            .eq('id', sub.restaurant_id)
+          // Note: is_verified is managed exclusively by admin review.
         }
         break
       }

@@ -204,17 +204,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           <div className={`rounded-xl p-3 mb-6 ${isPreviewMode ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
             <p className="font-semibold text-sm text-[var(--neutral)] truncate">{restaurant?.name}</p>
             <div className="flex items-center gap-2 mt-1">
-              {restaurant?.is_verified ? (
-                <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                  </svg>
-                  Verified
-                </span>
-              ) : (
-                <span className="text-xs text-gray-400">Not verified</span>
-              )}
-              <span className="text-xs text-gray-300">|</span>
               <span className="text-xs text-gray-500 capitalize">{subscription?.plan || 'free'} plan</span>
             </div>
             {isPreviewMode && (
