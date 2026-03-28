@@ -38,14 +38,19 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session
         const restaurantId = session.metadata?.restaurant_id
         const ownerId = session.metadata?.owner_id
+        const billingPeriod = session.metadata?.billing_period || 'monthly'
 
         if (restaurantId && session.subscription) {
-          // Get subscription details
-          const subResponse = await stripe.subscriptions.retrieve(
-            session.subscription as string
-          )
+          // Get full subscription details from Stripe
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const subscription = subResponse as any
+          const stripeSub = await stripe.subscriptions.retrieve(session.subscription as string) as any
+
+          const isTrialing = stripeSub.status === 'trialing'
+          const trialEnd = stripeSub.trial_end
+            ? new Date(stripeSub.trial_end * 1000).toISOString()
+            : null
+
+          const priceCents = billingPeriod === 'yearly' ? 47000 : 4900
 
           await supabase
             .from('restaurant_subscriptions')
@@ -53,60 +58,95 @@ export async function POST(request: NextRequest) {
               restaurant_id: restaurantId,
               owner_id: ownerId,
               plan: 'pro',
-              status: 'active',
-              price_cents: 4900,
+              status: stripeSub.status, // 'trialing' or 'active'
+              price_cents: priceCents,
               currency: 'usd',
-              billing_period: 'monthly',
+              billing_period: billingPeriod,
               stripe_customer_id: session.customer as string,
-              stripe_subscription_id: subscription.id,
-              current_period_start: subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : new Date().toISOString(),
-              current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : new Date().toISOString(),
+              stripe_subscription_id: stripeSub.id,
+              current_period_start: stripeSub.current_period_start
+                ? new Date(stripeSub.current_period_start * 1000).toISOString()
+                : new Date().toISOString(),
+              current_period_end: stripeSub.current_period_end
+                ? new Date(stripeSub.current_period_end * 1000).toISOString()
+                : new Date().toISOString(),
+              trial_end_date: trialEnd,
               cancel_at_period_end: false,
+              updated_at: new Date().toISOString(),
             }, { onConflict: 'restaurant_id' })
 
-          // Mark restaurant as verified (Pro perk)
-          await supabase
-            .from('restaurants')
-            .update({ is_verified: true })
-            .eq('id', restaurantId)
+          // Mark restaurant as verified when they start a Pro trial or subscription
+          // Verification status is set by admin separately; is_verified tracks subscription-based verification
+          if (!isTrialing) {
+            // Only set is_verified on active (non-trial) subscriptions
+            // During trial, verification is still managed by admin review
+            await supabase
+              .from('restaurants')
+              .update({ is_verified: true })
+              .eq('id', restaurantId)
+          }
         }
         break
       }
 
       case 'customer.subscription.updated': {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subscription = event.data.object as any
-        const customerId = (subscription.customer as string) || ''
+        const stripeSub = event.data.object as any
+        const customerId = (stripeSub.customer as string) || ''
 
         // Find restaurant by stripe customer ID
         const { data: sub } = await supabase
           .from('restaurant_subscriptions')
-          .select('restaurant_id')
+          .select('restaurant_id, billing_period')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (sub) {
-          const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+          const status = stripeSub.status // 'trialing', 'active', 'past_due', 'canceled', etc.
+          const isPro = status === 'active' || status === 'trialing'
+          const trialEnd = stripeSub.trial_end
+            ? new Date(stripeSub.trial_end * 1000).toISOString()
+            : null
+
+          // Determine billing period from subscription interval
+          const interval = stripeSub.items?.data?.[0]?.price?.recurring?.interval
+          const billingPeriod = interval === 'year' ? 'yearly' : (sub.billing_period || 'monthly')
+          const priceCents = billingPeriod === 'yearly' ? 47000 : 4900
 
           await supabase
             .from('restaurant_subscriptions')
             .update({
-              status: isActive ? 'active' : subscription.status,
-              plan: isActive ? 'pro' : 'free',
-              current_period_start: subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : new Date().toISOString(),
-              current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : new Date().toISOString(),
-              cancel_at_period_end: subscription.cancel_at_period_end || false,
+              status,
+              plan: isPro ? 'pro' : 'free',
+              price_cents: isPro ? priceCents : 0,
+              billing_period: billingPeriod,
+              current_period_start: stripeSub.current_period_start
+                ? new Date(stripeSub.current_period_start * 1000).toISOString()
+                : new Date().toISOString(),
+              current_period_end: stripeSub.current_period_end
+                ? new Date(stripeSub.current_period_end * 1000).toISOString()
+                : new Date().toISOString(),
+              trial_end_date: trialEnd,
+              cancel_at_period_end: stripeSub.cancel_at_period_end || false,
               updated_at: new Date().toISOString(),
             })
             .eq('restaurant_id', sub.restaurant_id)
+
+          // Sync is_verified: set true when subscription becomes active (trial converted)
+          if (status === 'active') {
+            await supabase
+              .from('restaurants')
+              .update({ is_verified: true })
+              .eq('id', sub.restaurant_id)
+          }
         }
         break
       }
 
       case 'customer.subscription.deleted': {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subscription = event.data.object as any
-        const customerId = (subscription.customer as string) || ''
+        const stripeSub = event.data.object as any
+        const customerId = (stripeSub.customer as string) || ''
 
         const { data: sub } = await supabase
           .from('restaurant_subscriptions')
@@ -123,16 +163,34 @@ export async function POST(request: NextRequest) {
               status: 'canceled',
               price_cents: 0,
               stripe_subscription_id: null,
+              trial_end_date: null,
               cancel_at_period_end: false,
               updated_at: new Date().toISOString(),
             })
             .eq('restaurant_id', sub.restaurant_id)
 
-          // Remove verified badge
+          // Remove verified badge on cancellation
           await supabase
             .from('restaurants')
             .update({ is_verified: false })
             .eq('id', sub.restaurant_id)
+
+          // Deactivate extra deals beyond free limit (1 deal max)
+          const { data: activeDeals } = await supabase
+            .from('restaurant_deals')
+            .select('id, created_at')
+            .eq('restaurant_id', sub.restaurant_id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+
+          if (activeDeals && activeDeals.length > 1) {
+            // Keep the oldest deal active, deactivate the rest
+            const toDeactivate = activeDeals.slice(1).map((d) => d.id)
+            await supabase
+              .from('restaurant_deals')
+              .update({ is_active: false })
+              .in('id', toDeactivate)
+          }
         }
         break
       }
@@ -155,6 +213,35 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString(),
             })
             .eq('restaurant_id', sub.restaurant_id)
+        }
+        break
+      }
+
+      case 'invoice.payment_succeeded': {
+        // Trial converted to paid subscription
+        const invoice = event.data.object as Stripe.Invoice
+        const customerId = invoice.customer as string
+
+        const { data: sub } = await supabase
+          .from('restaurant_subscriptions')
+          .select('restaurant_id')
+          .eq('stripe_customer_id', customerId)
+          .single()
+
+        if (sub) {
+          await supabase
+            .from('restaurant_subscriptions')
+            .update({
+              status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('restaurant_id', sub.restaurant_id)
+
+          // Ensure verified badge is set when payment succeeds
+          await supabase
+            .from('restaurants')
+            .update({ is_verified: true })
+            .eq('id', sub.restaurant_id)
         }
         break
       }

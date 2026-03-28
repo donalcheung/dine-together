@@ -21,10 +21,14 @@ interface Deal {
   redemptions_count: number
   max_per_user: number
   is_active: boolean
+  auto_generate_hostless: boolean
   terms: string | null
   free_item_name: string | null
   created_at: string
 }
+
+// Tier limits
+const DEAL_LIMITS: Record<string, number> = { free: 1, pro: 3 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -53,6 +57,7 @@ export default function DealsPage() {
   const [maxRedemptions, setMaxRedemptions] = useState('')
   const [terms, setTerms] = useState('')
   const [freeItemName, setFreeItemName] = useState('')
+  const [autoGenerateHostless, setAutoGenerateHostless] = useState(false)
 
   const supabase = createSupabaseBrowserClient()
 
@@ -106,15 +111,18 @@ export default function DealsPage() {
     setMaxRedemptions('')
     setTerms('')
     setFreeItemName('')
+    setAutoGenerateHostless(false)
     setEditingDeal(null)
     setError('')
   }
 
+  const dealLimit = DEAL_LIMITS[subscription] ?? 1
+  const isPro = subscription === 'pro'
+
   const openCreateForm = () => {
-    // Check deal limit for free plan
     const activeDeals = deals.filter(d => d.is_active).length
-    if (subscription === 'free' && activeDeals >= 1 && !editingDeal) {
-      setError('Free plan allows only 1 active deal. Upgrade to Pro for unlimited deals.')
+    if (activeDeals >= dealLimit && !editingDeal) {
+      setError(`Your ${subscription} plan allows up to ${dealLimit} active deal${dealLimit > 1 ? 's' : ''}. ${!isPro ? 'Upgrade to Pro for up to 3 deals.' : ''}`)
       return
     }
     resetForm()
@@ -137,6 +145,7 @@ export default function DealsPage() {
     setMaxRedemptions(deal.max_redemptions ? String(deal.max_redemptions) : '')
     setTerms(deal.terms || '')
     setFreeItemName(deal.free_item_name || '')
+    setAutoGenerateHostless(deal.auto_generate_hostless || false)
     setError('')
     setShowForm(true)
   }
@@ -168,6 +177,8 @@ export default function DealsPage() {
       max_redemptions: maxRedemptions ? parseInt(maxRedemptions) : null,
       terms: terms || null,
       free_item_name: discountType === 'free_item' ? freeItemName : null,
+      // auto_generate_hostless only available on Pro plan
+      auto_generate_hostless: isPro ? autoGenerateHostless : false,
       is_active: true,
     }
 
@@ -198,10 +209,10 @@ export default function DealsPage() {
 
   const toggleDeal = async (deal: Deal) => {
     // Check limit when activating
-    if (!deal.is_active && subscription === 'free') {
+    if (!deal.is_active) {
       const activeDeals = deals.filter(d => d.is_active).length
-      if (activeDeals >= 1) {
-        setError('Free plan allows only 1 active deal. Upgrade to Pro for unlimited deals.')
+      if (activeDeals >= dealLimit) {
+        setError(`Your ${subscription} plan allows up to ${dealLimit} active deal${dealLimit > 1 ? 's' : ''}. ${!isPro ? 'Upgrade to Pro for up to 3 deals.' : ''}`)
         return
       }
     }
@@ -249,9 +260,7 @@ export default function DealsPage() {
           <h1 className="text-2xl font-bold text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>Deals</h1>
           <p className="text-gray-500 text-sm mt-1">
             Create and manage deals for group diners.
-            {subscription === 'free' && (
-              <span className="text-[var(--primary)]"> Free plan: 1 active deal limit.</span>
-            )}
+            <span className="text-[var(--primary)]"> {isPro ? 'Pro plan: up to 3 active deals.' : 'Free plan: 1 active deal. Upgrade for up to 3 deals + auto-generation.'}</span>
           </p>
         </div>
         <button
@@ -464,6 +473,35 @@ export default function DealsPage() {
                 />
               </div>
 
+              {/* Auto-generate hostless dining requests — Pro only */}
+              <div className={`rounded-xl border p-4 ${
+                isPro ? 'border-orange-200 bg-orange-50' : 'border-gray-100 bg-gray-50 opacity-60'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                      Auto-generate hostless dining requests
+                      {!isPro && (
+                        <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-0.5 rounded-full">Pro only</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">When enabled, TableMesh automatically creates a hostless dining request for this deal&apos;s valid time slots, making it easier for solo diners to find your restaurant.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!isPro}
+                    onClick={() => isPro && setAutoGenerateHostless(prev => !prev)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-4 ${
+                      autoGenerateHostless && isPro ? 'bg-[var(--primary)]' : 'bg-gray-300'
+                    } ${!isPro ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      autoGenerateHostless && isPro ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                   {error}
@@ -547,6 +585,14 @@ export default function DealsPage() {
                     <span className="px-2 py-1 bg-gray-50 text-gray-500 rounded-lg text-xs font-medium">
                       {deal.redemptions_count} redemptions
                     </span>
+                    {deal.auto_generate_hostless && (
+                      <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-medium flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                        </svg>
+                        Auto-generating
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">

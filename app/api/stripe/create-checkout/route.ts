@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe()
     const supabase = getSupabase()
 
-    const { restaurantId } = await request.json()
+    const { restaurantId, billingPeriod = 'monthly' } = await request.json()
 
     if (!restaurantId) {
       return NextResponse.json({ error: 'Restaurant ID is required' }, { status: 400 })
@@ -29,12 +29,20 @@ export async function POST(request: NextRequest) {
     // Get restaurant and subscription info
     const { data: restaurant } = await supabase
       .from('restaurants')
-      .select('id, name, owner_id')
+      .select('id, name, owner_id, is_verified, verification_status')
       .eq('id', restaurantId)
       .single()
 
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
+
+    // Enforce verification gate — restaurant must be verified before subscribing
+    if (!restaurant.is_verified && restaurant.verification_status !== 'verified') {
+      return NextResponse.json(
+        { error: 'Your restaurant must be verified before upgrading. Please complete verification first.' },
+        { status: 403 }
+      )
     }
 
     // Get owner email
@@ -47,9 +55,14 @@ export async function POST(request: NextRequest) {
     // Check if already has a stripe customer
     const { data: existingSub } = await supabase
       .from('restaurant_subscriptions')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, plan, status')
       .eq('restaurant_id', restaurantId)
       .single()
+
+    // Don't allow re-subscribing if already on pro/trialing
+    if (existingSub?.plan === 'pro' && (existingSub?.status === 'active' || existingSub?.status === 'trialing')) {
+      return NextResponse.json({ error: 'Already subscribed to Pro plan' }, { status: 400 })
+    }
 
     let customerId = existingSub?.stripe_customer_id
 
@@ -78,30 +91,45 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'
 
+    // Monthly: $49/month | Yearly: $470/year (~2 months free)
+    const isYearly = billingPeriod === 'yearly'
+    const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
+      currency: 'usd',
+      product_data: {
+        name: 'TableMesh Restaurant Pro',
+        description: isYearly
+          ? 'Up to 3 deals, hostless dining auto-generation, full analytics, verified badge — billed yearly (save ~$118)'
+          : 'Up to 3 deals, hostless dining auto-generation, full analytics, verified badge',
+      },
+      unit_amount: isYearly ? 47000 : 4900,
+      recurring: {
+        interval: isYearly ? 'year' : 'month',
+      },
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'TableMesh Restaurant Pro',
-              description: 'Unlimited deals, priority placement, verified badge, and advanced analytics',
-            },
-            unit_amount: 4900, // $49.00
-            recurring: {
-              interval: 'month',
-            },
-          },
+          price_data: priceData,
           quantity: 1,
         },
       ],
+      subscription_data: {
+        trial_period_days: 30,
+        metadata: {
+          restaurant_id: restaurantId,
+          owner_id: restaurant.owner_id,
+          billing_period: billingPeriod,
+        },
+      },
       success_url: `${baseUrl}/partner/dashboard/billing?success=true`,
       cancel_url: `${baseUrl}/partner/dashboard/billing?canceled=true`,
       metadata: {
         restaurant_id: restaurantId,
         owner_id: restaurant.owner_id,
+        billing_period: billingPeriod,
       },
     })
 

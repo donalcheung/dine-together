@@ -181,12 +181,25 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Deal Performance Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
-        <div className="p-5 border-b border-gray-100">
+      {/* Deal Performance Table — Pro only */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 relative overflow-hidden">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-[var(--neutral)]">Deal Performance</h2>
+          {!isPro && (
+            <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded-full">Pro only</span>
+          )}
         </div>
-        {dealAnalytics.length === 0 ? (
+        {!isPro ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-gray-700 mb-1">Per-deal breakdown is a Pro feature</p>
+            <p className="text-xs text-gray-500">See views, redemptions, and conversion rate for each individual deal.</p>
+          </div>
+        ) : dealAnalytics.length === 0 ? (
           <div className="p-8 text-center text-gray-500 text-sm">
             No deals to analyze yet. Create a deal to start tracking performance.
           </div>
@@ -224,12 +237,25 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      {/* Recent Redemptions */}
+      {/* Recent Redemptions — Pro only */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
-        <div className="p-5 border-b border-gray-100">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-bold text-[var(--neutral)]">Recent Redemptions</h2>
+          {!isPro && (
+            <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded-full">Pro only</span>
+          )}
         </div>
-        {recentRedemptions.length === 0 ? (
+        {!isPro ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-gray-700 mb-1">Redemption history is a Pro feature</p>
+            <p className="text-xs text-gray-500">See who redeemed your deals, party sizes, and redemption status.</p>
+          </div>
+        ) : recentRedemptions.length === 0 ? (
           <div className="p-8 text-center text-gray-500 text-sm">
             No redemptions yet. When diners use your deals, they&apos;ll appear here.
           </div>
@@ -262,15 +288,15 @@ export default function AnalyticsPage() {
       {/* Pro Upsell */}
       {!isPro && (
         <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] rounded-xl p-6 text-white">
-          <h3 className="font-bold text-lg mb-2">Unlock Advanced Analytics</h3>
+          <h3 className="font-bold text-lg mb-2">Unlock Full Analytics with Pro</h3>
           <p className="text-white/90 text-sm mb-4">
-            Upgrade to Pro for detailed charts, trend analysis, diner demographics, and exportable reports.
+            Upgrade to Pro to see per-deal performance breakdowns, redemption history, conversion rates, and more. Start with a free 1-month trial.
           </p>
           <a
             href="/partner/dashboard/billing"
             className="inline-block px-4 py-2 bg-white text-[var(--primary)] rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
           >
-            Upgrade to Pro - $49/month
+            Start Free Trial — then $49/month
           </a>
         </div>
       )}
