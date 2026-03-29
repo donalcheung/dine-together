@@ -3,6 +3,18 @@ import { createClient } from '@supabase/supabase-js'
 
 const PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || ''
 
+// In-memory photo URL cache to avoid repeated Google Places API calls
+const photoCache = new Map<string, { url: string | null; timestamp: number }>()
+const PHOTO_CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+
+// Known test/demo restaurant names to filter out of public feed
+const TEST_RESTAURANT_NAMES = [
+  'demo restaurant',
+  'the golden fork',
+  'the reviewer bistro',
+  'test restaurant',
+]
+
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,19 +24,43 @@ function getSupabase() {
 
 async function fetchPhotoUrl(placeId: string): Promise<string | null> {
   if (!PLACES_API_KEY || !placeId) return null
+
+  // Check cache first
+  const cached = photoCache.get(placeId)
+  if (cached && Date.now() - cached.timestamp < PHOTO_CACHE_TTL) {
+    return cached.url
+  }
+
   try {
     const res = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=photos&key=${PLACES_API_KEY}`,
       { next: { revalidate: 86400 } }
     )
-    if (!res.ok) return null
+    if (!res.ok) {
+      photoCache.set(placeId, { url: null, timestamp: Date.now() })
+      return null
+    }
     const data = await res.json()
     const photoRef = data?.result?.photos?.[0]?.photo_reference
-    if (!photoRef) return null
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=600&photo_reference=${photoRef}&key=${PLACES_API_KEY}`
+    if (!photoRef) {
+      photoCache.set(placeId, { url: null, timestamp: Date.now() })
+      return null
+    }
+    const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=600&photo_reference=${photoRef}&key=${PLACES_API_KEY}`
+    photoCache.set(placeId, { url, timestamp: Date.now() })
+    return url
   } catch {
+    photoCache.set(placeId, { url: null, timestamp: Date.now() })
     return null
   }
+}
+
+function isTestData(item: Record<string, unknown>): boolean {
+  const name = (item.restaurant_name as string || '').toLowerCase()
+  const address = (item.restaurant_address as string || '').toLowerCase()
+  if (TEST_RESTAURANT_NAMES.some(test => name.includes(test))) return true
+  if (address.includes('123 demo') || address.includes('1 apple park way')) return true
+  return false
 }
 
 export async function GET(request: NextRequest) {
@@ -51,9 +87,12 @@ export async function GET(request: NextRequest) {
 
   if (error || !data) return NextResponse.json({ items: [], totalCount: 0 })
 
-  // Fetch photos in parallel
+  // Filter out test/demo data from public feed
+  const realData = data.filter((item: Record<string, unknown>) => !isTestData(item))
+
+  // Fetch photos in parallel with caching
   const itemsWithPhotos = await Promise.all(
-    data.map(async (item: Record<string, unknown>) => {
+    realData.map(async (item: Record<string, unknown>) => {
       const placeId = item.google_place_id as string | null
       const photoUrl = placeId ? await fetchPhotoUrl(placeId) : null
       return { ...item, photoUrl }
@@ -62,6 +101,6 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(
     { items: itemsWithPhotos, totalCount: itemsWithPhotos.length },
-    { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } }
+    { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' } }
   )
 }

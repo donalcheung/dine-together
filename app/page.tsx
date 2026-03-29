@@ -32,11 +32,11 @@ export default function Home() {
                   <span className="text-white/90 text-xs sm:text-sm font-medium">For friends, coworkers, foodies &amp; adventurers</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-                  The Easiest Way to<br />
-                  <span className="text-[var(--accent)]">Organize Group Meals</span>
+                  Bring Everyone<br />
+                  <span className="text-[var(--accent)]">to the Table</span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 leading-relaxed max-w-xl">
-                  Coordinate dinners with your friend group. Signal your lunch break to coworkers. Rally people for Korean BBQ.
+                  Organize your crew, discover new dining companions, and unlock exclusive group deals — all in one app.
                 </p>
                 <DownloadButtons variant="hero" />
               </div>
@@ -45,75 +45,118 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Everything in One App — Feature Grid ── */}
+      {/* ── Three Use Cases — "Choose Your Path" ── */}
       <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 sm:mb-12 md:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--neutral)] mb-3 sm:mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
-              Everything in One App
+              One App, Three Ways to Dine
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              From organizing your regular crew to discovering new dining companions — TableMesh handles it all.
+              Whether you are rallying your own crew, meeting new people, or hunting for a deal — TableMesh has you covered.
             </p>
           </div>
 
-          {/* 2-col on mobile, 2-col on tablet, 3-col on desktop */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          {/* Three main use-case cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-10 sm:mb-16">
 
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 sm:p-8 border border-orange-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-[var(--primary)] rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">🍽️</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Host a Table</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                Pick a restaurant, set the time and group size. Share a link with your crew or make it public for anyone nearby to join.
+            {/* Use Case 1: Organize */}
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 sm:p-8 border border-orange-100 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-[var(--primary)] rounded-2xl flex items-center justify-center mb-5 text-2xl group-hover:scale-110 transition-transform">🗓</div>
+              <div className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3">For Organizers</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[var(--neutral)] mb-3" style={{ fontFamily: 'Fraunces, serif' }}>Coordinate Without the Chaos</h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                Ditch the messy group chats. Pick a spot, set the time, send a link. Track RSVPs in real-time. Your friends do not even need the app to respond.
               </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-100 px-2 sm:px-3 py-1 rounded-full">Friends &amp; Coworkers</span>
+              <ul className="space-y-2 mb-6">
+                {[
+                  'One-tap RSVP — no app download required for guests',
+                  'In-app group chat replaces WhatsApp chaos',
+                  'See who is confirmed, pending, or ghosting',
+                  'Free groups for coworker lunches and recurring dinners',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <svg className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/features" className="inline-flex items-center gap-2 text-[var(--primary)] font-semibold text-sm hover:gap-3 transition-all">
+                Host a Table <span>&rarr;</span>
+              </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 sm:p-8 border border-blue-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">👥</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Groups — Free</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                Build your dining community without paying organizer fees. Create public or private groups, post recurring meals.
+            {/* Use Case 2: Discover */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 sm:p-8 border border-purple-100 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center mb-5 text-2xl group-hover:scale-110 transition-transform">👋</div>
+              <div className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3">For Explorers</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[var(--neutral)] mb-3" style={{ fontFamily: 'Fraunces, serif' }}>Find Your Food Buddies</h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                Traveling solo? Craving K-BBQ but have no one to go with? Browse public tables near you, match with locals who share your taste, and share a meal.
               </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-100 px-2 sm:px-3 py-1 rounded-full">Community</span>
+              <ul className="space-y-2 mb-6">
+                {[
+                  'Browse live dining requests on a map near you',
+                  'Match by cuisine preferences, style, and vibe',
+                  'Always in public restaurants — never private locations',
+                  'Verified profiles and diner levels build trust',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <svg className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/explore" className="inline-flex items-center gap-2 text-purple-600 font-semibold text-sm hover:gap-3 transition-all">
+                Explore Local Tables <span>&rarr;</span>
+              </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 sm:p-8 border border-purple-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-purple-600 rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">👋</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Food Buddies</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                Browse locals who share your exact taste in food, dining style, and vibe. Wave to connect — always in a public restaurant.
+            {/* Use Case 3: Save */}
+            <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-6 sm:p-8 border border-green-100 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center mb-5 text-2xl group-hover:scale-110 transition-transform">💰</div>
+              <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3">For Deal Seekers</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[var(--neutral)] mb-3" style={{ fontFamily: 'Fraunces, serif' }}>Eat Together, Save Together</h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                Partner restaurants post group-only discounts. The bigger your party, the better the deal. No coupon codes — deals appear automatically on dining requests.
               </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 bg-purple-100 px-2 sm:px-3 py-1 rounded-full">Foodies</span>
+              <ul className="space-y-2 mb-6">
+                {[
+                  '"Bring 4+, get 20% off" — party-size deals',
+                  'Slow-night specials fill your Tuesday dinners',
+                  'Deals auto-attach to restaurants — zero effort',
+                  'Assemble your crew or join strangers to unlock savings',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/explore" className="inline-flex items-center gap-2 text-green-600 font-semibold text-sm hover:gap-3 transition-all">
+                View Active Deals <span>&rarr;</span>
+              </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-5 sm:p-8 border border-green-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-green-600 rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">📍</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Discover Nearby</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                See live dining requests on a map. New in town? Browse public tables nearby and join one that looks good.
-              </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-100 px-2 sm:px-3 py-1 rounded-full">Travelers</span>
-            </div>
+          </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-5 sm:p-8 border border-amber-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-amber-500 rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">🎁</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Group Deals</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                Partner restaurants post deals designed for groups — the bigger your party, the better the offer. No coupon codes.
-              </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-100 px-2 sm:px-3 py-1 rounded-full">All Diners</span>
+          {/* Additional feature cards row */}
+          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 sm:p-6 border border-blue-100 text-center">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">👥</div>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--neutral)] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Free Groups</h3>
+              <p className="text-gray-500 text-xs leading-relaxed hidden sm:block">Build dining communities without paying organizer fees.</p>
             </div>
-
-            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-5 sm:p-8 border border-red-100 hover:shadow-lg transition-all">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 bg-red-500 rounded-2xl flex items-center justify-center mb-3 sm:mb-5 text-xl sm:text-2xl">⭐</div>
-              <h3 className="text-base sm:text-xl font-bold text-[var(--neutral)] mb-1 sm:mb-2" style={{ fontFamily: 'Fraunces, serif' }}>Level Up</h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 hidden sm:block">
-                Earn XP and likes from fellow diners. Unlock titles from Newcomer to Legend. Your foodie reputation travels with you.
-              </p>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-100 px-2 sm:px-3 py-1 rounded-full">All Users</span>
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-5 sm:p-6 border border-amber-100 text-center">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">📍</div>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--neutral)] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Live Map</h3>
+              <p className="text-gray-500 text-xs leading-relaxed hidden sm:block">See dining requests pinned near you in real-time.</p>
             </div>
-
+            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-5 sm:p-6 border border-red-100 text-center">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">⭐</div>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--neutral)] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Level Up</h3>
+              <p className="text-gray-500 text-xs leading-relaxed hidden sm:block">Earn XP and likes. Build your foodie reputation.</p>
+            </div>
           </div>
 
           <div className="text-center mt-8 sm:mt-12">
@@ -158,8 +201,8 @@ export default function Home() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-3 sm:mb-4 text-[var(--neutral)]" style={{ fontFamily: 'Fraunces, serif' }}>
             See It in Action
           </h2>
-          <p className="text-center text-base sm:text-lg text-gray-600 mb-8 sm:mb-16 max-w-2xl mx-auto">
-            A glimpse of the TableMesh experience.
+          <p className="text-center text-base sm:text-lg text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-auto">
+            A peek inside the app — from hosting a table to discovering meals near you.
           </p>
           <ScreenshotGallery />
         </div>
@@ -190,6 +233,7 @@ export default function Home() {
                   { feature: 'Works with existing friends', tm: true, others: false },
                   { feature: 'Discover new people', tm: true, others: true },
                   { feature: 'Groups — free', tm: true, others: false },
+                  { feature: 'Exclusive group deals', tm: true, others: false },
                   { feature: 'Organizer fees', tm: false, others: true, label: { tm: 'Free', others: 'Up to $100+/yr' } },
                   { feature: 'Built-in RSVP', tm: true, others: false },
                   { feature: 'Free to use', tm: true, others: false },
@@ -240,6 +284,7 @@ export default function Home() {
                   { feature: 'Works with existing friends', tm: true, tl: false, mu: false, gc: true },
                   { feature: 'Discover new people', tm: true, tl: true, mu: true, gc: false },
                   { feature: 'Create groups for free', tm: true, tl: false, mu: false, gc: true },
+                  { feature: 'Exclusive group deals', tm: true, tl: false, mu: false, gc: false },
                   { feature: 'Organizer fees', tm: false, tl: false, mu: true, gc: false, label: { tm: 'Free', tl: 'Free', mu: '$100+/yr', gc: 'N/A' } },
                   { feature: 'Built-in RSVP tracking', tm: true, tl: true, mu: true, gc: false },
                   { feature: 'Dining-specific features', tm: true, tl: true, mu: false, gc: false },
@@ -294,13 +339,13 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
 
-            <blockquote className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col">
-              <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 self-start">Work Team</div>
+            <blockquote className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 self-start">Organizer</div>
               <div className="flex items-center gap-1 mb-3 sm:mb-4">
                 {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
               </div>
               <p className="text-gray-700 leading-relaxed flex-1 mb-4 sm:mb-6 text-sm sm:text-base">
-                &ldquo;We created a group on TableMesh and now 8–12 of us go out for lunch together most days. Even people from different departments who never talked before. HR loves it.&rdquo;
+                &ldquo;I used to spend 30 minutes coordinating a simple team lunch in Slack. Now I post a table on TableMesh and people just RSVP. We go out 3 times a week now. HR actually thanked me.&rdquo;
               </p>
               <footer>
                 <p className="font-bold text-[var(--neutral)] text-sm sm:text-base">Priya S.</p>
@@ -308,8 +353,8 @@ export default function Home() {
               </footer>
             </blockquote>
 
-            <blockquote className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col">
-              <div className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 self-start">Foodie</div>
+            <blockquote className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col">
+              <div className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider mb-3 sm:mb-4 self-start">Explorer</div>
               <div className="flex items-center gap-1 mb-3 sm:mb-4">
                 {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
               </div>
@@ -427,7 +472,7 @@ export default function Home() {
                 <span className="text-xl font-bold">TableMesh</span>
               </div>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
-                The group dining coordination app for friends, teams, and food lovers.
+                The group dining app for friends, teams, and food lovers.
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://www.instagram.com/tablemesh.official" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-white/50 hover:text-white transition-colors">
@@ -445,9 +490,10 @@ export default function Home() {
               <h4 className="font-bold mb-4 text-xs uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><a href="#download" className="hover:text-white transition-colors">Download</a></li>
+                <li><Link href="/explore" className="hover:text-white transition-colors">Explore Tables</Link></li>
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-                <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety</Link></li>
+                <li><Link href="/safety" className="hover:text-white transition-colors">Safety</Link></li>
               </ul>
             </div>
             <div>

@@ -481,7 +481,7 @@ export default function PartnerLandingPage() {
               <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><Link href="/" className="hover:text-white transition-colors">Download App</Link></li>
-                <li><Link href="/safety-guidelines" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
+                <li><Link href="/safety" className="hover:text-white transition-colors">Safety Guidelines</Link></li>
               </ul>
             </div>
 

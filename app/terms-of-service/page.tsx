@@ -44,7 +44,7 @@ export default function TermsOfService() {
             <p className="leading-relaxed">You retain ownership of the content you create on the Service. By posting content, you grant Sheep Labs LLC a non-exclusive, worldwide, royalty-free license to use, display, and distribute your content in connection with operating and improving the Service.</p>
 
             <h2 className="text-2xl font-bold text-[var(--neutral)] mt-10 mb-4" style={{ fontFamily: 'Fraunces, serif' }}>6. Safety</h2>
-            <p className="leading-relaxed">TableMesh facilitates connections between users but does not guarantee the behavior of any user. You are responsible for your own safety when meeting other users. We strongly recommend meeting in public places and following our <Link href="/safety-guidelines" className="text-[var(--primary)] font-semibold hover:underline">Safety Guidelines</Link>.</p>
+            <p className="leading-relaxed">TableMesh facilitates connections between users but does not guarantee the behavior of any user. You are responsible for your own safety when meeting other users. We strongly recommend meeting in public places and following our <Link href="/safety" className="text-[var(--primary)] font-semibold hover:underline">Safety Guidelines</Link>.</p>
 
             <h2 className="text-2xl font-bold text-[var(--neutral)] mt-10 mb-4" style={{ fontFamily: 'Fraunces, serif' }}>7. Termination</h2>
             <p className="leading-relaxed">We reserve the right to suspend or terminate your account at any time for violations of these Terms or for any other reason at our sole discretion. You may delete your account at any time through the app settings.</p>

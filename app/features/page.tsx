@@ -249,7 +249,7 @@ export default function FeaturesPage() {
           <p className="text-gray-600 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
             Every meal on TableMesh happens in a public restaurant. Profiles are verified, diner levels are earned, and every user agrees to our zero-tolerance policy for objectionable content and abusive behavior. You can block or report any user instantly.
           </p>
-          <Link href="/safety-guidelines" className="inline-flex items-center gap-2 px-8 py-3 border-2 border-gray-400 text-gray-600 rounded-full font-semibold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all">
+          <Link href="/safety" className="inline-flex items-center gap-2 px-8 py-3 border-2 border-gray-400 text-gray-600 rounded-full font-semibold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all">
             Read Our Safety Guidelines
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />

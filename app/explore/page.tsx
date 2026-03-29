@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '../components/Navbar'
 
 interface DiningRequest {
@@ -69,6 +70,29 @@ function cityFromAddress(address: string): string {
   return parts[0]
 }
 
+// ── Skeleton Card ───────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col animate-pulse">
+      <div className="h-44 bg-gradient-to-br from-gray-200 to-gray-100" />
+      <div className="px-4 py-3 flex-1 flex flex-col gap-2">
+        <div className="h-4 bg-gray-200 rounded-full w-3/4" />
+        <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+        <div className="h-3 bg-gray-100 rounded-full w-full mt-1" />
+        <div className="h-3 bg-gray-100 rounded-full w-2/3" />
+        <div className="flex items-center gap-2 pt-2 border-t border-gray-50 mt-auto">
+          <div className="w-7 h-7 rounded-full bg-gray-200" />
+          <div className="h-3 bg-gray-200 rounded-full w-24" />
+        </div>
+      </div>
+      <div className="px-4 pb-4">
+        <div className="w-full py-3 bg-gray-200 rounded-xl" />
+      </div>
+    </div>
+  )
+}
+
 // ── App Download Modal ──────────────────────────────────────────────────────
 
 function AppDownloadModal({ onClose }: { onClose: () => void }) {
@@ -91,7 +115,7 @@ function AppDownloadModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 transition-colors text-xl leading-none"
           >
-            ×
+            &times;
           </button>
 
           {/* Icon */}
@@ -162,9 +186,10 @@ interface CardProps {
 }
 
 function RestaurantCard({ request: r, onCardClick }: CardProps) {
-  const [imgLoaded, setImgLoaded] = useState(false)
-  const photoSrc = r.photoUrl || getFallbackImage(r.cuisine_type)
+  const [imgError, setImgError] = useState(false)
+  const photoSrc = (!imgError && r.photoUrl) ? r.photoUrl : getFallbackImage(r.cuisine_type)
   const isFull = r.seats_available <= 0
+  const isGooglePhoto = photoSrc.includes('googleapis.com')
 
   return (
     <div
@@ -173,13 +198,27 @@ function RestaurantCard({ request: r, onCardClick }: CardProps) {
     >
       {/* Photo header */}
       <div className="relative h-44 bg-gradient-to-br from-orange-100 to-amber-100 overflow-hidden">
-        <img
-          src={photoSrc}
-          alt={r.restaurant_name}
-          className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setImgLoaded(true)}
-          loading="lazy"
-        />
+        {isGooglePhoto ? (
+          /* Google Places photos can't go through Next.js Image optimization easily */
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photoSrc}
+            alt={r.restaurant_name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Image
+            src={photoSrc}
+            alt={r.restaurant_name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            quality={75}
+            onError={() => setImgError(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
         {/* Badges */}
@@ -223,6 +262,7 @@ function RestaurantCard({ request: r, onCardClick }: CardProps) {
         {r.host && (
           <div className="flex items-center gap-2 pt-2 border-t border-gray-50 mt-auto">
             {r.host.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={r.host.avatar_url} alt={r.host.name} className="w-7 h-7 rounded-full object-cover ring-2 ring-orange-100" />
             ) : (
               <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-xs font-bold text-orange-500">
@@ -300,6 +340,10 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
+      {/* Preconnect to image CDNs */}
+      <link rel="preconnect" href="https://images.unsplash.com" />
+      <link rel="preconnect" href="https://maps.googleapis.com" />
+
       {/* App download modal */}
       {showModal && (
         <AppDownloadModal onClose={() => setShowModal(false)} />
@@ -343,9 +387,14 @@ export default function ExplorePage() {
       {/* Results */}
       <main className="max-w-6xl mx-auto px-4 pb-20">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
-            <p className="text-sm text-gray-400">Finding tables near you…</p>
+          /* Skeleton loading state */
+          <div>
+            <div className="h-3 bg-gray-200 rounded-full w-48 mb-4 mt-1 animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
           </div>
         ) : visibleItems.length === 0 ? (
           <div className="text-center py-20">
@@ -362,7 +411,7 @@ export default function ExplorePage() {
         ) : (
           <>
             <p className="text-xs text-gray-400 mb-4 mt-1">
-              Showing {start + 1}–{Math.min(start + CARDS_PER_PAGE, filtered.length)} of {filtered.length} upcoming tables
+              Showing {start + 1}&ndash;{Math.min(start + CARDS_PER_PAGE, filtered.length)} of {filtered.length} upcoming tables
               {cityFilter ? ` in ${cityFilter}` : ''}
             </p>
 
@@ -385,7 +434,7 @@ export default function ExplorePage() {
                   disabled={page === 1}
                   className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 bg-white hover:border-orange-400 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
                 >
-                  ← Previous
+                  &larr; Previous
                 </button>
                 <span className="text-sm text-gray-400 font-medium">
                   Page {page} of {totalPages}
@@ -395,7 +444,7 @@ export default function ExplorePage() {
                   disabled={page === totalPages}
                   className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 bg-white hover:border-orange-400 hover:text-orange-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
                 >
-                  Next →
+                  Next &rarr;
                 </button>
               </div>
             )}
@@ -407,9 +456,9 @@ export default function ExplorePage() {
       <footer className="border-t border-gray-100 py-8 text-center bg-white">
         <p className="text-sm text-gray-400">
           <Link href="/" className="text-orange-500 hover:underline">TableMesh</Link>
-          {' '}— Coordinate meals with friends, coworkers &amp; food lovers
+          {' '}&mdash; Coordinate meals with friends, coworkers &amp; food lovers
         </p>
-        <p className="text-xs text-gray-300 mt-1">© 2025 Sheep Labs LLC. All rights reserved.</p>
+        <p className="text-xs text-gray-300 mt-1">&copy; 2025 Sheep Labs LLC. All rights reserved.</p>
       </footer>
     </div>
   )
