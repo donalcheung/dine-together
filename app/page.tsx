@@ -20,6 +20,8 @@ export default function Home() {
             fill
             className="object-cover"
             priority
+            sizes="100vw"
+            quality={75}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/20" />
           <div className="absolute inset-0 flex items-center">

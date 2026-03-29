@@ -128,6 +128,8 @@ export default function ScreenshotGallery() {
                     width={280}
                     height={607}
                     className="w-full h-auto"
+                    sizes="(max-width: 640px) 200px, 280px"
+                    quality={80}
                   />
                 </div>
               </div>
