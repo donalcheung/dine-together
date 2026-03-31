@@ -70,16 +70,21 @@ export async function POST(request: NextRequest) {
       `🤖 Android: ${PLAY_STORE_URL}\n\n` +
       `Bring everyone to the table!`
 
-    await twilio.messages.create({
-      body: smsBody,
-      from: fromNumber,
-      to: e164,
-    })
-
-    return NextResponse.json({ success: true, smsSent: true })
+    try {
+      await twilio.messages.create({
+        body: smsBody,
+        from: fromNumber,
+        to: e164,
+      })
+      return NextResponse.json({ success: true, smsSent: true })
+    } catch (smsErr: any) {
+      // SMS failed (e.g. number not yet verified/approved) — still unlock the buttons
+      console.warn('[send-download-link] Twilio SMS error (non-fatal):', smsErr?.message)
+      return NextResponse.json({ success: true, smsSent: false })
+    }
   } catch (err: any) {
     console.error('[send-download-link] Error:', err)
-    // Surface a friendlier message for Twilio errors (e.g. invalid number)
+    // Only surface errors for truly invalid phone numbers
     const msg =
       err?.code === 21211 || err?.code === 21614
         ? 'That phone number doesn\'t look right. Please double-check and try again.'
