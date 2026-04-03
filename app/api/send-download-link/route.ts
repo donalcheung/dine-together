@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const APP_STORE_URL = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
+const SMART_LINK = 'https://tablemesh.app/download'
 
 // Normalise a phone number to E.164 format (+1XXXXXXXXXX for US/CA)
 function normalisePhone(raw: string): string | null {
@@ -16,25 +15,32 @@ function normalisePhone(raw: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  let phone = ''
+  let source = ''
+
   try {
     const body = await request.json()
-    const { phone, source } = body as { phone: string; source?: string }
+    phone = body.phone
+    source = body.source || ''
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
+  }
 
-    if (!phone || typeof phone !== 'string') {
-      return NextResponse.json({ error: 'Phone number is required.' }, { status: 400 })
-    }
+  if (!phone || typeof phone !== 'string') {
+    return NextResponse.json({ error: 'Phone number is required.' }, { status: 400 })
+  }
 
-    const e164 = normalisePhone(phone)
-    if (!e164) {
-      return NextResponse.json({ error: 'Please enter a valid phone number.' }, { status: 400 })
-    }
+  const e164 = normalisePhone(phone)
+  if (!e164) {
+    return NextResponse.json({ error: 'Please enter a valid phone number.' }, { status: 400 })
+  }
 
-    // ── 1. Store in Supabase ──────────────────────────────────────────────────
+  // ── 1. Store in Supabase (non-fatal) ───────────────────────────────────────
+  try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Upsert so duplicate numbers don't cause an error — just update the timestamp
     const { error: dbError } = await supabase
       .from('phone_leads')
       .upsert(
@@ -48,47 +54,41 @@ export async function POST(request: NextRequest) {
 
     if (dbError) {
       console.error('[send-download-link] Supabase upsert error:', dbError)
-      // Non-fatal — still try to send the SMS
     }
+  } catch (dbErr) {
+    console.error('[send-download-link] Supabase error (non-fatal):', dbErr)
+  }
 
-    // ── 2. Send SMS via Twilio ────────────────────────────────────────────────
+  // ── 2. Send SMS via Twilio (non-fatal) ─────────────────────────────────────
+  let smsSent = false
+  try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
     const fromNumber = process.env.TWILIO_PHONE_NUMBER
 
-    if (!accountSid || !authToken || !fromNumber) {
-      // Twilio not configured — still return success so the UI unlocks
-      console.warn('[send-download-link] Twilio env vars not set — skipping SMS')
-      return NextResponse.json({ success: true, smsSent: false })
-    }
+    if (accountSid && authToken && fromNumber) {
+      const twilio = require('twilio')(accountSid, authToken)
 
-    const twilio = require('twilio')(accountSid, authToken)
+      const smsBody =
+        `🍽️ Your TableMesh download link:\n` +
+        `📱 Download here: ${SMART_LINK}\n\n` +
+        `Bring everyone to the table!`
 
-    const smsBody =
-      `🍽️ Your TableMesh download link:\n` +
-      `📱 iOS: ${APP_STORE_URL}\n` +
-      `🤖 Android: ${PLAY_STORE_URL}\n\n` +
-      `Bring everyone to the table!`
-
-    try {
       await twilio.messages.create({
         body: smsBody,
         from: fromNumber,
         to: e164,
       })
-      return NextResponse.json({ success: true, smsSent: true })
-    } catch (smsErr: any) {
-      // SMS failed (e.g. number not yet verified/approved) — still unlock the buttons
-      console.warn('[send-download-link] Twilio SMS error (non-fatal):', smsErr?.message)
-      return NextResponse.json({ success: true, smsSent: false })
+      smsSent = true
+    } else {
+      console.warn('[send-download-link] Twilio env vars not set — skipping SMS')
     }
-  } catch (err: any) {
-    console.error('[send-download-link] Error:', err)
-    // Only surface errors for truly invalid phone numbers
-    const msg =
-      err?.code === 21211 || err?.code === 21614
-        ? 'That phone number doesn\'t look right. Please double-check and try again.'
-        : 'Something went wrong. Please try again.'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (smsErr: any) {
+    // SMS failed (e.g. toll-free number pending verification) — still return success
+    console.warn('[send-download-link] Twilio SMS error (non-fatal):', smsErr?.message)
   }
+
+  // Always return success for valid phone numbers — the phone is captured in DB
+  // and the user gets the download buttons unlocked regardless of SMS delivery
+  return NextResponse.json({ success: true, smsSent })
 }

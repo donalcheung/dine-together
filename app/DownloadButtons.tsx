@@ -67,6 +67,16 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
       }
       setStatus('success')
       setUnlocked(true)
+
+      // Push event to Google Tag Manager dataLayer
+      if (typeof window !== 'undefined') {
+        ;(window as any).dataLayer = (window as any).dataLayer || []
+        ;(window as any).dataLayer.push({
+          event: 'phone_submit',
+          phone_source: isHero ? 'hero' : 'cta',
+          sms_sent: data.smsSent ?? false,
+        })
+      }
     } catch {
       setStatus('error')
       setErrorMsg('Network error. Please check your connection and try again.')
