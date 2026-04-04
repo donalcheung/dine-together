@@ -15,6 +15,7 @@ type VerificationDoc = {
 
 type Restaurant = {
   id: string
+  name: string
   verification_status: string
 }
 
@@ -44,7 +45,7 @@ export default function VerificationPage() {
 
     const { data: rest } = await supabase
       .from('restaurants')
-      .select('id, verification_status')
+      .select('id, name, verification_status')
       .eq('owner_id', user.id)
       .single()
 
@@ -129,6 +130,18 @@ export default function VerificationPage() {
           .eq('id', restaurant.id)
         setRestaurant({ ...restaurant, verification_status: 'pending' })
       }
+
+      // Notify admin via email (non-blocking)
+      fetch('/api/notify-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantName: restaurant.name || 'Unknown',
+          documentType: selectedType,
+          fileName: file.name,
+          notes: notes || undefined,
+        }),
+      }).catch(() => {}) // Non-fatal — don't block the UI
 
       setSuccessMessage('Document uploaded successfully! Our team will review it shortly.')
       setNotes('')
