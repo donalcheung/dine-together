@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 const APP_STORE_URL = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
-const LANDING_URL = 'https://tablemesh.app'
+const LANDING_URL = 'https://tablemesh.com'
 
 type Platform = 'ios' | 'android' | 'unknown'
 

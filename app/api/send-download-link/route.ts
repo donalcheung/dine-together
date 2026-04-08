@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const SMART_LINK = 'https://tablemesh.app/download'
+const SMART_LINK = 'https://tablemesh.com/download'
 
 // Normalise a phone number to E.164 format (+1XXXXXXXXXX for US/CA)
 function normalisePhone(raw: string): string | null {
