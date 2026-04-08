@@ -149,6 +149,11 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
             </button>
           </div>
 
+          {/* SMS consent */}
+          <p className="mt-2 text-xs text-white/50">
+            By submitting, you consent to receive a one-time SMS with a download link.
+          </p>
+
           {/* Inline feedback */}
           {errorMsg && (
             <p className="mt-2 text-xs text-red-300 flex items-center gap-1">
