@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
 
   // ── 2. Send SMS via Twilio (non-fatal) ─────────────────────────────────────
   let smsSent = false
+  let smsError: string | null = null
   try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
@@ -82,14 +83,15 @@ export async function POST(request: NextRequest) {
       })
       smsSent = true
     } else {
+      smsError = 'Twilio env vars not configured'
       console.warn('[send-download-link] Twilio env vars not set — skipping SMS')
     }
   } catch (smsErr: any) {
-    // SMS failed (e.g. toll-free number pending verification) — still return success
-    console.warn('[send-download-link] Twilio SMS error (non-fatal):', smsErr?.message)
+    smsError = smsErr?.message ?? 'Unknown Twilio error'
+    console.warn('[send-download-link] Twilio SMS error (non-fatal):', smsError)
   }
 
   // Always return success for valid phone numbers — the phone is captured in DB
   // and the user gets the download buttons unlocked regardless of SMS delivery
-  return NextResponse.json({ success: true, smsSent })
+  return NextResponse.json({ success: true, smsSent, smsError })
 }
