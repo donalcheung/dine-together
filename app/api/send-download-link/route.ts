@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import twilio from 'twilio'
 
 const SMART_LINK = 'https://tablemesh.app/download'
 
@@ -67,14 +68,14 @@ export async function POST(request: NextRequest) {
     const fromNumber = process.env.TWILIO_PHONE_NUMBER
 
     if (accountSid && authToken && fromNumber) {
-      const twilio = require('twilio')(accountSid, authToken)
+      const client = twilio(accountSid, authToken)
 
       const smsBody =
         `🍽️ Your TableMesh download link:\n` +
         `📱 Download here: ${SMART_LINK}\n\n` +
         `Bring everyone to the table!`
 
-      await twilio.messages.create({
+      await client.messages.create({
         body: smsBody,
         from: fromNumber,
         to: e164,
