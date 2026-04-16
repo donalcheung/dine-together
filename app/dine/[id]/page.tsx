@@ -233,6 +233,7 @@ export default function DiningSharePage() {
         <div style={{
           background: 'linear-gradient(135deg, #ea580c, #f97316)',
           padding: '12px 20px',
+          marginTop: '64px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -264,7 +265,7 @@ export default function DiningSharePage() {
         </div>
       )}
 
-      <main style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <main style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', paddingTop: platform !== 'desktop' ? '20px' : '84px' }}>
         {/* Loading */}
         {status === 'loading' && (
           <div style={{ textAlign: 'center', padding: '80px 20px' }}>
