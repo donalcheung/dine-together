@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/guest-rsvp/send-reminders",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

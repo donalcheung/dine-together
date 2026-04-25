@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
 import Navbar from '../../components/Navbar'
 
@@ -30,10 +29,33 @@ interface DiningRequest {
   }
   joinCount: number
   guestCount: number
-  photoUrl?: string | null
+}
+
+interface PlaceDetails {
+  photoUrl: string | null
+  photoUrls: string[]
+  rating: number | null
+  userRatingsTotal: number | null
+  website: string | null
+  phone: string | null
+  reviews: Array<{
+    author_name: string
+    rating: number
+    text: string
+    relative_time_description: string
+    profile_photo_url: string | null
+  }>
 }
 
 type PageStatus = 'loading' | 'found' | 'not-found' | 'expired'
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <span style={{ color: '#f59e0b', fontSize: '14px' }}>
+      {'★'.repeat(Math.round(rating))}{'☆'.repeat(5 - Math.round(rating))}
+    </span>
+  )
+}
 
 export default function DiningSharePage() {
   const params = useParams()
@@ -42,6 +64,8 @@ export default function DiningSharePage() {
   const [status, setStatus] = useState<PageStatus>('loading')
   const [request, setRequest] = useState<DiningRequest | null>(null)
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('desktop')
+  const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null)
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
 
   // Guest RSVP form
   const [showRsvp, setShowRsvp] = useState(false)
@@ -52,7 +76,6 @@ export default function DiningSharePage() {
   const [rsvpLoading, setRsvpLoading] = useState(false)
   const [rsvpSuccess, setRsvpSuccess] = useState(false)
   const [rsvpError, setRsvpError] = useState('')
-  const [restaurantPhoto, setRestaurantPhoto] = useState<string | null>(null)
 
   const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
   const appStoreLink = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
@@ -66,14 +89,10 @@ export default function DiningSharePage() {
 
   useEffect(() => {
     const fetchRequest = async () => {
-      if (!requestId) {
-        setStatus('not-found')
-        return
-      }
+      if (!requestId) { setStatus('not-found'); return }
 
       const supabase = createSupabaseBrowserClient()
 
-      // Fetch dining request with host info
       const { data: dr, error } = await supabase
         .from('dining_requests')
         .select(`
@@ -86,23 +105,19 @@ export default function DiningSharePage() {
         .eq('id', requestId)
         .single()
 
-      if (error || !dr) {
-        setStatus('not-found')
-        return
-      }
+      if (error || !dr) { setStatus('not-found'); return }
 
-      // Get join count
       const { count: joinCount } = await supabase
         .from('dining_joins')
         .select('id', { count: 'exact', head: true })
         .eq('request_id', requestId)
         .in('status', ['pending', 'accepted'])
 
-      // Get guest RSVP count
       const { count: guestCount } = await supabase
         .from('guest_rsvps')
         .select('id', { count: 'exact', head: true })
         .eq('request_id', requestId)
+        .eq('status', 'approved')
 
       const hostData = Array.isArray(dr.host) ? dr.host[0] : dr.host
 
@@ -113,9 +128,8 @@ export default function DiningSharePage() {
         guestCount: guestCount || 0,
       }
 
-      // Check if event is in the past
       const eventTime = new Date(dr.dining_time)
-      if (eventTime < new Date() && dr.status !== 'open') {
+      if (eventTime < new Date() && dr.status !== 'open' && dr.status !== 'active') {
         setStatus('expired')
         setRequest(diningRequest)
         return
@@ -124,11 +138,11 @@ export default function DiningSharePage() {
       setRequest(diningRequest)
       setStatus('found')
 
-      // Fetch restaurant photo
+      // Fetch place details
       if (diningRequest.google_place_id) {
         fetch(`/api/places-photo?place_id=${encodeURIComponent(diningRequest.google_place_id)}`)
           .then(r => r.json())
-          .then(data => { if (data.photoUrl) setRestaurantPhoto(data.photoUrl) })
+          .then(data => setPlaceDetails(data))
           .catch(() => {})
       }
     }
@@ -139,25 +153,18 @@ export default function DiningSharePage() {
   const formatDateTime = (isoString: string, tz?: string | null) => {
     const date = new Date(isoString)
     const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZoneName: 'short',
+      weekday: 'long', month: 'long', day: 'numeric',
+      year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
     }
     if (tz) options.timeZone = tz
     return date.toLocaleDateString('en-US', options)
   }
 
   const getTimeUntil = (isoString: string) => {
-    const now = new Date()
-    const event = new Date(isoString)
-    const diff = event.getTime() - now.getTime()
+    const diff = new Date(isoString).getTime() - Date.now()
     if (diff < 0) return 'Already started'
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const days = Math.floor(diff / 86400000)
+    const hours = Math.floor((diff % 86400000) / 3600000)
     if (days > 0) return `in ${days} day${days > 1 ? 's' : ''}`
     if (hours > 0) return `in ${hours} hour${hours > 1 ? 's' : ''}`
     return 'Starting soon'
@@ -165,14 +172,8 @@ export default function DiningSharePage() {
 
   const handleRsvp = async () => {
     setRsvpError('')
-    if (!guestName.trim()) {
-      setRsvpError('Please enter your name')
-      return
-    }
-    if (!guestContact.trim()) {
-      setRsvpError(`Please enter your ${contactType === 'phone' ? 'phone number' : 'email'}`)
-      return
-    }
+    if (!guestName.trim()) { setRsvpError('Please enter your name'); return }
+    if (!guestContact.trim()) { setRsvpError(`Please enter your ${contactType === 'phone' ? 'phone number' : 'email'}`); return }
 
     setRsvpLoading(true)
     try {
@@ -187,13 +188,9 @@ export default function DiningSharePage() {
           message: guestMessage || undefined,
         }),
       })
-
       const data = await res.json()
-      if (!res.ok) {
-        setRsvpError(data.error || 'Failed to RSVP')
-      } else {
-        setRsvpSuccess(true)
-      }
+      if (!res.ok) setRsvpError(data.error || 'Failed to RSVP')
+      else setRsvpSuccess(true)
     } catch {
       setRsvpError('Network error. Please try again.')
     }
@@ -201,210 +198,169 @@ export default function DiningSharePage() {
   }
 
   const handleOpenApp = () => {
-    // Go directly to the appropriate store.
-    // We avoid the tablemesh:// custom URL scheme because Safari shows a
-    // 'cannot open page' error if the app is not installed, which is jarring
-    // for new users. Universal Links (HTTPS) would be the clean solution but
-    // require Associated Domains setup in the native app. For now, sending
-    // users straight to the store is the best experience.
-    if (platform === 'android') {
-      window.location.href = playStoreLink
-    } else {
-      // iOS and desktop both go to the App Store
-      window.location.href = appStoreLink
-    }
+    window.location.href = platform === 'android' ? playStoreLink : appStoreLink
   }
 
-  const seatsText = request
-    ? `${request.total_seats - request.seats_available + request.guestCount}/${request.total_seats} joined`
-    : ''
+  // Host counts as 1, plus app joins and approved guest RSVPs
+  const attendeeCount = request ? 1 + request.joinCount + request.guestCount : 0
   const isFull = request ? request.seats_available <= 0 : false
 
+  const s = {
+    page: { minHeight: '100vh', backgroundColor: '#faf7f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' } as React.CSSProperties,
+    main: { maxWidth: '480px', margin: '0 auto', padding: '12px', paddingTop: platform !== 'desktop' ? '12px' : '80px' } as React.CSSProperties,
+    card: { backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: '12px' } as React.CSSProperties,
+    cardPad: { padding: '16px' } as React.CSSProperties,
+    sectionTitle: { fontSize: '15px', fontWeight: 700, color: '#1f2937', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '6px' } as React.CSSProperties,
+    row: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px', marginBottom: '10px' } as React.CSSProperties,
+    rowIcon: { fontSize: '22px', flexShrink: 0 } as React.CSSProperties,
+    rowTitle: { fontSize: '14px', fontWeight: 600, color: '#1f2937', margin: 0 } as React.CSSProperties,
+    rowSub: { fontSize: '12px', color: '#6b7280', margin: '2px 0 0' } as React.CSSProperties,
+    btn: { width: '100%', padding: '15px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', marginBottom: '8px' } as React.CSSProperties,
+    btnOutline: { width: '100%', padding: '15px', backgroundColor: '#fff', color: '#f97316', border: '2px solid #f97316', borderRadius: '12px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
+    input: { width: '100%', padding: '12px 14px', fontSize: '16px', border: '1.5px solid #e5e7eb', borderRadius: '10px', backgroundColor: '#fafafa', boxSizing: 'border-box' as const, outline: 'none', WebkitAppearance: 'none' as const },
+    label: { display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' } as React.CSSProperties,
+  }
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#faf7f2',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    }}>
+    <div style={s.page}>
       <Navbar />
 
       {/* Mobile App Banner */}
       {platform !== 'desktop' && (
         <div style={{
           background: 'linear-gradient(135deg, #ea580c, #f97316)',
-          padding: '12px 20px',
-          marginTop: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
+          padding: '10px 16px', marginTop: '64px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
         }}>
           <div>
-            <p style={{ color: '#fff', fontSize: '14px', fontWeight: 600, margin: 0 }}>
-              Get the full TableMesh experience
-            </p>
-            <p style={{ color: '#fed7aa', fontSize: '12px', margin: '2px 0 0' }}>
-              Message hosts, join tables, and discover dining events
-            </p>
+            <p style={{ color: '#fff', fontSize: '13px', fontWeight: 700, margin: 0 }}>Get the full TableMesh experience</p>
+            <p style={{ color: '#fed7aa', fontSize: '11px', margin: '1px 0 0' }}>Message hosts, join tables, discover dining events</p>
           </div>
-          <a
-            href={platform === 'ios' ? appStoreLink : playStoreLink}
-            style={{
-              backgroundColor: '#fff',
-              color: '#ea580c',
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 700,
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Get App
-          </a>
+          <a href={platform === 'ios' ? appStoreLink : playStoreLink} style={{
+            backgroundColor: '#fff', color: '#ea580c', padding: '8px 14px',
+            borderRadius: '8px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap',
+          }}>Get App</a>
         </div>
       )}
 
-      <main style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', paddingTop: platform !== 'desktop' ? '20px' : '84px' }}>
+      <main style={s.main}>
         {/* Loading */}
         {status === 'loading' && (
           <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <div style={{
-              width: '40px', height: '40px',
-              border: '3px solid #fed7aa', borderTopColor: '#f97316',
-              borderRadius: '50%', animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px',
-            }} />
-            <p style={{ color: '#6b7280' }}>Loading dining details...</p>
+            <div style={{ width: '36px', height: '36px', border: '3px solid #fed7aa', borderTopColor: '#f97316', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+            <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading dining details...</p>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         )}
 
         {/* Not Found */}
         {status === 'not-found' && (
-          <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🍽️</div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
-              Dining Request Not Found
-            </h1>
-            <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-              This dining request may have been removed or the link is invalid.
-            </p>
-            <button onClick={handleOpenApp} style={{
-              backgroundColor: '#f97316', color: '#fff', border: 'none',
-              borderRadius: '12px', padding: '14px 32px', fontSize: '16px',
-              fontWeight: 600, cursor: 'pointer',
-            }}>
-              Explore TableMesh
-            </button>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '56px', marginBottom: '12px' }}>🍽️</div>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>Dining Request Not Found</h1>
+            <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>This dining request may have been removed or the link is invalid.</p>
+            <button onClick={handleOpenApp} style={s.btn}>Explore TableMesh</button>
           </div>
         )}
 
-        {/* Found - Main Content */}
+        {/* Main Content */}
         {(status === 'found' || status === 'expired') && request && (
           <>
-            {/* Hero Card */}
-            <div style={{
-              backgroundColor: '#fff',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              marginBottom: '16px',
-            }}>
-              {/* Restaurant Photo Hero */}
-              {restaurantPhoto && (
-                <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
+            {/* Hero Photo Carousel */}
+            {placeDetails && placeDetails.photoUrls.length > 0 && (
+              <div style={{ ...s.card, marginBottom: '12px' }}>
+                <div style={{ position: 'relative', height: '200px', overflow: 'hidden', borderRadius: '16px' }}>
                   <img
-                    src={restaurantPhoto}
+                    src={placeDetails.photoUrls[activePhotoIndex]}
                     alt={request.restaurant_name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.5))',
-                  }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4))' }} />
+                  {placeDetails.photoUrls.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px' }}>
+                      {placeDetails.photoUrls.map((_, i) => (
+                        <button key={i} onClick={() => setActivePhotoIndex(i)} style={{
+                          width: i === activePhotoIndex ? '20px' : '6px', height: '6px',
+                          borderRadius: '3px', backgroundColor: i === activePhotoIndex ? '#fff' : 'rgba(255,255,255,0.6)',
+                          border: 'none', cursor: 'pointer', padding: 0, transition: 'width 0.2s',
+                        }} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Restaurant Header */}
-              <div style={{
-                background: restaurantPhoto ? '#fff' : 'linear-gradient(135deg, #fff7ed, #fef3c7)',
-                padding: '24px 20px 20px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+            {/* Restaurant Header Card */}
+            <div style={s.card}>
+              <div style={{ background: placeDetails?.photoUrl ? '#fff' : 'linear-gradient(135deg, #fff7ed, #fef3c7)', padding: '20px 16px 4px' }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   {request.cuisine_type && (
-                    <span style={{
-                      backgroundColor: '#f97316', color: '#fff',
-                      fontSize: '11px', fontWeight: 700,
-                      padding: '3px 8px', borderRadius: '6px',
-                    }}>
+                    <span style={{ backgroundColor: '#f97316', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>
                       {request.cuisine_type}
                     </span>
                   )}
-                  {request.price_level && (
-                    <span style={{
-                      backgroundColor: '#15803d', color: '#fff',
-                      fontSize: '11px', fontWeight: 700,
-                      padding: '3px 8px', borderRadius: '6px',
-                    }}>
-                      {request.price_level}
-                    </span>
-                  )}
                   {status === 'expired' && (
-                    <span style={{
-                      backgroundColor: '#dc2626', color: '#fff',
-                      fontSize: '11px', fontWeight: 700,
-                      padding: '3px 8px', borderRadius: '6px',
-                    }}>
-                      Past Event
-                    </span>
+                    <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>Past Event</span>
                   )}
                 </div>
-                <h1 style={{
-                  fontSize: '24px', fontWeight: 800, color: '#1f2937',
-                  margin: '8px 0 4px', lineHeight: 1.2,
-                }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1f2937', margin: '0 0 4px', lineHeight: 1.2 }}>
                   {request.restaurant_name}
                 </h1>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                  {request.restaurant_address}
-                </p>
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 8px' }}>{request.restaurant_address}</p>
+
+                {/* Rating */}
+                {placeDetails?.rating && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <StarRating rating={placeDetails.rating} />
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1f2937' }}>{placeDetails.rating}</span>
+                    <span style={{ fontSize: '12px', color: '#9ca3af' }}>({placeDetails.userRatingsTotal?.toLocaleString()} reviews)</span>
+                  </div>
+                )}
+
+                {/* Website & Phone quick links */}
+                {(placeDetails?.website || placeDetails?.phone) && (
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    {placeDetails.website && (
+                      <a href={placeDetails.website} target="_blank" rel="noopener noreferrer" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                        fontSize: '12px', fontWeight: 600, color: '#f97316',
+                        backgroundColor: '#fff7ed', padding: '5px 10px', borderRadius: '8px',
+                        textDecoration: 'none', border: '1px solid #fed7aa',
+                      }}>
+                        🌐 Website
+                      </a>
+                    )}
+                    {placeDetails.phone && (
+                      <a href={`tel:${placeDetails.phone}`} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                        fontSize: '12px', fontWeight: 600, color: '#15803d',
+                        backgroundColor: '#f0fdf4', padding: '5px 10px', borderRadius: '8px',
+                        textDecoration: 'none', border: '1px solid #bbf7d0',
+                      }}>
+                        📞 {placeDetails.phone}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Details Grid */}
-              <div style={{ padding: '20px' }}>
+              <div style={s.cardPad}>
                 {/* Date/Time */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  marginBottom: '16px', padding: '14px',
-                  backgroundColor: '#faf7f2', borderRadius: '12px',
-                }}>
-                  <span style={{ fontSize: '28px' }}>📅</span>
+                <div style={s.row}>
+                  <span style={s.rowIcon}>📅</span>
                   <div>
-                    <p style={{ fontSize: '15px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                      {formatDateTime(request.dining_time, request.timezone)}
-                    </p>
-                    <p style={{ fontSize: '13px', color: '#f97316', fontWeight: 600, margin: '2px 0 0' }}>
-                      {getTimeUntil(request.dining_time)}
-                    </p>
+                    <p style={s.rowTitle}>{formatDateTime(request.dining_time, request.timezone)}</p>
+                    <p style={{ ...s.rowSub, color: '#f97316', fontWeight: 600 }}>{getTimeUntil(request.dining_time)}</p>
                   </div>
                 </div>
 
                 {/* Seats */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  marginBottom: '16px', padding: '14px',
-                  backgroundColor: isFull ? '#fef2f2' : '#f0fdf4', borderRadius: '12px',
-                }}>
-                  <span style={{ fontSize: '28px' }}>👥</span>
+                <div style={{ ...s.row, backgroundColor: isFull ? '#fef2f2' : '#f0fdf4' }}>
+                  <span style={s.rowIcon}>👥</span>
                   <div>
-                    <p style={{ fontSize: '15px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                      {seatsText}
-                    </p>
-                    <p style={{
-                      fontSize: '13px', margin: '2px 0 0',
-                      color: isFull ? '#dc2626' : '#15803d', fontWeight: 600,
-                    }}>
+                    <p style={s.rowTitle}>{attendeeCount}/{request.total_seats} going</p>
+                    <p style={{ ...s.rowSub, color: isFull ? '#dc2626' : '#15803d', fontWeight: 600 }}>
                       {isFull ? 'Table is full' : `${request.seats_available} seat${request.seats_available !== 1 ? 's' : ''} left`}
                     </p>
                   </div>
@@ -412,458 +368,251 @@ export default function DiningSharePage() {
 
                 {/* Bill Split */}
                 {request.bill_split && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    marginBottom: '16px', padding: '14px',
-                    backgroundColor: '#faf7f2', borderRadius: '12px',
-                  }}>
-                    <span style={{ fontSize: '28px' }}>💳</span>
+                  <div style={s.row}>
+                    <span style={s.rowIcon}>💳</span>
                     <div>
-                      <p style={{ fontSize: '15px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                        {request.bill_split}
-                      </p>
-                      {request.payment_app && (
-                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0' }}>
-                          via {request.payment_app}
-                        </p>
-                      )}
+                      <p style={s.rowTitle}>{request.bill_split}</p>
+                      {request.payment_app && <p style={s.rowSub}>via {request.payment_app}</p>}
                     </div>
                   </div>
                 )}
 
-                {/* Description */}
+                {/* About this table */}
                 {request.description && (
-                  <div style={{
-                    padding: '14px', backgroundColor: '#faf7f2',
-                    borderRadius: '12px', marginBottom: '16px',
-                  }}>
-                    <p style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, margin: 0 }}>
-                      &ldquo;{request.description}&rdquo;
-                    </p>
+                  <div style={{ marginBottom: '10px' }}>
+                    <p style={{ ...s.sectionTitle, marginBottom: '6px' }}>💬 About this table</p>
+                    <div style={{ padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px' }}>
+                      <p style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+                        &ldquo;{request.description}&rdquo;
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Host Info */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '14px', backgroundColor: '#faf7f2', borderRadius: '12px',
-                }}>
-                  <div style={{
-                    width: '44px', height: '44px', borderRadius: '50%',
-                    backgroundColor: '#fed7aa', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', flexShrink: 0,
-                  }}>
-                    {request.host.avatar_url ? (
-                      <img
-                        src={request.host.avatar_url}
-                        alt={request.host.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '20px' }}>👤</span>
-                    )}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                      Hosted by {request.host.name}
-                    </p>
-                    <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>
-                      TableMesh member
-                    </p>
+                <div>
+                  <p style={{ ...s.sectionTitle, marginBottom: '6px' }}>🧑‍🍳 Your host</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#fed7aa', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {request.host.avatar_url
+                        ? <img src={request.host.avatar_url} alt={request.host.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <span style={{ fontSize: '20px' }}>👤</span>}
+                    </div>
+                    <div>
+                      <p style={s.rowTitle}>{request.host.name}</p>
+                      <p style={s.rowSub}>TableMesh member</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Who's Going Teaser */}
-            <div style={{
-              backgroundColor: '#fff', borderRadius: '16px',
-              padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              marginBottom: '16px', overflow: 'hidden', position: 'relative',
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: '0 0 14px' }}>
-                👥 Who&apos;s going ({request.joinCount + request.guestCount}/{request.total_seats})
-              </h3>
-
-              {/* Blurred silhouette avatars */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', position: 'relative' }}>
-                {Array.from({ length: Math.min(request.joinCount + request.guestCount, 4) }).map((_, i) => (
-                  <div key={i} style={{
-                    width: '48px', height: '48px', borderRadius: '50%',
-                    background: `hsl(${20 + i * 30}, 80%, 70%)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '22px', filter: 'blur(4px)',
-                    border: '2px solid #fff', flexShrink: 0,
-                  }}>👤</div>
-                ))}
-                {request.joinCount + request.guestCount === 0 && (
-                  <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0, alignSelf: 'center' }}>
-                    Be the first to join!
-                  </p>
-                )}
-              </div>
-
-              {/* Lock overlay */}
-              <div style={{
-                backgroundColor: '#faf7f2', borderRadius: '12px',
-                padding: '14px 16px', display: 'flex',
-                alignItems: 'center', gap: '12px',
-                border: '1px solid #fed7aa',
-              }}>
-                <span style={{ fontSize: '22px' }}>🔒</span>
-                <div>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    See who&apos;s going on the app
-                  </p>
-                  <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>
-                    View profiles, shared interests, and chat with the group
-                  </p>
+            {/* Who's Going */}
+            <div style={s.card}>
+              <div style={s.cardPad}>
+                <p style={s.sectionTitle}>👥 Who&apos;s going ({attendeeCount}/{request.total_seats})</p>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  {attendeeCount === 0 ? (
+                    <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>Be the first to join!</p>
+                  ) : (
+                    Array.from({ length: Math.min(attendeeCount, 5) }).map((_, i) => (
+                      <div key={i} style={{
+                        width: '44px', height: '44px', borderRadius: '50%',
+                        background: `hsl(${20 + i * 35}, 80%, 70%)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '20px', filter: 'blur(3px)', border: '2px solid #fff', flexShrink: 0,
+                      }}>👤</div>
+                    ))
+                  )}
+                </div>
+                <div style={{ backgroundColor: '#faf7f2', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #fed7aa' }}>
+                  <span style={{ fontSize: '20px' }}>🔒</span>
+                  <div>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937', margin: 0 }}>See who&apos;s going on the app</p>
+                    <p style={{ fontSize: '11px', color: '#9ca3af', margin: '2px 0 0' }}>View profiles, shared interests, and chat with the group</p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
             {status === 'found' && !isFull && (
-              <div style={{
-                backgroundColor: '#fff', borderRadius: '16px',
-                padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                marginBottom: '16px',
-              }}>
-                {!showRsvp && !rsvpSuccess ? (
-                  <>
-                    {/* Primary: Open in App */}
-                    <button
-                      onClick={handleOpenApp}
-                      style={{
-                        width: '100%', padding: '14px',
-                        backgroundColor: '#f97316', color: '#fff',
-                        border: 'none', borderRadius: '12px',
-                        fontSize: '16px', fontWeight: 700,
-                        cursor: 'pointer', marginBottom: '10px',
-                      }}
-                    >
-                      Join on TableMesh App
-                    </button>
-                    <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '0 0 16px' }}>
-                      Message the host, see who else is going, and more
-                    </p>
-
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '12px',
-                      margin: '0 0 16px',
-                    }}>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
-                      <span style={{ fontSize: '12px', color: '#9ca3af' }}>or</span>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
+              <div style={s.card}>
+                <div style={s.cardPad}>
+                  {!showRsvp && !rsvpSuccess ? (
+                    <>
+                      <button onClick={handleOpenApp} style={s.btn}>Join on TableMesh App</button>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '0 0 14px' }}>
+                        Message the host, see who else is going, and more
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '0 0 14px' }}>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
+                        <span style={{ fontSize: '12px', color: '#9ca3af' }}>or</span>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
+                      </div>
+                      <button onClick={() => setShowRsvp(true)} style={s.btnOutline}>RSVP as Guest</button>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0' }}>
+                        No app needed — the host will get your info
+                      </p>
+                    </>
+                  ) : rsvpSuccess ? (
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '26px' }}>✓</div>
+                      <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 6px' }}>You&apos;re on the list!</h3>
+                      <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 6px', lineHeight: 1.5 }}>
+                        {request.host.name} will reach out to confirm.
+                      </p>
+                      <p style={{ fontSize: '13px', color: '#9ca3af', margin: '0 0 20px', lineHeight: 1.5 }}>
+                        You&apos;ll get a text or email when you&apos;re approved, and a reminder before the meal.
+                      </p>
+                      <button onClick={handleOpenApp} style={s.btn}>Download TableMesh</button>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '4px 0 0' }}>
+                        Chat with the host, discover more dining events, and build your foodie profile
+                      </p>
                     </div>
+                  ) : (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                        <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#1f2937', margin: 0 }}>RSVP as Guest</h3>
+                        <button onClick={() => { setShowRsvp(false); setRsvpError('') }} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '14px', padding: '4px 8px' }}>Cancel</button>
+                      </div>
 
-                    {/* Secondary: Guest RSVP */}
-                    <button
-                      onClick={() => setShowRsvp(true)}
-                      style={{
-                        width: '100%', padding: '14px',
-                        backgroundColor: '#fff', color: '#f97316',
-                        border: '2px solid #f97316', borderRadius: '12px',
-                        fontSize: '15px', fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      RSVP as Guest
-                    </button>
-                    <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0' }}>
-                      No app needed &mdash; the host will get your info
-                    </p>
-                  </>
-                ) : rsvpSuccess ? (
-                  /* RSVP Success */
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{
-                      width: '56px', height: '56px', borderRadius: '50%',
-                      backgroundColor: '#f0fdf4', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      margin: '0 auto 12px', fontSize: '28px',
-                    }}>
-                      &#10003;
-                    </div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 6px' }}>
-                      You&apos;re on the list!
-                    </h3>
-                    <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 20px', lineHeight: 1.5 }}>
-                      {request.host.name} will reach out to confirm. In the meantime, why not join TableMesh for the full experience?
-                    </p>
-                    <button
-                      onClick={handleOpenApp}
-                      style={{
-                        width: '100%', padding: '14px',
-                        backgroundColor: '#f97316', color: '#fff',
-                        border: 'none', borderRadius: '12px',
-                        fontSize: '16px', fontWeight: 700,
-                        cursor: 'pointer', marginBottom: '8px',
-                      }}
-                    >
-                      Download TableMesh
-                    </button>
-                    <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '4px 0 0' }}>
-                      Chat with the host, discover more dining events, and build your foodie profile
-                    </p>
-                  </div>
-                ) : (
-                  /* RSVP Form */
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
-                        RSVP as Guest
-                      </h3>
-                      <button
-                        onClick={() => { setShowRsvp(false); setRsvpError('') }}
-                        style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '14px' }}
-                      >
-                        Cancel
+                      <div style={{ marginBottom: '12px' }}>
+                        <label style={s.label}>Your Name *</label>
+                        <input type="text" placeholder="Enter your name" value={guestName} onChange={e => setGuestName(e.target.value)} style={s.input} />
+                      </div>
+
+                      <div style={{ marginBottom: '12px' }}>
+                        <label style={s.label}>Contact Info *</label>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                          {(['phone', 'email'] as const).map(type => (
+                            <button key={type} onClick={() => setContactType(type)} style={{
+                              flex: 1, padding: '10px', fontSize: '14px', fontWeight: 600,
+                              border: `1.5px solid ${contactType === type ? '#f97316' : '#e5e7eb'}`,
+                              backgroundColor: contactType === type ? '#fff7ed' : '#fff',
+                              color: contactType === type ? '#f97316' : '#6b7280',
+                              borderRadius: '8px', cursor: 'pointer',
+                            }}>{type.charAt(0).toUpperCase() + type.slice(1)}</button>
+                          ))}
+                        </div>
+                        <input
+                          type={contactType === 'phone' ? 'tel' : 'email'}
+                          placeholder={contactType === 'phone' ? 'Your phone number' : 'Your email address'}
+                          value={guestContact}
+                          onChange={e => setGuestContact(e.target.value)}
+                          style={s.input}
+                        />
+                      </div>
+
+                      <div style={{ marginBottom: '14px' }}>
+                        <label style={s.label}>Message to host (optional)</label>
+                        <textarea
+                          placeholder="Say hi or share any dietary preferences..."
+                          value={guestMessage}
+                          onChange={e => setGuestMessage(e.target.value)}
+                          rows={2}
+                          style={{ ...s.input, resize: 'vertical', fontFamily: 'inherit' }}
+                        />
+                      </div>
+
+                      {rsvpError && (
+                        <div style={{ padding: '10px 14px', backgroundColor: '#fef2f2', borderRadius: '8px', marginBottom: '12px' }}>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#dc2626' }}>{rsvpError}</p>
+                        </div>
+                      )}
+
+                      <button onClick={handleRsvp} disabled={rsvpLoading} style={{ ...s.btn, opacity: rsvpLoading ? 0.7 : 1, cursor: rsvpLoading ? 'not-allowed' : 'pointer' }}>
+                        {rsvpLoading ? 'Sending...' : 'Send RSVP'}
                       </button>
+                      <p style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0', lineHeight: 1.4 }}>
+                        Your contact info will only be shared with the host.
+                      </p>
                     </div>
-
-                    <div style={{ marginBottom: '12px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                        Your Name *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter your name"
-                        value={guestName}
-                        onChange={(e) => setGuestName(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px 14px', fontSize: '15px',
-                          border: '1.5px solid #e5e7eb', borderRadius: '10px',
-                          backgroundColor: '#fafafa', boxSizing: 'border-box',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-
-                    {/* Contact type toggle */}
-                    <div style={{ marginBottom: '8px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                        Contact Info *
-                      </label>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                        <button
-                          onClick={() => setContactType('phone')}
-                          style={{
-                            flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600,
-                            border: `1.5px solid ${contactType === 'phone' ? '#f97316' : '#e5e7eb'}`,
-                            backgroundColor: contactType === 'phone' ? '#fff7ed' : '#fff',
-                            color: contactType === 'phone' ? '#f97316' : '#6b7280',
-                            borderRadius: '8px', cursor: 'pointer',
-                          }}
-                        >
-                          Phone
-                        </button>
-                        <button
-                          onClick={() => setContactType('email')}
-                          style={{
-                            flex: 1, padding: '8px', fontSize: '13px', fontWeight: 600,
-                            border: `1.5px solid ${contactType === 'email' ? '#f97316' : '#e5e7eb'}`,
-                            backgroundColor: contactType === 'email' ? '#fff7ed' : '#fff',
-                            color: contactType === 'email' ? '#f97316' : '#6b7280',
-                            borderRadius: '8px', cursor: 'pointer',
-                          }}
-                        >
-                          Email
-                        </button>
-                      </div>
-                      <input
-                        type={contactType === 'phone' ? 'tel' : 'email'}
-                        placeholder={contactType === 'phone' ? 'Your phone number' : 'Your email address'}
-                        value={guestContact}
-                        onChange={(e) => setGuestContact(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px 14px', fontSize: '15px',
-                          border: '1.5px solid #e5e7eb', borderRadius: '10px',
-                          backgroundColor: '#fafafa', boxSizing: 'border-box',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                        Message to host (optional)
-                      </label>
-                      <textarea
-                        placeholder="Say hi or share any dietary preferences..."
-                        value={guestMessage}
-                        onChange={(e) => setGuestMessage(e.target.value)}
-                        rows={2}
-                        style={{
-                          width: '100%', padding: '12px 14px', fontSize: '15px',
-                          border: '1.5px solid #e5e7eb', borderRadius: '10px',
-                          backgroundColor: '#fafafa', boxSizing: 'border-box',
-                          outline: 'none', resize: 'vertical',
-                          fontFamily: 'inherit',
-                        }}
-                      />
-                    </div>
-
-                    {rsvpError && (
-                      <div style={{
-                        padding: '10px 14px', backgroundColor: '#fef2f2',
-                        borderRadius: '8px', marginBottom: '12px',
-                      }}>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#dc2626' }}>{rsvpError}</p>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={handleRsvp}
-                      disabled={rsvpLoading}
-                      style={{
-                        width: '100%', padding: '14px',
-                        backgroundColor: '#f97316', color: '#fff',
-                        border: 'none', borderRadius: '12px',
-                        fontSize: '16px', fontWeight: 700,
-                        cursor: rsvpLoading ? 'not-allowed' : 'pointer',
-                        opacity: rsvpLoading ? 0.7 : 1,
-                      }}
-                    >
-                      {rsvpLoading ? 'Sending...' : 'Send RSVP'}
-                    </button>
-
-                    <p style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0', lineHeight: 1.4 }}>
-                      Your contact info will only be shared with the host of this dining request.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Full table message */}
-            {status === 'found' && isFull && (
-              <div style={{
-                backgroundColor: '#fff', borderRadius: '16px',
-                padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                marginBottom: '16px', textAlign: 'center',
-              }}>
-                <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: '0 0 8px' }}>
-                  This table is full!
-                </p>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 16px' }}>
-                  Download TableMesh to discover more dining experiences near you.
-                </p>
-                <button
-                  onClick={handleOpenApp}
-                  style={{
-                    width: '100%', padding: '14px',
-                    backgroundColor: '#f97316', color: '#fff',
-                    border: 'none', borderRadius: '12px',
-                    fontSize: '16px', fontWeight: 700, cursor: 'pointer',
-                  }}
-                >
-                  Get TableMesh
-                </button>
-              </div>
-            )}
-
-            {/* Why TableMesh - Conversion */}
-            <div style={{
-              backgroundColor: '#fff', borderRadius: '16px',
-              padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              marginBottom: '16px',
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: '0 0 16px' }}>
-                Why join TableMesh?
-              </h3>
-              {[
-                { icon: '💬', title: 'Message hosts directly', desc: 'Chat before you meet and coordinate details' },
-                { icon: '👥', title: 'See who\'s going', desc: 'View profiles and find people with shared interests' },
-                { icon: '🍜', title: 'Discover dining events', desc: 'Browse hundreds of dining requests near you' },
-                { icon: '⭐', title: 'Build your foodie reputation', desc: 'Earn XP, unlock achievements, and level up' },
-                { icon: '🎁', title: 'Exclusive restaurant deals', desc: 'Access special offers from partner restaurants' },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex', gap: '12px', alignItems: 'flex-start',
-                  marginBottom: i < 4 ? '14px' : '0',
-                }}>
-                  <span style={{ fontSize: '22px', flexShrink: 0, marginTop: '1px' }}>{item.icon}</span>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                      {item.title}
-                    </p>
-                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '2px 0 0' }}>
-                      {item.desc}
-                    </p>
-                  </div>
+                  )}
                 </div>
-              ))}
+              </div>
+            )}
 
-              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                <a
-                  href={playStoreLink}
-                  style={{
-                    flex: 1, display: 'block', textAlign: 'center',
-                    backgroundColor: '#111827', color: '#fff',
-                    padding: '12px', borderRadius: '10px',
-                    fontSize: '13px', fontWeight: 700,
-                    textDecoration: 'none',
-                  }}
-                >
-                  Google Play
-                </a>
-                <a
-                  href={appStoreLink}
-                  style={{
-                    flex: 1, display: 'block', textAlign: 'center',
-                    backgroundColor: '#111827', color: '#fff',
-                    padding: '12px', borderRadius: '10px',
-                    fontSize: '13px', fontWeight: 700,
-                    textDecoration: 'none',
-                  }}
-                >
-                  App Store
-                </a>
+            {/* Full table */}
+            {status === 'found' && isFull && (
+              <div style={{ ...s.card, textAlign: 'center' }}>
+                <div style={s.cardPad}>
+                  <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: '0 0 8px' }}>This table is full!</p>
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 16px' }}>Download TableMesh to discover more dining experiences near you.</p>
+                  <button onClick={handleOpenApp} style={s.btn}>Get TableMesh</button>
+                </div>
+              </div>
+            )}
+
+            {/* Google Reviews */}
+            {placeDetails?.reviews && placeDetails.reviews.length > 0 && (
+              <div style={s.card}>
+                <div style={s.cardPad}>
+                  <p style={s.sectionTitle}>⭐ What people say about {request.restaurant_name}</p>
+                  {placeDetails.reviews.map((review, i) => (
+                    <div key={i} style={{ marginBottom: i < placeDetails.reviews.length - 1 ? '14px' : 0, paddingBottom: i < placeDetails.reviews.length - 1 ? '14px' : 0, borderBottom: i < placeDetails.reviews.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        {review.profile_photo_url
+                          ? <img src={review.profile_photo_url} alt={review.author_name} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          : <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#fed7aa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>👤</div>
+                        }
+                        <div>
+                          <p style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937', margin: 0 }}>{review.author_name}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <StarRating rating={review.rating} />
+                            <span style={{ fontSize: '11px', color: '#9ca3af' }}>{review.relative_time_description}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#374151', lineHeight: 1.5, margin: 0 }}>
+                        {review.text.length > 200 ? review.text.slice(0, 200) + '…' : review.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Why TableMesh */}
+            <div style={s.card}>
+              <div style={s.cardPad}>
+                <h3 style={s.sectionTitle}>Why join TableMesh?</h3>
+                {[
+                  { icon: '💬', title: 'Message hosts directly', desc: 'Chat before you meet and coordinate details' },
+                  { icon: '👥', title: 'See who\'s going', desc: 'View profiles and find people with shared interests' },
+                  { icon: '🍜', title: 'Discover dining events', desc: 'Browse hundreds of dining requests near you' },
+                  { icon: '⭐', title: 'Build your foodie reputation', desc: 'Earn XP, unlock achievements, and level up' },
+                  { icon: '🎁', title: 'Exclusive restaurant deals', desc: 'Access special offers from partner restaurants' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: i < 4 ? '12px' : 0 }}>
+                    <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>{item.icon}</span>
+                    <div>
+                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937', margin: 0 }}>{item.title}</p>
+                      <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0' }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                  <a href={playStoreLink} style={{ flex: 1, display: 'block', textAlign: 'center', backgroundColor: '#111827', color: '#fff', padding: '12px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>Google Play</a>
+                  <a href={appStoreLink} style={{ flex: 1, display: 'block', textAlign: 'center', backgroundColor: '#111827', color: '#fff', padding: '12px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>App Store</a>
+                </div>
               </div>
             </div>
 
             {/* Google Maps Link */}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(request.restaurant_name + ' ' + request.restaurant_address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'block', backgroundColor: '#fff', borderRadius: '16px',
-                padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                marginBottom: '16px', textDecoration: 'none',
-                textAlign: 'center',
-              }}
+              target="_blank" rel="noopener noreferrer"
+              style={{ display: 'block', ...s.card, padding: '14px 16px', textDecoration: 'none', textAlign: 'center', marginBottom: '12px' }}
             >
-              <span style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>
-                📍 View {request.restaurant_name} on Google Maps
-              </span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937' }}>📍 View {request.restaurant_name} on Google Maps</span>
             </a>
 
-            {/* Explore More Tables CTA */}
-            <div style={{
-              backgroundColor: '#fff7ed', borderRadius: '16px',
-              padding: '20px', marginBottom: '16px',
-              border: '1px solid #fed7aa',
-              textAlign: 'center',
-            }}>
-              <p style={{ fontSize: '15px', fontWeight: 700, color: '#1f2937', margin: '0 0 6px' }}>
-                🍽 More tables near you
-              </p>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 14px' }}>
-                Browse all upcoming group dining experiences on TableMesh.
-              </p>
-              <Link
-                href="/explore"
-                style={{
-                  display: 'inline-block',
-                  backgroundColor: '#f97316', color: '#fff',
-                  padding: '11px 24px', borderRadius: '10px',
-                  fontSize: '14px', fontWeight: 700,
-                  textDecoration: 'none',
-                }}
-              >
+            {/* Explore More */}
+            <div style={{ backgroundColor: '#fff7ed', borderRadius: '16px', padding: '18px 16px', marginBottom: '12px', border: '1px solid #fed7aa', textAlign: 'center' }}>
+              <p style={{ fontSize: '15px', fontWeight: 700, color: '#1f2937', margin: '0 0 4px' }}>🍽 More tables near you</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 12px' }}>Browse all upcoming group dining experiences on TableMesh.</p>
+              <Link href="/explore" style={{ display: 'inline-block', backgroundColor: '#f97316', color: '#fff', padding: '10px 22px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}>
                 Explore Tables →
               </Link>
             </div>
@@ -871,18 +620,12 @@ export default function DiningSharePage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer style={{
-        padding: '24px 20px', textAlign: 'center',
-        borderTop: '1px solid #f3f4f6', backgroundColor: '#fff',
-      }}>
-        <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#6b7280' }}>
+      <footer style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f3f4f6', backgroundColor: '#fff' }}>
+        <p style={{ margin: '0 0 6px', fontSize: '13px', color: '#6b7280' }}>
           <Link href="/" style={{ color: '#f97316', textDecoration: 'none' }}>TableMesh</Link>
-          {' '}&mdash; Coordinate meals with friends, coworkers &amp; food lovers
+          {' '}— Coordinate meals with friends, coworkers &amp; food lovers
         </p>
-        <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af' }}>
-          &copy; 2025 Sheep Labs LLC. All rights reserved.
-        </p>
+        <p style={{ margin: 0, fontSize: '11px', color: '#9ca3af' }}>© 2025 Sheep Labs LLC. All rights reserved.</p>
       </footer>
     </div>
   )
