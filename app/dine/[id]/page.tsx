@@ -85,6 +85,10 @@ export default function DiningSharePage() {
     if (refCode) {
       // Store referral code so it persists across app install
       try { localStorage.setItem('tablemesh_referral_code', refCode) } catch {}
+      // Auto-copy to clipboard for deferred deep link (app reads on first launch)
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(`TABLEMESH_REF:${refCode}`).catch(() => {})
+      }
     }
   }, [refCode])
 

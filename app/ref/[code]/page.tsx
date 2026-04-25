@@ -25,6 +25,8 @@ export default function ReferralPage() {
     }
   };
 
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+
   useEffect(() => {
     // Detect platform
     const ua = navigator.userAgent.toLowerCase();
@@ -38,6 +40,13 @@ export default function ReferralPage() {
     // Store referral code in localStorage for cross-page persistence
     if (code) {
       try { localStorage.setItem('tablemesh_referral_code', code); } catch {}
+    }
+    // Auto-copy referral code to clipboard for deferred deep link
+    // When user installs the app, it will check the clipboard on first launch
+    if (code && navigator.clipboard) {
+      navigator.clipboard.writeText(`TABLEMESH_REF:${code}`).then(() => {
+        setCopiedToClipboard(true);
+      }).catch(() => {});
     }
   }, [code]);
 
