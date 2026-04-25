@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (diningRequest.status !== 'open') {
+    if (diningRequest.status !== 'open' && diningRequest.status !== 'active') {
       return NextResponse.json(
         { error: 'This dining request is no longer accepting guests' },
         { status: 400 }
