@@ -13,6 +13,18 @@ export default function ReferralPage() {
   const playStoreLink = `https://play.google.com/store/apps/details?id=com.tablemeshnative&referrer=utm_source%3Dreferral%26utm_content%3D${code}`;
   const appStoreLink = `https://apps.apple.com/us/app/tablemesh/id6760209899`;
 
+  // On iOS, try to open the app via universal link first
+  const handleMobileDownload = () => {
+    if (platform === 'ios') {
+      // Try universal link — if app is installed, it opens directly with the ref code
+      window.location.href = `https://tablemesh.com/ref/${code}`;
+      // Fallback to App Store after 2s if app isn't installed
+      setTimeout(() => { window.location.href = appStoreLink; }, 2000);
+    } else {
+      window.location.href = playStoreLink;
+    }
+  };
+
   useEffect(() => {
     // Detect platform
     const ua = navigator.userAgent.toLowerCase();
@@ -23,7 +35,11 @@ export default function ReferralPage() {
     } else {
       setPlatform('desktop');
     }
-  }, []);
+    // Store referral code in localStorage for cross-page persistence
+    if (code) {
+      try { localStorage.setItem('tablemesh_referral_code', code); } catch {}
+    }
+  }, [code]);
 
   useEffect(() => {
     // Auto-redirect countdown for mobile

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
 import Navbar from '../../components/Navbar'
@@ -77,7 +77,24 @@ export default function DiningSharePage() {
   const [rsvpSuccess, setRsvpSuccess] = useState(false)
   const [rsvpError, setRsvpError] = useState('')
 
-  const playStoreLink = 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
+  // Referral tracking
+  const searchParams = useSearchParams()
+  const refCode = searchParams.get('ref')?.toUpperCase() || ''
+
+  useEffect(() => {
+    if (refCode) {
+      // Store referral code so it persists across app install
+      try { localStorage.setItem('tablemesh_referral_code', refCode) } catch {}
+    }
+  }, [refCode])
+
+  const storedRef = typeof window !== 'undefined'
+    ? (refCode || (() => { try { return localStorage.getItem('tablemesh_referral_code') || '' } catch { return '' } })())
+    : refCode
+
+  const playStoreLink = storedRef
+    ? `https://play.google.com/store/apps/details?id=com.tablemeshnative&referrer=utm_source%3Dreferral%26utm_content%3D${storedRef}`
+    : 'https://play.google.com/store/apps/details?id=com.tablemeshnative'
   const appStoreLink = 'https://apps.apple.com/us/app/tablemesh/id6760209899'
 
   useEffect(() => {
@@ -198,7 +215,18 @@ export default function DiningSharePage() {
   }
 
   const handleOpenApp = () => {
-    window.location.href = platform === 'android' ? playStoreLink : appStoreLink
+    // Try to open the app via universal link first (passes referral code)
+    if (storedRef) {
+      // Try universal link which the app can intercept
+      const universalLink = `https://tablemesh.com/ref/${storedRef}`
+      window.location.href = universalLink
+      // Fallback to store after a delay
+      setTimeout(() => {
+        window.location.href = platform === 'android' ? playStoreLink : appStoreLink
+      }, 2000)
+    } else {
+      window.location.href = platform === 'android' ? playStoreLink : appStoreLink
+    }
   }
 
   // Host counts as 1, plus app joins and approved guest RSVPs
