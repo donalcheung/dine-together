@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 interface DownloadButtonsProps {
   variant: 'hero' | 'cta'
@@ -32,8 +32,6 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
   const [display, setDisplay] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
-  const [unlocked, setUnlocked] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const valid = isValidPhone(display)
   const isHero = variant === 'hero'
@@ -66,7 +64,6 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
         return
       }
       setStatus('success')
-      setUnlocked(true)
 
       // Push event to Google Tag Manager dataLayer
       if (typeof window !== 'undefined') {
@@ -87,10 +84,10 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
     <div className={`w-full ${isHero ? 'max-w-xs sm:max-w-md' : 'max-w-sm sm:max-w-lg mx-auto'}`}>
 
       {/* ── Phone capture form ── */}
-      {!unlocked && (
+      {status !== 'success' && (
         <form onSubmit={handleSubmit} className="mb-4 sm:mb-5">
           <p className={`text-xs font-medium mb-2 ${isHero ? 'text-white/70' : 'text-white/80'}`}>
-            📲 Get the download link sent straight to your phone
+            📲 Browsing on desktop? Get the link sent to your phone
           </p>
           <div className="flex items-stretch gap-2">
             {/* Country code badge */}
@@ -105,7 +102,6 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
 
             {/* Phone input */}
             <input
-              ref={inputRef}
               type="tel"
               inputMode="numeric"
               autoComplete="tel-national"
@@ -162,14 +158,14 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
           )}
           {valid && status === 'idle' && (
             <p className="mt-2 text-xs text-green-300 flex items-center gap-1">
-              <span>✓</span> Looks good — tap &ldquo;Send link&rdquo; to unlock the download buttons
+              <span>✓</span> Looks good — tap &ldquo;Send link&rdquo; and we&rsquo;ll text you the link
             </p>
           )}
         </form>
       )}
 
       {/* ── Success banner ── */}
-      {unlocked && (
+      {status === 'success' && (
         <div className="mb-4 flex items-center gap-3 bg-green-500/20 border border-green-400/40 rounded-xl px-4 py-3">
           <span className="text-xl">✅</span>
           <div>
@@ -180,39 +176,19 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
       )}
 
       {/* ── Download badges ── */}
-      <div className={`flex flex-row items-center gap-3 sm:gap-4 mb-3 ${isHero ? '' : 'justify-center'} relative`}>
-        {/* Lock overlay — tapping focuses the phone input */}
-        {!unlocked && (
-          <div
-            className="absolute inset-0 z-10 rounded-xl flex items-center justify-center cursor-pointer"
-            onClick={() => inputRef.current?.focus()}
-            title="Enter your phone number to unlock"
-          >
-            <div className="absolute inset-0 bg-black/40 rounded-xl backdrop-blur-[1px]" />
-            <div className="relative flex items-center gap-2 bg-black/60 text-white/80 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/20">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-              Enter your number to unlock
-            </div>
-          </div>
-        )}
-
+      <div className={`flex flex-row items-center gap-3 sm:gap-4 mb-3 ${isHero ? '' : 'justify-center'}`}>
         <a
           href={PLAY_STORE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={e => { if (!unlocked) e.preventDefault() }}
-          className={`transition-all ${isHero ? 'flex-1 sm:flex-none' : ''} ${unlocked ? 'hover:scale-105' : 'pointer-events-none'}`}
-          tabIndex={unlocked ? 0 : -1}
-          aria-disabled={!unlocked}
+          className={`transition-all hover:scale-105 ${isHero ? 'flex-1 sm:flex-none' : ''}`}
         >
           <Image
             src="/google-play-badge.png"
             alt="Get it on Google Play"
             width={isHero ? 180 : 200}
             height={isHero ? 54 : 60}
-            className={`${isHero ? 'h-[46px] sm:h-[54px]' : 'h-[50px] sm:h-[60px]'} w-auto transition-opacity ${!unlocked ? 'opacity-40' : 'opacity-100'}`}
+            className={`${isHero ? 'h-[46px] sm:h-[54px]' : 'h-[50px] sm:h-[60px]'} w-auto`}
           />
         </a>
 
@@ -220,25 +196,20 @@ function PhoneGate({ variant }: { variant: 'hero' | 'cta' }) {
           href={APP_STORE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={e => { if (!unlocked) e.preventDefault() }}
-          className={`transition-all ${isHero ? 'flex-1 sm:flex-none' : ''} ${unlocked ? 'hover:scale-105' : 'pointer-events-none'}`}
-          tabIndex={unlocked ? 0 : -1}
-          aria-disabled={!unlocked}
+          className={`transition-all hover:scale-105 ${isHero ? 'flex-1 sm:flex-none' : ''}`}
         >
           <Image
             src="/app-store-badge.svg"
             alt="Download on the App Store"
             width={isHero ? 180 : 200}
             height={isHero ? 54 : 60}
-            className={`${isHero ? 'h-[46px] sm:h-[54px]' : 'h-[50px] sm:h-[60px]'} w-auto transition-opacity ${!unlocked ? 'opacity-40' : 'opacity-100'}`}
+            className={`${isHero ? 'h-[46px] sm:h-[54px]' : 'h-[50px] sm:h-[60px]'} w-auto`}
           />
         </a>
       </div>
 
       <p className={`text-xs ${isHero ? 'text-white/50' : 'text-white/60 text-center sm:text-sm'}`}>
-        {unlocked
-          ? 'Available now on iOS and Android.'
-          : 'Enter your number above to unlock the download buttons.'}
+        Available now on iOS and Android.
       </p>
     </div>
   )
