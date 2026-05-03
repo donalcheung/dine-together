@@ -1,11 +1,10 @@
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+const WEBHOOK_SECRET = Deno.env.get('NEW_USER_WEBHOOK_SECRET') ?? ''
 const ADMIN_EMAIL = 'donal.cheung@gmail.com'
 
 Deno.serve(async (req) => {
-  // Supabase Database Webhooks send the service role key as a Bearer token
-  const auth = req.headers.get('authorization') ?? ''
-  if (SUPABASE_SERVICE_ROLE_KEY && auth !== `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`) {
+  const secret = req.headers.get('x-webhook-secret') ?? ''
+  if (WEBHOOK_SECRET && secret !== WEBHOOK_SECRET) {
     return new Response('Unauthorized', { status: 401 })
   }
 
