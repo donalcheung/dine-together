@@ -1,9 +1,5 @@
 -- Triggers an Edge Function email to the admin whenever a new user profile is created.
---
--- Before running this migration, store your webhook secret in the database:
---   Run once in the Supabase SQL editor:
---     ALTER DATABASE postgres SET app.new_user_webhook_secret = '<your-secret>';
---   Then in the Edge Function dashboard, set NEW_USER_WEBHOOK_SECRET to the same value.
+-- NEW_USER_WEBHOOK_SECRET must be set in the Edge Function's secrets dashboard.
 
 create extension if not exists pg_net schema extensions;
 
@@ -16,8 +12,8 @@ begin
   perform net.http_post(
     url     := 'https://hyhegzrmeewjlevtslbk.supabase.co/functions/v1/notify-new-user',
     headers := jsonb_build_object(
-      'Content-Type',    'application/json',
-      'x-webhook-secret', current_setting('app.new_user_webhook_secret', true)
+      'Content-Type',     'application/json',
+      'x-webhook-secret', 'df47759d18c10871ee56ee3718acf90df6e0b1108ba2cbe8f9b2d9cd10405bd4'
     ),
     body    := jsonb_build_object('record', row_to_json(new))
   );
