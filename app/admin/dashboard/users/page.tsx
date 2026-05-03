@@ -10,6 +10,32 @@ type User = {
   role: string
   verified: boolean
   created_at: string
+  diningRequestCount: number
+  lastLocation: string | null
+  lastActivity: string | null
+}
+
+function extractCity(address: string | null): string | null {
+  if (!address) return null
+  const parts = address.split(',').map(p => p.trim()).filter(Boolean)
+  if (parts.length >= 3) return parts[parts.length - 2]
+  if (parts.length === 2) return parts[0]
+  return parts[0].length > 25 ? parts[0].substring(0, 25) + '…' : parts[0]
+}
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return '—'
+  const now = new Date()
+  const date = new Date(dateStr)
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
 }
 
 export default function AdminUsersPage() {
@@ -24,6 +50,8 @@ export default function AdminUsersPage() {
     let query = supabase
       .from('profiles')
       .select('id, name, email, role, verified, created_at')
+      .not('email', 'ilike', '%@tablemesh.com')
+      .not('email', 'ilike', '%@tablemesh.app')
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -36,7 +64,53 @@ export default function AdminUsersPage() {
     }
 
     const { data } = await query
-    if (data) setUsers(data)
+    if (!data) {
+      setLoading(false)
+      return
+    }
+
+    const userIds = data.map(u => u.id)
+
+    // Fetch dining requests (for count, last location, last activity as host)
+    const { data: diningRequests } = await supabase
+      .from('dining_requests')
+      .select('host_id, restaurant_address, created_at')
+      .in('host_id', userIds)
+
+    // Fetch dining joins (for last activity as guest)
+    const { data: diningJoins } = await supabase
+      .from('dining_joins')
+      .select('user_id, created_at')
+      .in('user_id', userIds)
+
+    // Build per-user stats
+    const statsMap = new Map<string, { count: number; lastLocation: string | null; lastActivity: string | null }>()
+
+    for (const req of diningRequests || []) {
+      const s = statsMap.get(req.host_id) || { count: 0, lastLocation: null, lastActivity: null }
+      s.count++
+      if (!s.lastLocation) s.lastLocation = req.restaurant_address
+      if (!s.lastActivity || req.created_at > s.lastActivity) s.lastActivity = req.created_at
+      statsMap.set(req.host_id, s)
+    }
+
+    for (const join of diningJoins || []) {
+      const s = statsMap.get(join.user_id) || { count: 0, lastLocation: null, lastActivity: null }
+      if (!s.lastActivity || join.created_at > s.lastActivity) s.lastActivity = join.created_at
+      statsMap.set(join.user_id, s)
+    }
+
+    const enriched: User[] = data.map(u => {
+      const s = statsMap.get(u.id)
+      return {
+        ...u,
+        diningRequestCount: s?.count ?? 0,
+        lastLocation: extractCity(s?.lastLocation ?? null),
+        lastActivity: s?.lastActivity ?? null,
+      }
+    })
+
+    setUsers(enriched)
     setLoading(false)
   }, [supabase, roleFilter, search])
 
@@ -76,7 +150,7 @@ export default function AdminUsersPage() {
           Users
         </h1>
         <p className="text-gray-400 mt-1">
-          Browse and manage platform users.
+          {users.length} real {users.length === 1 ? 'user' : 'users'} — seed accounts excluded.
         </p>
       </div>
 
@@ -116,7 +190,9 @@ export default function AdminUsersPage() {
               <tr className="border-b border-gray-700">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">User</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Verified</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Location</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Dining Reqs</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Active</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Joined</th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
@@ -125,8 +201,17 @@ export default function AdminUsersPage() {
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-700/30 transition-colors">
                   <td className="px-5 py-3">
-                    <p className="text-sm font-medium text-white">{user.name || 'No name'}</p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
+                    <div className="flex items-center gap-2">
+                      {user.verified && (
+                        <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-white">{user.name || 'No name'}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-5 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
@@ -138,13 +223,29 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    {user.verified ? (
-                      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-                      </svg>
+                    {user.lastLocation ? (
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                        <span className="text-sm text-gray-300">{user.lastLocation}</span>
+                      </div>
                     ) : (
-                      <span className="text-xs text-gray-500">No</span>
+                      <span className="text-xs text-gray-600">—</span>
                     )}
+                  </td>
+                  <td className="px-5 py-3">
+                    {user.diningRequestCount > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-400">
+                        {user.diningRequestCount}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-600">0</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3">
+                    <p className="text-sm text-gray-400">{timeAgo(user.lastActivity)}</p>
                   </td>
                   <td className="px-5 py-3">
                     <p className="text-sm text-gray-400">{new Date(user.created_at).toLocaleDateString()}</p>

@@ -55,14 +55,14 @@ export default function AdminDashboardPage() {
       { count: proSubscriptions },
       { count: recentSignups },
     ] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).not('email', 'ilike', '%@tablemesh.com').not('email', 'ilike', '%@tablemesh.app'),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
       supabase.from('verification_documents').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('user_reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('restaurant_deals').select('*', { count: 'exact', head: true }),
       supabase.from('dining_requests').select('*', { count: 'exact', head: true }),
       supabase.from('restaurant_subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).not('email', 'ilike', '%@tablemesh.com').not('email', 'ilike', '%@tablemesh.app').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     ])
 
     setStats({
@@ -76,10 +76,12 @@ export default function AdminDashboardPage() {
       recentSignups: recentSignups || 0,
     })
 
-    // Fetch recent signups list
+    // Fetch recent signups list (exclude seed accounts)
     const { data: newUsers } = await supabase
       .from('profiles')
       .select('id, name, email, avatar_url, verified, gender, age_range, job_title, company, bio, created_at')
+      .not('email', 'ilike', '%@tablemesh.com')
+      .not('email', 'ilike', '%@tablemesh.app')
       .order('created_at', { ascending: false })
       .limit(20)
 
