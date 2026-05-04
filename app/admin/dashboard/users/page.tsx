@@ -125,12 +125,16 @@ export default function AdminUsersPage() {
     const newRole = currentRole === 'admin' ? 'user' : 'admin'
     setActionLoading(userId)
 
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({ role: newRole })
       .eq('id', userId)
 
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+    if (!error) {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+    } else {
+      console.error('Failed to update role:', error.message)
+    }
     setActionLoading(null)
   }
 
