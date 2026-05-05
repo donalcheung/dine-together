@@ -5,7 +5,9 @@
       {
         "appID": "LC63YPVU3J.com.tablemeshnative",
         "paths": [
-          "/ref/*"
+          "/ref/*",
+          "/auth/confirm",
+          "/auth/confirm/*"
         ]
       }
     ]

@@ -10,6 +10,7 @@ type PageStatus = 'loading' | 'confirmed' | 'recovery' | 'password-updated' | 'e
 export default function ConfirmEmailPage() {
   const [status, setStatus] = useState<PageStatus>('loading')
   const [countdown, setCountdown] = useState(5)
+  const [deepLinkFailed, setDeepLinkFailed] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordError, setPasswordError] = useState('')
@@ -65,6 +66,8 @@ export default function ConfirmEmailPage() {
         if (prev <= 1) {
           clearInterval(timer)
           window.location.href = 'tablemesh://auth'
+          // Show fallback if still on page after redirect attempt
+          setTimeout(() => setDeepLinkFailed(true), 1500)
           return 0
         }
         return prev - 1
@@ -76,6 +79,10 @@ export default function ConfirmEmailPage() {
 
   const handleOpenApp = () => {
     window.location.href = 'tablemesh://auth'
+    // If the browser is still here after a short delay, the deep link likely failed
+    setTimeout(() => {
+      setDeepLinkFailed(true)
+    }, 1500)
   }
 
   const handlePasswordUpdate = useCallback(async () => {
@@ -258,17 +265,50 @@ export default function ConfirmEmailPage() {
             <button onClick={handleOpenApp} style={buttonStyle}>
               Open TableMesh App
             </button>
-            {countdown > 0 && (
+            {countdown > 0 && !deepLinkFailed && (
               <p style={{ margin: '16px 0 0', fontSize: '13px', color: '#9ca3af' }}>
                 Redirecting to app in {countdown} seconds...
               </p>
             )}
-            <p style={{ margin: '20px 0 0', fontSize: '13px', color: '#9ca3af' }}>
-              Don&apos;t have the app yet?{' '}
-              <Link href="/" style={{ color: '#f97316', textDecoration: 'underline' }}>
-                Download it here
-              </Link>
-            </p>
+            {deepLinkFailed && (
+              <div style={{
+                margin: '16px 0 0',
+                padding: '14px',
+                backgroundColor: '#fff7ed',
+                borderRadius: '10px',
+                border: '1px solid #fed7aa',
+              }}>
+                <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#92400e', fontWeight: 600 }}>
+                  Couldn&apos;t open the app automatically
+                </p>
+                <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#78350f' }}>
+                  Make sure the TableMesh app is installed, then try again.
+                </p>
+                <Link
+                  href="/download"
+                  style={{
+                    display: 'inline-block',
+                    padding: '8px 20px',
+                    backgroundColor: '#f97316',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Download the App
+                </Link>
+              </div>
+            )}
+            {!deepLinkFailed && (
+              <p style={{ margin: '20px 0 0', fontSize: '13px', color: '#9ca3af' }}>
+                Don&apos;t have the app yet?{' '}
+                <Link href="/download" style={{ color: '#f97316', textDecoration: 'underline' }}>
+                  Download it here
+                </Link>
+              </p>
+            )}
           </div>
         )}
 
