@@ -489,7 +489,7 @@ export default function Home() {
             <div>
               <h4 className="font-bold mb-4 text-xs uppercase tracking-wider text-white/50">For Diners</h4>
               <ul className="space-y-2 text-sm text-white/70">
-                <li><a href="#download" className="hover:text-white transition-colors">Download</a></li>
+                <li><a href="https://www.tablemesh.com/download" className="hover:text-white transition-colors">Download</a></li>
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Tables</Link></li>
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
