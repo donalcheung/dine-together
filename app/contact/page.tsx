@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar'
 export const metadata: Metadata = {
   title: 'Contact \u2014 TableMesh',
   description: 'Get in touch with the TableMesh team. We are here to help with questions, feedback, or support.',
+  alternates: {
+    canonical: '/contact',
+  },
 }
 
 export default function Contact() {

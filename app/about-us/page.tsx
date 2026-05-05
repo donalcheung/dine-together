@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar'
 export const metadata: Metadata = {
   title: 'About Us \u2014 TableMesh',
   description: 'Learn about TableMesh, the social dining platform built by Sheep Labs LLC. Our mission is to bring people together around great food.',
+  alternates: {
+    canonical: '/about-us',
+  },
 }
 
 export default function AboutUs() {

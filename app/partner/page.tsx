@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: 'TableMesh for Restaurants — Fill Empty Seats with Group Diners',
   description:
     'Join TableMesh as a restaurant partner. Create deals for group diners, fill empty seats during off-peak hours, and grow your business with the dining social app.',
+  alternates: {
+    canonical: '/partner',
+  },
 }
 
 export default function PartnerLandingPage() {

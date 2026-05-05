@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'Features — TableMesh',
   description:
     'Explore every feature of TableMesh: host meals, build dining groups for free, find food buddies by taste and vibe, discover nearby tables on a map, and unlock exclusive restaurant deals.',
+  alternates: {
+    canonical: '/features',
+  },
 }
 
 export default function FeaturesPage() {

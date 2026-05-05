@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar'
 export const metadata: Metadata = {
   title: 'Privacy Policy \u2014 TableMesh',
   description: 'Read the TableMesh privacy policy. Learn how we collect, use, and protect your information.',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
 }
 
 export default function PrivacyPolicy() {

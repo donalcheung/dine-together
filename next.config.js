@@ -11,6 +11,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/safety',
+        destination: '/safety-guidelines',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

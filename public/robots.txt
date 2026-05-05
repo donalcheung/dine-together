@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
 
+Disallow: /login
+Disallow: /account
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /partner/login
+Disallow: /partner/signup
+Disallow: /partner/dashboard/
+Disallow: /dine/
+Disallow: /ref/
+Disallow: /request/
+
 Sitemap: https://tablemesh.com/sitemap.xml

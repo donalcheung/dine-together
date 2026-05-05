@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar'
 export const metadata: Metadata = {
   title: 'Safety Guidelines \u2014 TableMesh',
   description: 'Stay safe while dining with TableMesh. Read our community safety guidelines for meeting new people and organizing group meals.',
+  alternates: {
+    canonical: '/safety-guidelines',
+  },
 }
 
 export default function SafetyGuidelines() {

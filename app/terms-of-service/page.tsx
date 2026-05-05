@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar'
 export const metadata: Metadata = {
   title: 'Terms of Service \u2014 TableMesh',
   description: 'Read the TableMesh terms of service. Understand your rights and responsibilities when using our platform.',
+  alternates: {
+    canonical: '/terms-of-service',
+  },
 }
 
 export default function TermsOfService() {
