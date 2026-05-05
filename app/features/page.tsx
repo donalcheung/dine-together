@@ -34,7 +34,7 @@ export default function FeaturesPage() {
           <div className="relative h-[400px] md:h-[560px]">
             <Image src="/photos/friends-cheers.jpg" alt="Friends toasting at a restaurant" fill className="object-cover" />
           </div>
-          <div className="p-10 md:p-16 max-w-xl">
+          <div className="p-10 md:p-16">
             <div className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">For Everyone</div>
             <h2 className="text-3xl md:text-4xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
               Host a Table in Seconds
@@ -65,7 +65,7 @@ export default function FeaturesPage() {
       {/* ── Feature 2: Dining Groups ── */}
       <section className="py-0 bg-[var(--background)]">
         <div className="grid md:grid-cols-2 items-center max-w-none">
-          <div className="p-10 md:p-16 max-w-xl order-2 md:order-1">
+          <div className="p-10 md:p-16 order-2 md:order-1">
             <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">For Community Organizers</div>
             <h2 className="text-3xl md:text-4xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
               Build Your Dining Community — Free
@@ -110,7 +110,7 @@ export default function FeaturesPage() {
           <div className="relative h-[400px] md:h-[560px]">
             <Image src="/Screenshots/iPhone/food buddies.png" alt="TableMesh Food Buddies screen" fill className="object-contain bg-gray-50 p-8" />
           </div>
-          <div className="p-10 md:p-16 max-w-xl">
+          <div className="p-10 md:p-16">
             <div className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">For Foodies &amp; Explorers</div>
             <h2 className="text-3xl md:text-4xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
               Find Your Dining Counterparts
@@ -144,7 +144,7 @@ export default function FeaturesPage() {
       {/* ── Feature 4: Discover on Map ── */}
       <section className="py-0 bg-[var(--background)]">
         <div className="grid md:grid-cols-2 items-center max-w-none">
-          <div className="p-10 md:p-16 max-w-xl order-2 md:order-1">
+          <div className="p-10 md:p-16 order-2 md:order-1">
             <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">For Travelers &amp; Newcomers</div>
             <h2 className="text-3xl md:text-4xl font-bold text-[var(--neutral)] mb-4" style={{ fontFamily: 'Fraunces, serif' }}>
               Discover Meals Near You
