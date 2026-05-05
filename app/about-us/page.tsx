@@ -32,7 +32,7 @@ export default function AboutUs() {
 
             <div className="mt-12 p-8 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl text-center">
               <p className="text-lg font-semibold text-[var(--neutral)] mb-4">Ready to bring your table together?</p>
-              <a href="/#download" className="inline-block px-8 py-3 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all font-semibold">Download TableMesh</a>
+              <a href="https://www.tablemesh.com/download" className="inline-block px-8 py-3 bg-[var(--primary)] text-white rounded-full hover:bg-[var(--primary-dark)] transition-all font-semibold">Download TableMesh</a>
             </div>
           </div>
         </div>
