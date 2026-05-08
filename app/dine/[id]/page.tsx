@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser'
 import Navbar from '../../components/Navbar'
+import { trackPageView } from '../../lib/track-page'
 
 interface DiningRequest {
   id: string
@@ -107,6 +108,10 @@ export default function DiningSharePage() {
     else if (/android/.test(ua)) setPlatform('android')
     else setPlatform('desktop')
   }, [])
+
+  useEffect(() => {
+    if (requestId) trackPageView('dine', { id: requestId })
+  }, [requestId])
 
   useEffect(() => {
     const fetchRequest = async () => {

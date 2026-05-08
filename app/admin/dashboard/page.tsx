@@ -15,6 +15,23 @@ type Stats = {
   recentSignups: number
 }
 
+type PageStat = {
+  page: string
+  count: number
+}
+
+type RequestVisibility = {
+  publicCount: number
+  privateCount: number
+}
+
+const PAGE_LABELS: Record<string, string> = {
+  explore: 'Explore Feed',
+  explore_city: 'City Explore',
+  dine: 'Dining Request',
+  account: 'My Profile',
+}
+
 type RecentUser = {
   id: string
   name: string
@@ -43,6 +60,10 @@ export default function AdminDashboardPage() {
   })
   const [loading, setLoading] = useState(true)
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([])
+  const [topPages, setTopPages] = useState<PageStat[]>([])
+  const [visibility, setVisibility] = useState<RequestVisibility>({ publicCount: 0, privateCount: 0 })
+  const [totalJoins, setTotalJoins] = useState(0)
+  const [totalLikes, setTotalLikes] = useState(0)
 
   const loadStats = useCallback(async () => {
     const [
@@ -86,6 +107,45 @@ export default function AdminDashboardPage() {
       .limit(20)
 
     if (newUsers) setRecentUsers(newUsers)
+
+    // Fetch user behavior metrics in parallel
+    const [
+      { data: pageEventsData },
+      { data: visibilityData },
+      { count: joinsCount },
+      { count: likesCount },
+    ] = await Promise.all([
+      supabase.from('page_events').select('page').limit(2000),
+      supabase.from('dining_requests').select('visibility').limit(2000),
+      supabase.from('dining_joins').select('*', { count: 'exact', head: true }),
+      supabase.from('profile_likes').select('*', { count: 'exact', head: true }),
+    ])
+
+    // Aggregate top pages
+    if (pageEventsData) {
+      const counts: Record<string, number> = {}
+      for (const ev of pageEventsData) {
+        counts[ev.page] = (counts[ev.page] || 0) + 1
+      }
+      const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([page, count]) => ({ page, count }))
+      setTopPages(sorted)
+    }
+
+    // Aggregate request visibility
+    if (visibilityData) {
+      let pub = 0, priv = 0
+      for (const r of visibilityData) {
+        if (r.visibility === 'public') pub++
+        else priv++
+      }
+      setVisibility({ publicCount: pub, privateCount: priv })
+    }
+
+    setTotalJoins(joinsCount || 0)
+    setTotalLikes(likesCount || 0)
     setLoading(false)
   }, [supabase])
 
@@ -174,6 +234,121 @@ export default function AdminDashboardPage() {
             <p className="text-sm text-gray-400 mt-1">{card.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* User Behavior Metrics */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-4">User Behavior</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+          {/* Top Pages */}
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 sm:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+              </svg>
+              <p className="text-sm font-semibold text-white">Most Visited Pages</p>
+            </div>
+            {topPages.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">No page data yet — tracking activates as users visit the app.</p>
+            ) : (
+              <div className="space-y-2">
+                {topPages.map((p, i) => {
+                  const maxCount = topPages[0]?.count || 1
+                  return (
+                    <div key={p.page} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-4 text-right">{i + 1}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-sm text-gray-300">{PAGE_LABELS[p.page] ?? p.page}</span>
+                          <span className="text-sm font-semibold text-white">{p.count}</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{ width: `${Math.round((p.count / maxCount) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Request Visibility */}
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              <p className="text-sm font-semibold text-white">Request Visibility</p>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-400">Public</span>
+                  <span className="text-lg font-bold text-green-400">{visibility.publicCount}</span>
+                </div>
+                {visibility.publicCount + visibility.privateCount > 0 && (
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${Math.round((visibility.publicCount / (visibility.publicCount + visibility.privateCount)) * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-400">Private</span>
+                  <span className="text-lg font-bold text-gray-400">{visibility.privateCount}</span>
+                </div>
+                {visibility.publicCount + visibility.privateCount > 0 && (
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gray-500 rounded-full"
+                      style={{ width: `${Math.round((visibility.privateCount / (visibility.publicCount + visibility.privateCount)) * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Join Attempts & Profile Likes */}
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-4 h-4 text-pink-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+              <p className="text-sm font-semibold text-white">Engagement</p>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-purple-400">{totalJoins}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Join attempts</p>
+                </div>
+                <svg className="w-8 h-8 text-purple-500/30" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z" />
+                </svg>
+              </div>
+              <div className="border-t border-gray-700 pt-3 flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-pink-400">{totalLikes}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Profile likes (swipes)</p>
+                </div>
+                <svg className="w-8 h-8 text-pink-500/30" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Quick Links */}

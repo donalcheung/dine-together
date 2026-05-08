@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import Navbar from '../../components/Navbar'
+import PageTracker from '../../components/PageTracker'
 
 interface DiningRequest {
   id: string
@@ -97,6 +98,7 @@ export default async function CityExplorePage({ params }: { params: Promise<{ ci
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      <PageTracker page="explore_city" params={{ city: citySlug }} />
       <Navbar />
 
       {/* Hero */}

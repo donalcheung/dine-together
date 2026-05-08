@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '../components/Navbar'
+import { trackPageView } from '../lib/track-page'
 
 interface DiningRequest {
   id: string
@@ -325,6 +326,7 @@ export default function ExplorePage() {
   }, [cuisineFilter, cityFilter])
 
   useEffect(() => { fetchFeed() }, [fetchFeed])
+  useEffect(() => { trackPageView('explore') }, [])
 
   const filtered = cityFilter
     ? allItems.filter(r => cityFromAddress(r.restaurant_address).toLowerCase() === cityFilter.toLowerCase())

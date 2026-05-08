@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '../lib/supabase-browser'
 import Navbar from '../components/Navbar'
+import { trackPageView } from '../lib/track-page'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,6 +145,7 @@ export default function AccountPage() {
   }, [supabase])
 
   useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { trackPageView('account') }, [])
 
   // ── Save profile ────────────────────────────────────────────────────────────
 
