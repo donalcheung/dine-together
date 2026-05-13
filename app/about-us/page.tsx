@@ -45,7 +45,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-bold text-[var(--neutral)] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Donal Cheung</h2>
               <p className="text-[var(--primary)] font-semibold mb-3">Founder, Sheep Labs LLC</p>
               <p className="text-gray-600 leading-relaxed">
-                I&apos;m the only person behind TableMesh — no team, no investors, just me building something I genuinely believe in. TableMesh launched in February 2026, but the idea had been simmering for years.
+                I&apos;m Donal — a traveler, food lover, and the founder of TableMesh. I&apos;ve spent years eating my way through cities solo, and somewhere between London and Asia I became convinced there had to be a better way to share a meal with someone. So I built it.
               </p>
             </div>
           </div>
