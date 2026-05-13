@@ -45,7 +45,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-bold text-[var(--neutral)] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>Donal Cheung</h2>
               <p className="text-[var(--primary)] font-semibold mb-3">Founder, Sheep Labs LLC</p>
               <p className="text-gray-600 leading-relaxed">
-                Solo founder building tools that make eating together easier. TableMesh launched in February 2026 — but the idea had been simmering for years.
+                I&apos;m the only person behind TableMesh — no team, no investors, just me building something I genuinely believe in. TableMesh launched in February 2026, but the idea had been simmering for years.
               </p>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function AboutUs() {
               Because the truth is, this isn&apos;t just a traveler&apos;s problem. How many times have you wanted to catch up with an old friend but the &ldquo;we should hang soon&rdquo; text never leads anywhere? Sometimes sending a dining request and having them spot it nearby is easier than a cold &ldquo;hey, how have you been?&rdquo; text. There&apos;s something lower-stakes about it. An invitation, not an interrogation.
             </p>
             <p className="leading-relaxed">
-              I want TableMesh to be the app you reach for any time you want to eat with someone. That could mean posting a public table and seeing who&apos;s interested. It could mean inviting friends to a spot you&apos;ve been meaning to try. It could mean reconnecting with a colleague over lunch. Food is one of the best excuses we have to show up for each other — TableMesh just makes the logistics disappear.
+              I want TableMesh to be the app you reach for any time you want to eat with someone. That could mean posting a public table and seeing who&apos;s interested. It could mean inviting friends to a spot you&apos;ve been meaning to try. It could mean reconnecting with a colleague over lunch. Food is one of the best excuses people have to show up for each other — TableMesh just makes the logistics disappear.
             </p>
 
             <h2 className="text-2xl font-bold text-[var(--neutral)] mt-10 mb-4" style={{ fontFamily: 'Fraunces, serif' }}>My Commitment to You</h2>
