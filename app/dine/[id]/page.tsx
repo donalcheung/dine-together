@@ -8,6 +8,7 @@ import Navbar from '../../components/Navbar'
 
 interface DiningRequest {
   id: string
+  title: string | null
   restaurant_name: string
   restaurant_address: string
   dining_time: string
@@ -19,6 +20,13 @@ interface DiningRequest {
   price_level: string | null
   bill_split: string | null
   payment_app: string | null
+  gender_restriction: string | null
+  age_min: number | null
+  age_max: number | null
+  recurring: string | null
+  guest_count_flexible: boolean | null
+  host_deal_headline: string | null
+  host_deal_description: string | null
   visibility: string
   timezone: string | null
   google_place_id: string | null
@@ -48,6 +56,65 @@ interface PlaceDetails {
 }
 
 type PageStatus = 'loading' | 'found' | 'not-found' | 'expired'
+
+/** Matches in-app payment chips + free-text edits from request detail. */
+function formatPaymentAppLabel(raw: string | null | undefined): string {
+  if (!raw?.trim()) return ''
+  const key = raw.trim().toLowerCase()
+  if (key === 'venmo') return 'Venmo'
+  if (key === 'cashapp' || key === 'cash app') return 'Cash App'
+  if (key === 'other') return 'the payment method the host prefers'
+  return raw.trim()
+}
+
+/**
+ * Guest-facing copy for how the bill works (aligned with CreateRequest / RequestDetail).
+ * Split calculator tax/tip are session-only in the app — we describe typical expectations here.
+ */
+function getBillAndPaymentGuestCopy(
+  billSplit: string | null | undefined,
+  paymentApp: string | null | undefined,
+): { headline: string; body: string[] } {
+  const mode = (billSplit || '').trim().toLowerCase()
+  const app = formatPaymentAppLabel(paymentApp)
+
+  if (mode === 'host_treats') {
+    return {
+      headline: 'Host is treating',
+      body: [
+        'The organizer plans to cover the meal for the table. Unless the host tells you otherwise, you should not owe a food split (drinks or extras may still be on your own tab).',
+      ],
+    }
+  }
+
+  if (mode === 'digital' || mode === 'split_evenly') {
+    const settle = app
+      ? `After the meal, expect to send your share of the bill via ${app}.`
+      : 'After the meal, the host will coordinate how everyone sends their share.'
+    return {
+      headline: 'Split evenly',
+      body: [
+        'The group usually splits subtotal, tax, and tip evenly across everyone at the table unless the host says otherwise.',
+        settle,
+        'TableMesh does not charge guests or organizers a fee to join this meal.',
+      ],
+    }
+  }
+
+  return {
+    headline: 'Separate checks',
+    body: [
+      'Everyone typically orders and pays for their own food at the restaurant.',
+    ],
+  }
+}
+
+function formatPriceLevel(level: string | null | undefined): string | null {
+  if (!level || level === 'any') return null
+  const n = Number.parseInt(level.replace(/\$/g, ''), 10)
+  if (Number.isFinite(n) && n >= 1 && n <= 4) return '$'.repeat(n)
+  return level
+}
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -117,9 +184,11 @@ export default function DiningSharePage() {
       const { data: dr, error } = await supabase
         .from('dining_requests')
         .select(`
-          id, restaurant_name, restaurant_address, dining_time,
+          id, title, restaurant_name, restaurant_address, dining_time,
           seats_available, total_seats, description, status,
           cuisine_type, price_level, bill_split, payment_app,
+          gender_restriction, age_min, age_max, recurring, guest_count_flexible,
+          host_deal_headline, host_deal_description,
           visibility, timezone, google_place_id,
           host:profiles!dining_requests_host_id_fkey(name, avatar_url, bio)
         `)
@@ -339,6 +408,11 @@ export default function DiningSharePage() {
                 <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1f2937', margin: '0 0 4px', lineHeight: 1.2 }}>
                   {request.restaurant_name}
                 </h1>
+                {request.title?.trim() ? (
+                  <p style={{ fontSize: '15px', fontWeight: 600, color: '#4b5563', margin: '0 0 8px', lineHeight: 1.35 }}>
+                    {request.title.trim()}
+                  </p>
+                ) : null}
                 <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 8px' }}>{request.restaurant_address}</p>
 
                 {/* Rating */}
@@ -394,20 +468,100 @@ export default function DiningSharePage() {
                     <p style={s.rowTitle}>{attendeeCount}/{request.total_seats} going</p>
                     <p style={{ ...s.rowSub, color: isFull ? '#dc2626' : '#15803d', fontWeight: 600 }}>
                       {isFull ? 'Table is full' : `${request.seats_available} seat${request.seats_available !== 1 ? 's' : ''} left`}
+                      {request.guest_count_flexible === false ? ' · Exact headcount' : ''}
                     </p>
                   </div>
                 </div>
 
-                {/* Bill Split */}
-                {request.bill_split && (
+                {/* Price range */}
+                {formatPriceLevel(request.price_level) ? (
                   <div style={s.row}>
-                    <span style={s.rowIcon}>💳</span>
+                    <span style={s.rowIcon}>💵</span>
                     <div>
-                      <p style={s.rowTitle}>{request.bill_split}</p>
-                      {request.payment_app && <p style={s.rowSub}>via {request.payment_app}</p>}
+                      <p style={s.rowTitle}>Rough price band</p>
+                      <p style={s.rowSub}>{formatPriceLevel(request.price_level)} (set by the host)</p>
                     </div>
                   </div>
-                )}
+                ) : null}
+
+                {/* Table expectations: gender, ages, recurring */}
+                {(() => {
+                  const bullets: string[] = []
+                  if (request.gender_restriction === 'women') bullets.push('This table is women-only.')
+                  if (request.gender_restriction === 'men') bullets.push('This table is men-only.')
+                  if (request.age_min != null && request.age_max != null) {
+                    bullets.push(`Ages on this invite: ${request.age_min}–${request.age_max}.`)
+                  }
+                  if (request.recurring && request.recurring !== 'none') {
+                    const r = request.recurring
+                    const recurringLabel =
+                      r === 'weekly'
+                        ? 'Weekly'
+                        : r === 'biweekly'
+                          ? 'Every two weeks'
+                          : r === 'monthly'
+                            ? 'Monthly'
+                            : r.charAt(0).toUpperCase() + r.slice(1)
+                    bullets.push(
+                      `${recurringLabel} table — confirm with the host if you only plan to join once.`,
+                    )
+                  }
+                  if (bullets.length === 0) return null
+                  return (
+                    <div style={{ marginBottom: '10px' }}>
+                      <p style={{ ...s.sectionTitle, marginBottom: '6px' }}>📋 Table expectations</p>
+                      <div style={{ padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px' }}>
+                        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: '#374151', lineHeight: 1.55 }}>
+                          {bullets.map(line => (
+                            <li key={line} style={{ marginBottom: '4px' }}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Bill & payment — always show so guests know how money works */}
+                {(() => {
+                  const bill = getBillAndPaymentGuestCopy(request.bill_split, request.payment_app)
+                  return (
+                    <div style={{ marginBottom: '10px' }}>
+                      <p style={{ ...s.sectionTitle, marginBottom: '6px' }}>💳 Bill & payment</p>
+                      <div style={{ padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px' }}>
+                        <p style={{ ...s.rowTitle, margin: '0 0 8px' }}>{bill.headline}</p>
+                        {bill.body.map((line, i) => (
+                          <p
+                            key={i}
+                            style={{
+                              fontSize: '13px',
+                              color: '#374151',
+                              lineHeight: 1.55,
+                              margin: i === 0 ? 0 : '8px 0 0',
+                            }}>
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Host-offered deal / perk (distinct from long description) */}
+                {(request.host_deal_headline || request.host_deal_description) ? (
+                  <div style={{ marginBottom: '10px' }}>
+                    <p style={{ ...s.sectionTitle, marginBottom: '6px' }}>🏷️ From the host</p>
+                    <div style={{ padding: '12px', backgroundColor: '#fff7ed', borderRadius: '10px', border: '1px solid #fed7aa' }}>
+                      {request.host_deal_headline ? (
+                        <p style={{ ...s.rowTitle, margin: '0 0 6px' }}>{request.host_deal_headline}</p>
+                      ) : null}
+                      {request.host_deal_description ? (
+                        <p style={{ fontSize: '13px', color: '#374151', lineHeight: 1.55, margin: 0 }}>
+                          {request.host_deal_description}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* About this table */}
                 {request.description && (
@@ -485,6 +639,10 @@ export default function DiningSharePage() {
                       <button onClick={() => setShowRsvp(true)} style={s.btnOutline}>RSVP as Guest</button>
                       <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0' }}>
                         No app needed — the host will get your info
+                      </p>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '12px 0 0' }}>
+                        Already have an account?{' '}
+                        <a href={`/login?next=/dine/${requestId}`} style={{ color: '#f97316', fontWeight: 600, textDecoration: 'none' }}>Sign in</a>
                       </p>
                     </>
                   ) : rsvpSuccess ? (

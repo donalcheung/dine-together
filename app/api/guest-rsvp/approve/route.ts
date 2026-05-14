@@ -69,6 +69,32 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'
     const shareUrl = `${appUrl}/dine/${dr.id}`
 
+    // For approved email guests, generate a one-click account claim link
+    let claimUrl: string | undefined
+    if (action === 'approve' && rsvp.guest_email) {
+      try {
+        const { data: inviteData } = await supabase.auth.admin.generateLink({
+          type: 'invite',
+          email: rsvp.guest_email,
+          options: {
+            data: { name: rsvp.guest_name },
+            redirectTo: shareUrl,
+          },
+        })
+        claimUrl = inviteData?.properties?.action_link ?? undefined
+      } catch {
+        // User may already exist — fall back to magic link
+        try {
+          const { data: otpData } = await supabase.auth.admin.generateLink({
+            type: 'magiclink',
+            email: rsvp.guest_email,
+            options: { redirectTo: shareUrl },
+          })
+          claimUrl = otpData?.properties?.action_link ?? undefined
+        } catch {}
+      }
+    }
+
     const { smsSent, emailSent } = await notifyGuest({
       guestName: rsvp.guest_name,
       guestPhone: rsvp.guest_phone,
@@ -79,6 +105,7 @@ export async function POST(request: NextRequest) {
       timezone: dr.timezone,
       hostName,
       shareUrl,
+      claimUrl,
       type: action === 'approve' ? 'approved' : 'rejected',
     })
 
