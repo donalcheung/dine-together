@@ -132,6 +132,7 @@ export default function DiningSharePage() {
   const [request, setRequest] = useState<DiningRequest | null>(null)
   const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop'>('desktop')
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null)
+  const [placeDetailsLoading, setPlaceDetailsLoading] = useState(false)
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
 
   // Guest RSVP form
@@ -179,6 +180,10 @@ export default function DiningSharePage() {
     const fetchRequest = async () => {
       if (!requestId) { setStatus('not-found'); return }
 
+      setPlaceDetails(null)
+      setPlaceDetailsLoading(false)
+      setActivePhotoIndex(0)
+
       const supabase = createSupabaseBrowserClient()
 
       const { data: dr, error } = await supabase
@@ -218,23 +223,40 @@ export default function DiningSharePage() {
         guestCount: guestCount || 0,
       }
 
+      const loadPlaceDetails = async () => {
+        const pid = diningRequest.google_place_id?.trim()
+        const nm = diningRequest.restaurant_name?.trim()
+        const addr = diningRequest.restaurant_address?.trim()
+        if (!pid && (!nm || !addr)) {
+          return
+        }
+        setPlaceDetailsLoading(true)
+        try {
+          const qs = pid
+            ? `place_id=${encodeURIComponent(pid)}`
+            : `name=${encodeURIComponent(nm!)}&address=${encodeURIComponent(addr!)}`
+          const res = await fetch(`/api/places-photo?${qs}`)
+          const data = (await res.json()) as PlaceDetails
+          setPlaceDetails(data)
+        } catch {
+          setPlaceDetails(null)
+        } finally {
+          setPlaceDetailsLoading(false)
+        }
+      }
+
       const eventTime = new Date(dr.dining_time)
       if (eventTime < new Date() && dr.status !== 'open' && dr.status !== 'active') {
         setStatus('expired')
         setRequest(diningRequest)
+        void loadPlaceDetails()
         return
       }
 
       setRequest(diningRequest)
       setStatus('found')
 
-      // Fetch place details
-      if (diningRequest.google_place_id) {
-        fetch(`/api/places-photo?place_id=${encodeURIComponent(diningRequest.google_place_id)}`)
-          .then(r => r.json())
-          .then(data => setPlaceDetails(data))
-          .catch(() => {})
-      }
+      void loadPlaceDetails()
     }
 
     fetchRequest()
@@ -405,53 +427,72 @@ export default function DiningSharePage() {
                     <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>Past Event</span>
                   )}
                 </div>
-                <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1f2937', margin: '0 0 4px', lineHeight: 1.2 }}>
-                  {request.restaurant_name}
+                <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1f2937', margin: '0 0 6px', lineHeight: 1.25 }}>
+                  {request.title?.trim() ? request.title.trim() : request.restaurant_name}
                 </h1>
                 {request.title?.trim() ? (
-                  <p style={{ fontSize: '15px', fontWeight: 600, color: '#4b5563', margin: '0 0 8px', lineHeight: 1.35 }}>
-                    {request.title.trim()}
+                  <p style={{ fontSize: '17px', fontWeight: 700, color: '#374151', margin: '0 0 6px', lineHeight: 1.3 }}>
+                    {request.restaurant_name}
                   </p>
                 ) : null}
-                <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 8px' }}>{request.restaurant_address}</p>
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 8px', lineHeight: 1.45 }}>{request.restaurant_address}</p>
 
-                {/* Rating */}
-                {placeDetails?.rating && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                {/* Rating (from Google when available) */}
+                {placeDetails?.rating != null && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                     <StarRating rating={placeDetails.rating} />
                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#1f2937' }}>{placeDetails.rating}</span>
                     <span style={{ fontSize: '12px', color: '#9ca3af' }}>({placeDetails.userRatingsTotal?.toLocaleString()} reviews)</span>
                   </div>
                 )}
-
-                {/* Website & Phone quick links */}
-                {(placeDetails?.website || placeDetails?.phone) && (
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                    {placeDetails.website && (
-                      <a href={placeDetails.website} target="_blank" rel="noopener noreferrer" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        fontSize: '12px', fontWeight: 600, color: '#f97316',
-                        backgroundColor: '#fff7ed', padding: '5px 10px', borderRadius: '8px',
-                        textDecoration: 'none', border: '1px solid #fed7aa',
-                      }}>
-                        🌐 Website
-                      </a>
-                    )}
-                    {placeDetails.phone && (
-                      <a href={`tel:${placeDetails.phone}`} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        fontSize: '12px', fontWeight: 600, color: '#15803d',
-                        backgroundColor: '#f0fdf4', padding: '5px 10px', borderRadius: '8px',
-                        textDecoration: 'none', border: '1px solid #bbf7d0',
-                      }}>
-                        📞 {placeDetails.phone}
-                      </a>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div style={s.cardPad}>
+                {/* Restaurant: contact + directions (phone/website from Google when we can match the venue) */}
+                <div style={{ marginBottom: '14px' }}>
+                  <p style={{ ...s.sectionTitle, marginBottom: '8px' }}>📍 Restaurant</p>
+                  <div style={{ padding: '12px', backgroundColor: '#faf7f2', borderRadius: '10px' }}>
+                    <p style={{ ...s.rowTitle, marginBottom: '4px' }}>{request.restaurant_name}</p>
+                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 10px', lineHeight: 1.45 }}>{request.restaurant_address}</p>
+                    {placeDetailsLoading ? (
+                      <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0 0 8px' }}>Looking up phone and website from Google Maps…</p>
+                    ) : null}
+                    {placeDetails?.phone ? (
+                      <div style={{ marginBottom: '8px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: '#9ca3af', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Phone</p>
+                        <a href={`tel:${placeDetails.phone.replace(/[^\d+]/g, '')}`} style={{ fontSize: '15px', fontWeight: 600, color: '#15803d', textDecoration: 'none' }}>
+                          {placeDetails.phone}
+                        </a>
+                      </div>
+                    ) : null}
+                    {placeDetails?.website ? (
+                      <div style={{ marginBottom: '10px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: '#9ca3af', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Website</p>
+                        <a href={placeDetails.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: '14px', fontWeight: 600, color: '#f97316', textDecoration: 'none', wordBreak: 'break-all' as const }}>
+                          {placeDetails.website.replace(/^https?:\/\//i, '')}
+                        </a>
+                      </div>
+                    ) : null}
+                    {!placeDetailsLoading && placeDetails && !placeDetails.phone && !placeDetails.website ? (
+                      <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0 0 8px' }}>
+                        Phone and website were not found for this listing. Check Google Maps below.
+                      </p>
+                    ) : null}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${request.restaurant_name} ${request.restaurant_address}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        fontSize: '13px', fontWeight: 600, color: '#1f2937',
+                        backgroundColor: '#fff', padding: '8px 12px', borderRadius: '8px',
+                        textDecoration: 'none', border: '1px solid #e5e7eb',
+                      }}>
+                      🗺️ Open in Google Maps
+                    </a>
+                  </div>
+                </div>
+
                 {/* Date/Time */}
                 <div style={s.row}>
                   <span style={s.rowIcon}>📅</span>
