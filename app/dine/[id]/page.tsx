@@ -486,6 +486,10 @@ export default function DiningSharePage() {
                       <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '8px 0 0' }}>
                         No app needed — the host will get your info
                       </p>
+                      <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '12px 0 0' }}>
+                        Already have an account?{' '}
+                        <a href={`/login?next=/dine/${requestId}`} style={{ color: '#f97316', fontWeight: 600, textDecoration: 'none' }}>Sign in</a>
+                      </p>
                     </>
                   ) : rsvpSuccess ? (
                     <div style={{ textAlign: 'center' }}>

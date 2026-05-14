@@ -21,11 +21,12 @@ interface NotifyParams {
   timezone: string | null
   hostName: string
   shareUrl: string
+  claimUrl?: string
   type: 'approved' | 'rejected' | 'reminder'
 }
 
 export async function notifyGuest(params: NotifyParams): Promise<{ smsSent: boolean; emailSent: boolean }> {
-  const { guestName, guestPhone, guestEmail, restaurantName, restaurantAddress, diningTime, timezone, hostName, shareUrl, type } = params
+  const { guestName, guestPhone, guestEmail, restaurantName, restaurantAddress, diningTime, timezone, hostName, shareUrl, claimUrl, type } = params
   const dateStr = formatDate(diningTime, timezone)
   let smsSent = false
   let emailSent = false
@@ -48,6 +49,7 @@ export async function notifyGuest(params: NotifyParams): Promise<{ smsSent: bool
       ],
       ctaText: 'View Dining Details',
       ctaUrl: shareUrl,
+      claimUrl,
       footer: 'Download TableMesh to chat with the host and see who else is going.',
     })
   } else if (type === 'rejected') {
@@ -138,6 +140,7 @@ interface EmailOptions {
   details: Array<{ label: string; value: string }>
   ctaText: string
   ctaUrl: string
+  claimUrl?: string
   footer: string
 }
 
@@ -148,6 +151,13 @@ function buildEmailHtml(opts: EmailOptions): string {
       <td style="padding:8px 12px;border:1px solid #e5e7eb;color:#111827;">${d.value}</td>
     </tr>`).join('')
 
+  const claimBlock = opts.claimUrl ? `
+    <div style="margin-top:20px;padding:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;">
+      <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#1f2937;">New to TableMesh?</p>
+      <p style="margin:0 0 12px;font-size:13px;color:#6b7280;line-height:1.5;">Create your free account to message the host, see who else is coming, and join future tables — no need to re-enter your info.</p>
+      <a href="${opts.claimUrl}" style="display:inline-block;background:#f97316;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">Set up my account &rarr;</a>
+    </div>` : ''
+
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
       <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:24px;border-radius:16px 16px 0 0;text-align:center;">
@@ -157,6 +167,7 @@ function buildEmailHtml(opts: EmailOptions): string {
         <p style="color:#374151;font-size:15px;line-height:1.6;margin-top:0;">${opts.body}</p>
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">${rows}</table>
         <a href="${opts.ctaUrl}" style="display:inline-block;background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;margin-top:8px;">${opts.ctaText} &rarr;</a>
+        ${claimBlock}
         <p style="color:#6b7280;font-size:13px;margin-top:20px;line-height:1.5;">${opts.footer}</p>
         <p style="color:#9ca3af;font-size:11px;margin-top:16px;margin-bottom:0;">This message was sent by TableMesh on behalf of the host. &copy; 2025 Sheep Labs LLC.</p>
       </div>
