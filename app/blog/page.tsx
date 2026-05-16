@@ -19,6 +19,15 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: 'social-dining-apps-compared',
+    title: 'TableMesh vs Timeleft vs Meetup: What\'s the Difference?',
+    excerpt:
+      'The social dining space is growing fast. Here\'s an honest look at how TableMesh, Timeleft, and Meetup each approach the problem of eating with other people — and which one fits your situation.',
+    date: 'May 16, 2026',
+    readTime: '6 min read',
+    category: 'Insights',
+  },
+  {
     slug: 'loneliness-epidemic-social-dining',
     title: 'The Loneliness Epidemic Has a Surprisingly Simple Cure: Dinner With Strangers',
     excerpt:
