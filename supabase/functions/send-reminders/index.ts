@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
         host:profiles!dining_requests_host_id_fkey(name)
       )
     `)
-    .eq('status', 'approved')
+    .in('status', ['accepted', 'approved'])
     .is('reminder_sent_at', null)
 
   if (error) {

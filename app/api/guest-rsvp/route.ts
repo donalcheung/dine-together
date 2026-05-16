@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { notifyGuest } from '../../lib/guest-notify'
+import { GUEST_RSVP_STATUS } from '../../lib/guest-rsvp-status'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(request: NextRequest) {
@@ -99,10 +106,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Confirm receipt via SMS or email (best-effort)
+    let notified = { smsSent: false, emailSent: false }
+    try {
+      const { data: dr } = await supabaseAdmin
+        .from('dining_requests')
+        .select(`
+          id, restaurant_name, restaurant_address, dining_time, timezone,
+          host:profiles!dining_requests_host_id_fkey(name)
+        `)
+        .eq('id', request_id)
+        .single()
+
+      if (dr) {
+        const hostData = Array.isArray(dr.host) ? dr.host[0] : dr.host
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tablemesh.com'
+        notified = await notifyGuest({
+          guestName: guest_name.trim(),
+          guestPhone: guest_phone?.trim() || null,
+          guestEmail: guest_email?.trim().toLowerCase() || null,
+          restaurantName: dr.restaurant_name,
+          restaurantAddress: dr.restaurant_address ?? '',
+          diningTime: dr.dining_time,
+          timezone: dr.timezone,
+          hostName: hostData?.name || 'Your host',
+          shareUrl: `${appUrl}/dine/${dr.id}`,
+          type: 'pending',
+        })
+      }
+    } catch (notifyErr) {
+      console.error('[guest-rsvp] Pending notification error:', notifyErr)
+    }
+
     return NextResponse.json({
       success: true,
       rsvp_id: rsvp.id,
-      message: 'Your RSVP has been sent to the host!'
+      status: GUEST_RSVP_STATUS.pending,
+      message: 'Your RSVP has been sent to the host!',
+      notified,
     })
   } catch (err) {
     console.error('Guest RSVP error:', err)

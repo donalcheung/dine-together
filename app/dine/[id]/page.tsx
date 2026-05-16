@@ -212,7 +212,7 @@ export default function DiningSharePage() {
         .from('guest_rsvps')
         .select('id', { count: 'exact', head: true })
         .eq('request_id', requestId)
-        .eq('status', 'approved')
+        .in('status', ['accepted', 'approved'])
 
       const hostData = Array.isArray(dr.host) ? dr.host[0] : dr.host
 

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { notifyGuest } from '../../../lib/guest-notify'
+import { GUEST_RSVP_CONFIRMED_STATUSES } from '../../../lib/guest-rsvp-status'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
           host:profiles!dining_requests_host_id_fkey(name)
         )
       `)
-      .eq('status', 'approved')
+      .in('status', [...GUEST_RSVP_CONFIRMED_STATUSES])
       .is('reminder_sent_at', null)
 
     if (error) {

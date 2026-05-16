@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { notifyGuest } from '../../../lib/guest-notify'
+import { GUEST_RSVP_STATUS } from '../../../lib/guest-rsvp-status'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,11 +9,11 @@ const supabase = createClient(
 )
 
 // POST /api/guest-rsvp/approve
-// Body: { rsvp_id: string, action: 'approve' | 'reject', host_user_id: string }
+// Body: { rsvp_id: string, action: 'approve' | 'reject', host_user_id: string, notify_only?: boolean }
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { rsvp_id, action, host_user_id } = body
+    const { rsvp_id, action, host_user_id, notify_only } = body
 
     if (!rsvp_id || !action || !host_user_id) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -48,21 +49,19 @@ export async function POST(request: NextRequest) {
     const hostData = Array.isArray(dr.host) ? dr.host[0] : dr.host
     const hostName = hostData?.name || 'Your host'
 
-    const newStatus = action === 'approve' ? 'approved' : 'rejected'
-    const timestampField = action === 'approve' ? 'approved_at' : 'rejected_at'
+    const newStatus =
+      action === 'approve' ? GUEST_RSVP_STATUS.accepted : GUEST_RSVP_STATUS.declined
 
-    // Update the RSVP status
-    const { error: updateError } = await supabase
-      .from('guest_rsvps')
-      .update({
-        status: newStatus,
-        [timestampField]: new Date().toISOString(),
-        approval_notified_at: new Date().toISOString(),
-      })
-      .eq('id', rsvp_id)
+    if (!notify_only) {
+      const { error: updateError } = await supabase
+        .from('guest_rsvps')
+        .update({ status: newStatus })
+        .eq('id', rsvp_id)
 
-    if (updateError) {
-      return NextResponse.json({ error: 'Failed to update RSVP' }, { status: 500 })
+      if (updateError) {
+        console.error('[guest-rsvp/approve] Update error:', updateError)
+        return NextResponse.json({ error: 'Failed to update RSVP' }, { status: 500 })
+      }
     }
 
     // Send notification to guest

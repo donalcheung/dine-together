@@ -22,7 +22,7 @@ interface NotifyParams {
   hostName: string
   shareUrl: string
   claimUrl?: string
-  type: 'approved' | 'rejected' | 'reminder'
+  type: 'pending' | 'approved' | 'rejected' | 'reminder'
 }
 
 export async function notifyGuest(params: NotifyParams): Promise<{ smsSent: boolean; emailSent: boolean }> {
@@ -35,7 +35,23 @@ export async function notifyGuest(params: NotifyParams): Promise<{ smsSent: bool
   let emailSubject = ''
   let emailHtml = ''
 
-  if (type === 'approved') {
+  if (type === 'pending') {
+    smsBody = `Hi ${guestName}, your RSVP for ${restaurantName} on ${dateStr} was received.\n\n${hostName} will confirm your spot soon. We'll text or email you when you're approved and again before the meal.`
+    emailSubject = `RSVP received for ${restaurantName}`
+    emailHtml = buildEmailHtml({
+      title: `You're on the list, ${guestName}!`,
+      body: `We received your RSVP for the group dining at <strong>${restaurantName}</strong>. <strong>${hostName}</strong> will review and confirm your spot.`,
+      details: [
+        { label: 'Restaurant', value: restaurantName },
+        { label: 'Address', value: restaurantAddress },
+        { label: 'Date & Time', value: dateStr },
+        { label: 'Host', value: hostName },
+      ],
+      ctaText: 'View Dining Details',
+      ctaUrl: shareUrl,
+      footer: "We'll email or text you when the host approves your RSVP, and send a reminder before the meal.",
+    })
+  } else if (type === 'approved') {
     smsBody = `You're confirmed, ${guestName}!\n\n${hostName} approved your RSVP for:\n${restaurantName}\n${dateStr}\n\nSee you there! Download TableMesh for the full experience:\nhttps://tablemesh.com/download`
     emailSubject = `You're confirmed for ${restaurantName}!`
     emailHtml = buildEmailHtml({
