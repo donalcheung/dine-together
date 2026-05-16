@@ -45,12 +45,7 @@ const articleJsonLd = {
 export default function BlogPost() {
   return (
     <div className="min-h-screen bg-white">
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-        />
-      </head>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
 
       {/* Header */}
       <Navbar />
