@@ -492,6 +492,7 @@ export default function Home() {
                 <li><a href="https://www.tablemesh.com/download" className="hover:text-white transition-colors">Download</a></li>
                 <li><Link href="/explore" className="hover:text-white transition-colors">Explore Tables</Link></li>
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="/updates" className="hover:text-white transition-colors">Updates</Link></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                 <li><Link href="/safety" className="hover:text-white transition-colors">Safety</Link></li>
               </ul>

@@ -23,6 +23,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <Link href="/explore" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Explore</Link>
           <Link href="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
+          <Link href="/updates" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Updates</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Blog</Link>
           <Link href="/about-us" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">About</Link>
         </div>
@@ -62,6 +63,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col">
           <Link href="/explore" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Explore</Link>
           <Link href="/features" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Features</Link>
+          <Link href="/updates" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Updates</Link>
           <Link href="/blog" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Blog</Link>
           <Link href="/about-us" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>About</Link>
           <Link href="/partner" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-100" onClick={() => setMenuOpen(false)}>For Restaurants</Link>

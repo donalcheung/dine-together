@@ -20,11 +20,20 @@ export default function FeaturesPage() {
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-[var(--neutral)] mb-6 leading-tight" style={{ fontFamily: 'Fraunces, serif' }}>
-            Every Feature, <span className="text-[var(--primary)]">Explained</span>
+            Core Features, <span className="text-[var(--primary)]">Explained</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-6">
             TableMesh is built for every kind of diner — whether you&apos;re organizing your friend group, building a community, finding new food companions, or just trying to fill a table for Korean BBQ.
           </p>
+          <Link
+            href="/updates"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] hover:gap-3 transition-all"
+          >
+            See what we shipped recently
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
         </div>
       </section>
 
@@ -281,6 +290,7 @@ export default function FeaturesPage() {
           <div className="flex flex-wrap gap-6 text-sm text-white/70">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/features" className="hover:text-white transition-colors">Features</Link>
+            <Link href="/updates" className="hover:text-white transition-colors">Updates</Link>
             <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
             <Link href="/partner" className="hover:text-white transition-colors">For Restaurants</Link>
             <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
